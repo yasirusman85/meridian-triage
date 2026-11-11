@@ -1,0 +1,112 @@
+# Stories of epic-triage-core, in build order. Epic ids: R1-R15 = parent R1-R15, R16 = parent R22, R17 = parent R23.
+
+[[entry]]
+id = 1
+type = "story"
+title = "A pasted message reaches the queue"
+description = "Tracer bullet: solution scaffold per the architecture seed, SQLite with migrations, Message and Job entities with the event table, POST /api/messages stores a message unchanged and creates a placeholder job, and the React queue page lists it; run.sh builds the client and starts everything."
+verify = "After ./run.sh, pasting a message in the browser shows it in the queue, and the database holds the message text unchanged and a MessageReceived event."
+covers = ["R1", "R2", "R16"]
+after = []
+hitl = true
+risk = "medium"
+
+[[entry]]
+id = 2
+type = "story"
+title = "The AI prepares a message through the model port"
+description = "ITriageModel port, StubTriageModel with recorded responses, the triage.v1 validator with one retry, the 20-second timeout and the fall-back to Unsure; preparation output and its model metadata are recorded as an event."
+verify = "Unit tests: a recorded valid response yields issues; invalid JSON retries once then yields Unsure; a timeout yields Unsure with the message still queued."
+covers = ["R7", "R10", "R16"]
+after = [1]
+hitl = false
+risk = "high"
+
+[[entry]]
+id = 3
+type = "story"
+title = "Emergency rules and urgency only going up"
+description = "Domain EmergencyRules (gas, water through a ceiling, no heating October to April) run before the model; Job.RaiseUrgency and SetUrgencyByPerson per AD-4; merged urgency is the higher of rule and AI."
+verify = "Unit tests: each rule fires on its phrases and not on near misses; an AI proposal of routine never lowers a rule emergency; no heating in July is not an emergency."
+covers = ["R4", "R5", "R9"]
+after = [2]
+hitl = false
+risk = "medium"
+
+[[entry]]
+id = 4
+type = "story"
+title = "Messages become the right jobs"
+description = "One job per issue, PropertyResolver against seeded properties with unresolved going to Unsure, and FollowUpMatcher attaching repeat messages to an open job per AD-13."
+verify = "With the stub, Joy's message makes two jobs and the three Walsh messages make one job with two follow-ups; an unknown address makes an Unsure job."
+covers = ["R3", "R6", "R8"]
+after = [3]
+hitl = false
+risk = "medium"
+
+[[entry]]
+id = 5
+type = "story"
+title = "Each job shows its building and usual contractor"
+description = "Seed data for buildings, properties, contractors and per-building category assignments; ContractorLookup suggests the contractor by fixed lookup; the job shows building, contractor and the rules that applied."
+verify = "Every seeded job shows a building and a suggested contractor that matches the seed table for its category; changing the seed changes the suggestion."
+covers = ["R11", "R12"]
+after = [4]
+hitl = false
+risk = "low"
+
+[[entry]]
+id = 6
+type = "story"
+title = "A person approves, edits or rejects each job"
+description = "Review queue ordered by urgency then age with explanation, English summary and original messages; approve, edit (category, urgency, contractor, property) and reject through the state machine, each recorded before and after; acting-as switch for Rachel or the backup."
+verify = "In the browser, editing a job's category and approving it moves it to Approved and its history shows both values; a Prepared job cannot be sent to a contractor."
+covers = ["R13", "R14", "R15"]
+after = [5]
+hitl = false
+risk = "medium"
+
+[[entry]]
+id = 7
+type = "story"
+title = "A job's full history is visible"
+description = "Job detail page showing every event in time order, including rules applied, the model id, prompt version and raw output, edits and approval."
+verify = "Opening any seeded job lists its events in time order with the raw model output visible."
+covers = ["R16", "R17"]
+after = [6]
+hitl = false
+risk = "low"
+
+[[entry]]
+id = 8
+type = "story"
+title = "The eval set runs through the real pipeline"
+description = "Labelled cases in eval/cases (the six forwarded messages plus written variations: every category and urgency, other languages, multi-issue, follow-ups, vague and angry, non-maintenance, instruction injection), Meridian.Eval runner per AD-12, harm-weighted scoring and a Markdown summary."
+verify = "One command runs the eval with the stub and writes eval/results with emergency recall, category accuracy and every failure listed by harm class."
+covers = ["R4", "R6", "R7", "R9", "R10"]
+after = [4]
+hitl = false
+risk = "medium"
+
+[[entry]]
+id = 9
+type = "story"
+title = "OpenRouter prepares messages when a key is set"
+description = "OpenRouterTriageModel behind the same port: OpenAI-compatible chat completions with the versioned prompt, the message wrapped as data, JSON response, token and latency capture; selected only when OPENROUTER_API_KEY is set."
+verify = "Without a key the app uses the stub; with a key the eval runs against OpenRouter and records the model id in its results."
+covers = ["R7", "R10"]
+after = [2, 8]
+hitl = true
+risk = "high"
+notes = ["The user adds the OpenRouter key at the end; until then this is verified with a recorded HTTP response."]
+
+[[entry]]
+id = 10
+type = "story"
+title = "Refactor sweep"
+description = "Cleanup only, scoped at its start from the plans and review findings the other stories deferred."
+verify = "All tests pass, the eval result is unchanged, and the deferred findings list is empty or each item is recorded as a new story."
+covers = []
+after = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+hitl = false
+risk = "low"

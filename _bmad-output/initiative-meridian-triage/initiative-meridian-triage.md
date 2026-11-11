@@ -3,7 +3,7 @@ type: initiative
 title: "Meridian maintenance triage"
 parent: none
 sources: [_bmad-output/initiative-meridian-triage/prd-meridian-triage/prd-meridian-triage.md, _bmad-output/brief-meridian-triage/brief-meridian-triage.md]
-companions: []
+companions: [_bmad-output/initiative-meridian-triage/architecture-meridian-triage/architecture-meridian-triage.md]
 after: []
 risk: high
 ---
@@ -79,6 +79,7 @@ Rachel and any backup who does not know the buildings can run maintenance from a
 
 - prd — _bmad-output/initiative-meridian-triage/prd-meridian-triage/prd-meridian-triage.md, Features and requirements, Rules, AI behavior and evaluation
 - brief — _bmad-output/brief-meridian-triage/brief-meridian-triage.md, Scope
+- architecture — _bmad-output/initiative-meridian-triage/architecture-meridian-triage/architecture-meridian-triage.md, Invariants & Rules (AD-1 to AD-13)
 
 ## Notes
 
