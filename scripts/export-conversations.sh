@@ -9,7 +9,7 @@ OUT="$ROOT/conversations/claude-code"
 mkdir -p "$OUT"
 
 # Personal addresses to redact; add more with REDACT="a@b.com c@d.com".
-REDACT="${REDACT:-uyasir85@gmail.com}"
+REDACT="${REDACT:-uyasir85@gmail.com uyasir85}"
 
 redact() {
   local f="$1"
