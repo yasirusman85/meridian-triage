@@ -5,7 +5,7 @@ parent: initiative-meridian-triage
 covers: [R20, R21, R24]
 sources: []
 companions: []
-after: [{ epic = "epic-triage-core", needs = "approval and the event log" }]
+after: []
 refined: false
 risk: medium
 ---

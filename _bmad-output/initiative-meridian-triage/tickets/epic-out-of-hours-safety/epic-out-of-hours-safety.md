@@ -5,7 +5,7 @@ parent: initiative-meridian-triage
 covers: [R16, R17, R18, R19]
 sources: []
 companions: []
-after: [{ epic = "epic-triage-core", needs = "jobs with urgency and the event log" }]
+after: []
 refined: false
 risk: medium
 ---
