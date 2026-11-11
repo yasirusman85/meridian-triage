@@ -106,7 +106,8 @@ For the MD: a small set of numbers. Jobs by category and urgency, time from mess
 - Escalation of urgent jobs to Rachel, then to the named backup after 30 minutes (notification simulated in the demo).
 - Automatic tenant acknowledgement and the fixed gas safety message (sending simulated in the demo).
 - The built-in map: buildings, categories and contractors, from seed data.
-- A record of every AI decision and every human correction.
+- A record of every step of every job, from message received to contractor attended: every AI decision, every human correction, every notification and every status change, so there is visibility into everything at all times.
+- Tracking contractor arrival, so the 24-hour promise can be measured to attendance.
 - A small numbers page for the MD.
 
 **Left out, and why:**
