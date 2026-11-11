@@ -28,6 +28,16 @@ Much of the volume is "the same five things over and over", so the bottleneck is
 
 ## Solution
 
+A triage service that reads every incoming maintenance message the moment it arrives, prepares the job, and puts it in front of a person to approve. The AI prepares; a human approves everything. Nothing reaches a contractor until Rachel, or the backup covering for her, clicks approve.
+
+What changes:
+
+- **Every message is prepared, not just received.** Each one arrives in a review queue already sorted: what the problem is (category), how urgent it is, which property, and a suggested contractor. One email that reports two problems becomes two jobs; repeat messages about the same fault are grouped into one.
+- **Emergencies reach a person straight away, day or night.** Fixed rules flag the obvious emergencies first (gas, water through a ceiling, no heating in winter), and the AI can only ever raise a message's urgency, never lower it. An urgent message goes to Rachel's phone first; if she has not acknowledged it within 30 minutes [ASSUMPTION: window to confirm], it goes to a named backup such as Dawn.
+- **Routine work waits safely.** Non-urgent jobs sit prepared in the queue until a person is back, inside the five-working-day promise.
+- **Rachel's job changes from doing everything to reviewing and deciding.** On Monday morning the weekend's messages are already sorted. She checks the AI's work, approves or corrects it, and spends her time on the exceptions and the difficult cases. Her corrections show where the system is getting things wrong.
+- **A stand-in can do the job.** Because each job arrives prepared and explained, someone who does not know the buildings can approve with confidence.
+
 ## What makes it different
 
 ## Who it serves
