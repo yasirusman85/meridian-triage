@@ -53,6 +53,16 @@ This product keeps fixed rules for the clear-cut emergencies and uses the AI onl
 
 ## Who it serves
 
+**Primary: the backup.** Dawn, or whoever covers when Rachel is away. They use the same review queue but do not know the buildings, the tenants or which contractor suits which job, and today that is where things go wrong. The product is designed for them first: every job arrives explained, and they have a guidance document to use as a map of the buildings, the categories, the contractors and what counts as an emergency. Success for the backup is a normal week of approvals while Rachel is away, with nothing missed and no call to her.
+
+**Primary: Rachel.** The maintenance coordinator who uses the queue every day. She needs speed: getting through a weekend's prepared jobs quickly, and spending her time on the exceptions and the difficult cases. A design that works for someone who does not know the buildings also works for her. Success for Rachel is time off that is actually off.
+
+**Secondary: tenants.** They never see the system, but they get an acknowledgement at once, a safety message for gas, and a faster response on emergencies.
+
+**Secondary: the MD.** Wants "how many jobs, how fast, that sort of thing", without anyone going mad on it.
+
+**Not users: contractors.** They receive approved jobs the same way they do today.
+
 ## Success criteria
 
 ## Scope
