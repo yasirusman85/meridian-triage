@@ -41,6 +41,16 @@ What changes:
 
 ## What makes it different
 
+The product does not replace a backup person; a backup coordinator is always worth having. It changes what that backup can do. Today a stand-in is "someone who doesn't know the buildings, and it's a disaster". With this product any backup can do the job, because every message has already been read, sorted and explained by the time they open it. And the reading never stops: urgent messages are flagged within seconds, 24 hours a day, whether or not anyone is at a desk.
+
+The alternatives, and why they fall short:
+
+- **Do nothing.** Meridian keeps losing two days every absence and keeps missing its 24-hour emergency promise out of hours.
+- **A second coordinator on their own.** Still a person who sleeps, takes holidays and does not know the buildings. Worth having as the backup, but not a fix for the reading bottleneck.
+- **Inbox rules and a tenant web form.** Cheap and needs no AI, but tenants do not use forms at 7 pm in a panic: the Walshes sent angry emails, and Mrs Nowak wrote in Polish. A keyword rule sees "boiler" in both the Walsh email (no heating, a baby in the house) and the Patel email (banging, still working) and cannot tell the emergency from the routine job. Rules also cannot spot two problems in one email or read another language.
+
+This product keeps fixed rules for the clear-cut emergencies and uses the AI only for what rules cannot do: reading messy, emotional, multi-issue or non-English messages. The AI can only raise urgency, never lower it, and a person approves every job.
+
 ## Who it serves
 
 ## Success criteria
