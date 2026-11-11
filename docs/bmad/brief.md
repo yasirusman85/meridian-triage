@@ -83,7 +83,7 @@ This product keeps fixed rules for the clear-cut emergencies and uses the AI onl
 For tenants and the business:
 
 - **SC1. No emergency is missed.** Every message that meets an emergency rule (gas, water through a ceiling, no heating in winter) reaches Rachel or the backup within 30 minutes, at any hour. One missed gas report is a stop-and-fix event, not a percentage.
-- **SC2. The 24-hour emergency promise is kept** for every emergency job, measured from the tenant's first message to the job being approved.
+- **SC2. The 24-hour emergency promise is kept** for every emergency job, measured from the tenant's first message to a contractor attending, with a fallback contractor when the first cannot.
 - **SC3. Every tenant is acknowledged within 5 minutes** of their message arriving.
 - **SC4. No backlog when Rachel is away.** A week of her absence ends with no prepared job older than one working day waiting for approval.
 
@@ -119,8 +119,8 @@ For the MD: a small set of numbers. Jobs by category and urgency, time from mess
 
 ## Open questions
 
-For John (PRD) to decide; none blocks the brief.
+Two were settled after the first draft; one remains for John (PRD). None blocks the brief.
 
-- **Damp and mould.** Dawn's categories have no place for it, and it is not on her emergency list, yet Mrs Nowak's case involves a child with asthma. Category, urgency and any health-risk flag are open.
-- **What "dealt with" means.** SC2 measures the 24-hour promise to approval; the tenancy agreement may mean a contractor attending. Which one the promise is measured against is open.
-- **Ambiguous boiler faults.** Mr Patel's boiler is banging but working. Not an emergency on Dawn's list, but a possible safety issue; how such cases are prioritised is open.
+- **Settled: anything the system is not sure about gets its own category.** Alongside Dawn's seven categories there is an "Unsure, needs a person" category. Mould goes there, as does anything else that does not clearly fit, so a person decides rather than the AI forcing it into a bucket. Whether mould also carries a health-risk flag is for the PRD.
+- **Settled: "dealt with" means a contractor attending, for safety issues.** For emergencies, the 24-hour promise is measured to a contractor turning up, not to approval, with a fallback when the first contractor cannot attend. SC2 is measured this way; how the fallback works is for the PRD.
+- **Open: ambiguous boiler faults.** Mr Patel's boiler is banging but working. Not an emergency on Dawn's list, but a possible safety issue; how such cases are prioritised is open.
