@@ -2,7 +2,7 @@
 title: "Meridian maintenance triage"
 template: brief
 version: 1.1.0
-status: draft
+status: final
 created: "2026-11-11"
 updated: "2026-11-11"
 ---
@@ -11,7 +11,22 @@ updated: "2026-11-11"
 
 ## Table of Contents
 
+- [Executive summary](#executive-summary): what it is, who it is for, why now
+- [Problem](#problem): single point of failure, broken 24-hour promise, out-of-hours
+- [Solution](#solution): AI prepares, human approves, emergency rules, escalation, acknowledgement, gas message
+- [What makes it different](#what-makes-it-different): makes any backup competent; vs second coordinator, inbox rules
+- [Who it serves](#who-it-serves): backup (primary), Rachel, tenants, MD
+- [Success criteria](#success-criteria): SC1–SC6, MD numbers
+- [Scope](#scope): first version in and out, WhatsApp, photos, integrations
+- [Open questions](#open-questions): mould, "dealt with", ambiguous boilers
+
 ## Executive summary
+
+Meridian Property Services handles 300–400 maintenance messages a month through one inbox and one person. When Rachel, the maintenance coordinator, is away, nothing moves, and out of hours nobody reads the inbox at all. That breaks the most important promise in Meridian's tenancy agreement: a response to emergencies within 24 hours. A family with a baby and no heating on a Friday night may not be read until Monday.
+
+This product reads every message the moment it arrives and prepares the job: what it is, how urgent it is, which property and which contractor, with a plain-English explanation of why. Fixed rules catch the clear emergencies first, and the AI can only ever raise urgency. Urgent jobs go to Rachel's phone and then to a named backup; every tenant is acknowledged at once, and gas reports get a fixed safety message. A person approves every job before it reaches a contractor.
+
+It does not replace Rachel or a backup coordinator; it makes any backup able to do the job, and it never stops reading. The first version covers email, the review queue, escalation and a small numbers page for the MD, and deliberately leaves WhatsApp, photos and live integrations for later.
 
 ## Problem
 
@@ -34,7 +49,7 @@ What changes:
 
 - **Every message is prepared, not just received.** Each one arrives in a review queue already sorted: what the problem is (category), how urgent it is, which property, and a suggested contractor. One email that reports two problems becomes two jobs, because they may need different contractors. Repeat messages about the same fault, even from different people in the same household, are grouped into one job, with the later messages shown as follow-ups that raise its urgency.
 - **Every job explains itself.** Each prepared job says why it was classified the way it was ("Category: heating. Urgent because: no heating, a baby in the house, winter"), so a stand-in who does not know the buildings can make the right call without Rachel's local knowledge.
-- **Emergencies reach a person straight away, day or night.** Fixed rules flag the obvious emergencies first (gas, water through a ceiling, no heating in winter), and the AI can only ever raise a message's urgency, never lower it. An urgent message goes to Rachel's phone first; if she has not acknowledged it within 30 minutes [ASSUMPTION: window to confirm], it goes to a named backup such as Dawn.
+- **Emergencies reach a person straight away, day or night.** Fixed rules flag the obvious emergencies first (gas, water through a ceiling, no heating in winter), and the AI can only ever raise a message's urgency, never lower it. An urgent message goes to Rachel's phone first; if she has not acknowledged it within 30 minutes, it goes to a named backup such as Dawn.
 - **Every tenant hears back at once.** The system sends an automatic acknowledgement with a reference number ("we've received your report about your heating, reference #123"). It contacts the tenant but decides nothing, and it stops people writing again and again because nobody answered. A report that mentions gas instead gets a fixed, pre-written safety message: leave the property, do not use switches, and call the National Gas Emergency line on 0800 111 999.
 - **Routine work waits safely.** Non-urgent jobs sit prepared in the queue until a person is back, inside the five-working-day promise.
 - **Rachel's job changes from doing everything to reviewing and deciding.** On Monday morning the weekend's messages are already sorted. She checks the AI's work, approves or corrects it, and spends her time on the exceptions and the difficult cases. Her corrections show where the system is getting things wrong.
@@ -67,15 +82,15 @@ This product keeps fixed rules for the clear-cut emergencies and uses the AI onl
 
 For tenants and the business:
 
-- **SC1. No emergency is missed.** Every message that meets an emergency rule (gas, water through a ceiling, no heating in winter) reaches Rachel or the backup within 30 minutes, at any hour. One missed gas report is a stop-and-fix event, not a percentage. [ASSUMPTION]
-- **SC2. The 24-hour emergency promise is kept** for every emergency job, measured from the tenant's first message to the job being approved. [ASSUMPTION]
-- **SC3. Every tenant is acknowledged within 5 minutes** of their message arriving. [ASSUMPTION]
-- **SC4. No backlog when Rachel is away.** A week of her absence ends with no prepared job older than one working day waiting for approval. [ASSUMPTION]
+- **SC1. No emergency is missed.** Every message that meets an emergency rule (gas, water through a ceiling, no heating in winter) reaches Rachel or the backup within 30 minutes, at any hour. One missed gas report is a stop-and-fix event, not a percentage.
+- **SC2. The 24-hour emergency promise is kept** for every emergency job, measured from the tenant's first message to the job being approved.
+- **SC3. Every tenant is acknowledged within 5 minutes** of their message arriving.
+- **SC4. No backlog when Rachel is away.** A week of her absence ends with no prepared job older than one working day waiting for approval.
 
 For the AI component:
 
-- **SC5. The AI never lowers urgency.** On the test set, no message labelled emergency is prepared as routine. [ASSUMPTION]
-- **SC6. Most prepared jobs are right first time.** At least 80% of routine jobs are approved without the category or contractor being changed. Below 60%, the AI is costing more time than it saves and should be switched off. [ASSUMPTION]
+- **SC5. The AI never lowers urgency.** On the test set, no message labelled emergency is prepared as routine.
+- **SC6. Most prepared jobs are right first time.** At least 80% of routine jobs are approved without the category or contractor being changed. Below 60%, the AI is costing more time than it saves and should be switched off.
 
 For the MD: a small set of numbers. Jobs by category and urgency, time from message to first human look, time to approval, and how often the 24-hour and five-day promises were met.
 
@@ -101,3 +116,11 @@ For the MD: a small set of numbers. Jobs by category and urgency, time from mess
 - **Connecting to the live inbox, Meridian's job system and contractors.** Integration work that can follow once the triage is trusted.
 - **Real SMS and email sending.** Simulated, so the demo runs anywhere without accounts.
 - **The system learning by itself from corrections.** Corrections are recorded and reviewed by people; nothing changes the AI's behaviour automatically.
+
+## Open questions
+
+For John (PRD) to decide; none blocks the brief.
+
+- **Damp and mould.** Dawn's categories have no place for it, and it is not on her emergency list, yet Mrs Nowak's case involves a child with asthma. Category, urgency and any health-risk flag are open.
+- **What "dealt with" means.** SC2 measures the 24-hour promise to approval; the tenancy agreement may mean a contractor attending. Which one the promise is measured against is open.
+- **Ambiguous boiler faults.** Mr Patel's boiler is banging but working. Not an emergency on Dawn's list, but a possible safety issue; how such cases are prioritised is open.
