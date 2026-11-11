@@ -1,0 +1,24 @@
+# Epics of initiative-meridian-triage, in build order.
+
+[[epic]]
+id = 1
+slug = "epic-triage-core"
+title = "Every message is prepared and approved"
+description = "A pasted message is stored, run through the emergency rules, prepared by the AI behind the product's interface (stub by default), split and grouped, shown in the review queue with its map and explanation, approved or edited by a person, and every step recorded; the eval set runs against it."
+covers = ["R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8", "R9", "R10", "R11", "R12", "R13", "R14", "R15", "R22", "R23"]
+
+[[epic]]
+id = 2
+slug = "epic-out-of-hours-safety"
+title = "Tenants are answered and emergencies reach a person at any hour"
+description = "Every message is acknowledged from a fixed template, gas reports get the gas safety message, and emergencies notify Rachel then the backup after 30 minutes, with escalation failures held at the top of the queue."
+covers = ["R16", "R17", "R18", "R19"]
+after = [{ epic = 1, needs = "jobs with urgency and the event log" }]
+
+[[epic]]
+id = 3
+slug = "epic-attendance-and-numbers"
+title = "Approved jobs are tracked to attendance and counted"
+description = "An approved job reaches its contractor with an attended link, an emergency running out of time alerts for the fallback contractor, and the MD's numbers page shows the promise measures from recorded events."
+covers = ["R20", "R21", "R24"]
+after = [{ epic = 1, needs = "approval and the event log" }]
