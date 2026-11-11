@@ -19,7 +19,7 @@ Every maintenance request Meridian receives, 300–400 a month and more in winte
 
 The cost shows up out of hours. A tenant writes in on a Friday night, Rachel is not there, and the process fails. The forwarded messages show what that looks like:
 
-- **A broken promise.** The tenancy agreement promises a response within 24 hours on emergencies. A Friday 19:15 email reporting no heating or hot water with a baby in the house may not be read until Monday. [ASSUMPTION: the user ranks this as the biggest cost; to confirm.]
+- **A broken promise.** The tenancy agreement promises a response within 24 hours on emergencies. A Friday 19:15 email reporting no heating or hot water with a baby in the house may not be read until Monday. This is the biggest cost: it is a contractual commitment, and missing it is a legal and reputational exposure, not just an inconvenience.
 - **Tenant safety.** A family with a 7-month-old went a night without heat or hot water.
 - **Repeat work.** The same fault arrived as three messages from two email addresses within 75 minutes, because nobody answered.
 - **Missed risk.** Mould in a child's bedroom, where the child has asthma, was reported in Polish and could easily sit unread or be misunderstood.
