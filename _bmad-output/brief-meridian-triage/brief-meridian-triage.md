@@ -53,7 +53,7 @@ This product keeps fixed rules for the clear-cut emergencies and uses the AI onl
 
 ## Who it serves
 
-**Primary: the backup.** Dawn, or whoever covers when Rachel is away. They use the same review queue but do not know the buildings, the tenants or which contractor suits which job, and today that is where things go wrong. The product is designed for them first: every job arrives explained, and they have a guidance document to use as a map of the buildings, the categories, the contractors and what counts as an emergency. Success for the backup is a normal week of approvals while Rachel is away, with nothing missed and no call to her.
+**Primary: the backup.** Dawn, or whoever covers when Rachel is away. They use the same review queue but do not know the buildings, the tenants or which contractor suits which job, and today that is where things go wrong. The product is designed for them first: every job arrives explained, and the map they need is built into the product: each job shows the building, the usual contractor for that category and the emergency rules that applied. A one-page guide covers only the process: how to approve, when to escalate, who to call. Success for the backup is a normal week of approvals while Rachel is away, with nothing missed and no call to her.
 
 **Primary: Rachel.** The maintenance coordinator who uses the queue every day. She needs speed: getting through a weekend's prepared jobs quickly, and spending her time on the exceptions and the difficult cases. A design that works for someone who does not know the buildings also works for her. Success for Rachel is time off that is actually off.
 
@@ -65,4 +65,39 @@ This product keeps fixed rules for the clear-cut emergencies and uses the AI onl
 
 ## Success criteria
 
+For tenants and the business:
+
+- **SC1. No emergency is missed.** Every message that meets an emergency rule (gas, water through a ceiling, no heating in winter) reaches Rachel or the backup within 30 minutes, at any hour. One missed gas report is a stop-and-fix event, not a percentage. [ASSUMPTION]
+- **SC2. The 24-hour emergency promise is kept** for every emergency job, measured from the tenant's first message to the job being approved. [ASSUMPTION]
+- **SC3. Every tenant is acknowledged within 5 minutes** of their message arriving. [ASSUMPTION]
+- **SC4. No backlog when Rachel is away.** A week of her absence ends with no prepared job older than one working day waiting for approval. [ASSUMPTION]
+
+For the AI component:
+
+- **SC5. The AI never lowers urgency.** On the test set, no message labelled emergency is prepared as routine. [ASSUMPTION]
+- **SC6. Most prepared jobs are right first time.** At least 80% of routine jobs are approved without the category or contractor being changed. Below 60%, the AI is costing more time than it saves and should be switched off. [ASSUMPTION]
+
+For the MD: a small set of numbers. Jobs by category and urgency, time from message to first human look, time to approval, and how often the 24-hour and five-day promises were met.
+
 ## Scope
+
+**In the first version:**
+
+- Taking in maintenance messages (email first; for the demo, messages are pasted or seeded rather than read from a live inbox).
+- Preparing each job: category, urgency, property, suggested contractor and a plain-English explanation, including messages not written in English.
+- Fixed emergency rules first; the AI may only raise urgency.
+- Splitting a message with two problems into two jobs, and grouping repeat messages into one.
+- A review queue where Rachel or the backup approves, edits or rejects every job. Approval marks the job ready for the contractor.
+- Escalation of urgent jobs to Rachel, then to the named backup after 30 minutes (notification simulated in the demo).
+- Automatic tenant acknowledgement and the fixed gas safety message (sending simulated in the demo).
+- The built-in map: buildings, categories and contractors, from seed data.
+- A record of every AI decision and every human correction.
+- A small numbers page for the MD.
+
+**Left out, and why:**
+
+- **WhatsApp.** Dawn has no process for it yet. The intake is built so a second channel can be added later.
+- **Reading photos.** Mrs Nowak's photos would help, but the text alone already marks her case as serious; photo analysis adds cost and risk for little gain in the first version.
+- **Connecting to the live inbox, Meridian's job system and contractors.** Integration work that can follow once the triage is trusted.
+- **Real SMS and email sending.** Simulated, so the demo runs anywhere without accounts.
+- **The system learning by itself from corrections.** Corrections are recorded and reviewed by people; nothing changes the AI's behaviour automatically.
