@@ -2,7 +2,7 @@
 title: "Meridian maintenance triage"
 template: prd
 version: 1.1.0
-status: draft
+status: final
 created: "2026-11-11"
 updated: "2026-11-11"
 ---
@@ -81,7 +81,7 @@ Messages enter the system with their sender, time, text and attachments. The fir
 
 ### F2. Emergency rules
 Deterministic rules run on every message before and independently of the AI.
-- **FR-4.** The system flags an issue as emergency when it matches a fixed rule: any mention of gas or a gas smell, water coming through a ceiling, or no heating during the winter window (OQ-1).
+- **FR-4.** The system flags an issue as emergency when it matches a fixed rule: any mention of gas or a gas smell, water coming through a ceiling, or no heating during the winter window, October to April.
 - **FR-5.** An emergency flag from a rule cannot be removed or lowered by the AI, only by a person.
 
 ### F3. AI preparation
@@ -167,7 +167,7 @@ The queue where every job is checked by a person.
 - **Unsure rate** balances SM-5 and SM-7: the share of issues sent to Unsure. Above 25%, the AI is passing too much work back to people.
 - **Time to approve per job** balances SM-6: approving fast must not mean approving without reading; watched, no target.
 
-The thresholds above are proposals, not yet confirmed (OQ-4).
+The thresholds above were accepted by the user.
 
 ## Quality and constraints
 
@@ -205,8 +205,8 @@ The thresholds above are proposals, not yet confirmed (OQ-4).
 
 ## Open questions
 
-- **OQ-1. The winter window.** Which months count as winter for the no-heating rule. Proposed: October to April. Owner: the user. Needed before F2. Blocks FR-4.
-- **OQ-2. Vulnerable tenants outside winter.** Whether no heating or hot water with a baby or a health condition is an emergency in summer. Owner: the user. Needed before F2. Blocks FR-4.
+- **OQ-1. The winter window. Settled:** October to April.
+- **OQ-2. Vulnerable tenants outside winter. Settled:** not an emergency outside the winter window; the AI may raise such a job to urgent, and the explanation names the vulnerability.
 - **OQ-3. Data protection.** What obligations apply to storing tenant messages and sending them to a model provider, and for how long messages are kept. Owner: the user, with Meridian. Needed before live use, not for the demo. Blocks RULE-14.
-- **OQ-4. Metric thresholds.** SM-5, SM-7 and the counter-metric limits are proposals. Owner: the user. Needed before the eval is run.
+- **OQ-4. Metric thresholds. Settled:** SM-5, SM-7 and the counter-metric limits as written.
 - **OQ-5. Which model.** Chosen when the OpenRouter key is added, against the eval. Owner: the user. Needed before the final eval run.
