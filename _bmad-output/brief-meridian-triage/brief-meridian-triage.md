@@ -32,12 +32,12 @@ A triage service that reads every incoming maintenance message the moment it arr
 
 What changes:
 
-- **Every message is prepared, not just received.** Each one arrives in a review queue already sorted: what the problem is (category), how urgent it is, which property, and a suggested contractor. One email that reports two problems becomes two jobs; repeat messages about the same fault are grouped into one.
+- **Every message is prepared, not just received.** Each one arrives in a review queue already sorted: what the problem is (category), how urgent it is, which property, and a suggested contractor. One email that reports two problems becomes two jobs, because they may need different contractors. Repeat messages about the same fault, even from different people in the same household, are grouped into one job, with the later messages shown as follow-ups that raise its urgency.
+- **Every job explains itself.** Each prepared job says why it was classified the way it was ("Category: heating. Urgent because: no heating, a baby in the house, winter"), so a stand-in who does not know the buildings can make the right call without Rachel's local knowledge.
 - **Emergencies reach a person straight away, day or night.** Fixed rules flag the obvious emergencies first (gas, water through a ceiling, no heating in winter), and the AI can only ever raise a message's urgency, never lower it. An urgent message goes to Rachel's phone first; if she has not acknowledged it within 30 minutes [ASSUMPTION: window to confirm], it goes to a named backup such as Dawn.
-- **Every tenant hears back at once.** The system sends an automatic acknowledgement with a reference number ("we've received your report about your heating, reference #123"). It contacts the tenant but decides nothing, and it stops people writing again and again because nobody answered.
+- **Every tenant hears back at once.** The system sends an automatic acknowledgement with a reference number ("we've received your report about your heating, reference #123"). It contacts the tenant but decides nothing, and it stops people writing again and again because nobody answered. A report that mentions gas instead gets a fixed, pre-written safety message: leave the property, do not use switches, and call the National Gas Emergency line on 0800 111 999.
 - **Routine work waits safely.** Non-urgent jobs sit prepared in the queue until a person is back, inside the five-working-day promise.
 - **Rachel's job changes from doing everything to reviewing and deciding.** On Monday morning the weekend's messages are already sorted. She checks the AI's work, approves or corrects it, and spends her time on the exceptions and the difficult cases. Her corrections show where the system is getting things wrong.
-- **A stand-in can do the job.** Because each job arrives prepared and explained, someone who does not know the buildings can approve with confidence.
 
 ## What makes it different
 
