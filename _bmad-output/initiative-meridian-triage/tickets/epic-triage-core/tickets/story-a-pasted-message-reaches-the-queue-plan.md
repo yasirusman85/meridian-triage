@@ -3,7 +3,7 @@ title: 'A pasted message reaches the queue'
 type: feature
 ticket: '1'
 created: '2026-11-11'
-status: in-review
+status: built
 baseline_revision: 'c967069c7d01dee52a833b4f6bd63a40ffe4ca3d'
 route: full
 route_source: auto
@@ -89,6 +89,13 @@ Greenfield: the repo holds only `docs/`, `_bmad*/`, `.claude/`, `scripts/`, `con
 ## Plan Change Log
 
 ## Review Triage Log
+
+**Pass 1 (quick lens), 2026-11-16.** high 0, medium 1, low 1, false 0, maybe-false 0.
+
+| Verdict | Route | Finding | Evidence / action |
+|---|---|---|---|
+| medium | patch | Node 22.0–22.11 fails `vite build` inside `run.sh`, narrowing AC1 ("Node 22") | Vite 8 / rolldown require `^20.19.0 \|\| >=22.12.0`. Patched: `run.sh` and `run.ps1` now check Node 20.19+/22.12+ and the .NET 8 SDK up front with a clear message. Re-ran `./run.sh`, posted the Polish message, saw it in the queue (headless browser). |
+| low | rejected (needs human) | `@types/react` and `@types/react-dom` 19.3.0 added, beyond the frozen "no packages beyond the Stack table" | Compile-time type packages only, needed for TypeScript (in the Stack) to type-check React; no runtime effect. Removing them breaks `npm run build`. Flagged to the user rather than editing the frozen block. |
 
 ## Verification
 

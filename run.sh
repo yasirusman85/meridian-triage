@@ -5,6 +5,10 @@ set -euo pipefail
 
 cd "$(dirname "$0")"
 
+# Vite 8 needs Node 20.19+ or 22.12+; fail early with a clear message instead of mid-build.
+node -e 'const [a,b]=process.versions.node.split(".").map(Number); if(!((a===20&&b>=19)||(a===22&&b>=12)||a>22)){console.error("Node "+process.versions.node+" found; Node 20.19+ or 22.12+ is required.");process.exit(1)}'
+dotnet --list-sdks | grep -q '^8\.' || { echo ".NET 8 SDK is required." >&2; exit 1; }
+
 echo "==> Building client"
 (
   cd src/client
