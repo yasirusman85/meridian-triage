@@ -1,0 +1,26 @@
+{
+  "id": "gen-recorded-0001",
+  "provider": "Anthropic",
+  "model": "anthropic/claude-haiku-5.5",
+  "object": "chat.completion",
+  "created": 1794787200,
+  "choices": [
+    {
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```json\n{\n  \"language\": \"en\",\n  \"issues\": [\n    {\n      \"summary_en\": \"No heating and no hot water since this morning; a baby lives in the home.\",\n      \"category\": \"Heating\",\n      \"urgency\": \"Emergency\",\n      \"property_text\": \"14b Alder Court\",\n      \"explanation\": \"Total loss of heating and hot water with a baby in the home is an emergency.\",\n      \"vulnerability_mentioned\": true,\n      \"confidence\": \"high\"\n    }\n  ]\n}\n```",
+        "refusal": null,
+        "reasoning": null
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 742,
+    "completion_tokens": 118,
+    "total_tokens": 860
+  }
+}

@@ -252,6 +252,8 @@ public sealed class MessagesApiTests : IDisposable
         new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
         {
             builder.UseSetting("ConnectionStrings:Meridian", $"Data Source={_dbPath}");
+            // Never call a real model, even when a developer has OPENROUTER_API_KEY set.
+            builder.UseSetting("Triage:Provider", "stub");
             if (clock is not null)
             {
                 builder.ConfigureTestServices(services => services.AddSingleton(clock));
