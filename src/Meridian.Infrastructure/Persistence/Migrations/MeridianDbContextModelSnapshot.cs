@@ -104,6 +104,27 @@ namespace Meridian.Infrastructure.Persistence.Migrations
                     b.Property<DateTime>("CreatedAtUtc")
                         .HasColumnType("TEXT");
 
+                    b.Property<DateTime?>("EscalationAcknowledgedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("EscalationAcknowledgedBy")
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("EscalationBackupNotifiedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("EscalationFailedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("EscalationPrimaryNotifiedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("EscalationState")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Explanation")
                         .HasColumnType("TEXT");
 
@@ -151,6 +172,8 @@ namespace Meridian.Infrastructure.Persistence.Migrations
                         .HasColumnName("RuleIds");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("EscalationState");
 
                     b.HasIndex("PropertyId");
 

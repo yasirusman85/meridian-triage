@@ -29,4 +29,13 @@ public enum EventType
 
     /// <summary>Fixed code suggested the usual contractor for the job's category and building (R12, AD-3).</summary>
     ContractorSuggested,
+
+    /// <summary>A staff member was notified of the emergency (R18, R19); the payload names the recipient and the outbound id.</summary>
+    EscalationNotified,
+
+    /// <summary>A staff member acknowledged the emergency; the event actor is who acknowledged it.</summary>
+    EscalationAcknowledged,
+
+    /// <summary>Neither the primary nor the backup acknowledged the emergency in time.</summary>
+    EscalationFailed,
 }

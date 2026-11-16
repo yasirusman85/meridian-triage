@@ -142,6 +142,9 @@ public class SubmitMessageTests
         public Task<bool> MessageHasJobsAsync(Guid messageId, CancellationToken cancellationToken) =>
             Task.FromResult(Added.Any(j => j.Messages.Any(m => m.Id == messageId)));
 
+        public Task<IReadOnlyList<Job>> ListEscalatingAsync(CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<Job>>(Added.Where(j => j.IsEscalating).ToList());
+
         public Task<IReadOnlyList<Job>> ListAsync(CancellationToken cancellationToken) =>
             Task.FromResult<IReadOnlyList<Job>>(Added);
     }

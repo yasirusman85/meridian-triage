@@ -9,7 +9,7 @@ namespace Meridian.Domain.Jobs;
 /// One unit of maintenance work. State changes only through methods on this class,
 /// and every change appends a <see cref="JobEvent"/> (AD-5).
 /// </summary>
-public sealed class Job
+public sealed partial class Job
 {
     private readonly List<Message> _messages = new();
     private readonly List<JobEvent> _events = new();

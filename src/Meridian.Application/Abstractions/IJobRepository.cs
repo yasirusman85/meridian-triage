@@ -35,6 +35,12 @@ public interface IJobRepository
     /// <summary>True when at least one job is linked to the message.</summary>
     Task<bool> MessageHasJobsAsync(Guid messageId, CancellationToken cancellationToken);
 
+    /// <summary>
+    /// Open Emergency jobs whose escalation is not acknowledged or failed (<see cref="Job.IsEscalating"/>), with
+    /// events, tracked for changes: the escalation worker's candidates (R18, R19).
+    /// </summary>
+    Task<IReadOnlyList<Job>> ListEscalatingAsync(CancellationToken cancellationToken);
+
     /// <summary>All jobs with their messages, read-only.</summary>
     Task<IReadOnlyList<Job>> ListAsync(CancellationToken cancellationToken);
 }

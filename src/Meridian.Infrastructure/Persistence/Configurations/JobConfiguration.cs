@@ -39,6 +39,17 @@ internal sealed class JobConfiguration : IEntityTypeConfiguration<Job>
         builder.Ignore(j => j.FollowUpCount);
         builder.Ignore(j => j.IsOpen);
 
+        // Escalation (AD-6): a separate field from the lifecycle status, with a time for each step.
+        builder.Property(j => j.EscalationState).IsRequired().HasMaxLength(32);
+        builder.Property(j => j.EscalationPrimaryNotifiedAtUtc);
+        builder.Property(j => j.EscalationBackupNotifiedAtUtc);
+        builder.Property(j => j.EscalationAcknowledgedAtUtc);
+        builder.Property(j => j.EscalationAcknowledgedBy).HasMaxLength(JobEvent.MaxActorLength);
+        builder.Property(j => j.EscalationFailedAtUtc);
+        builder.HasIndex(j => j.EscalationState);
+        builder.Ignore(j => j.IsEscalating);
+        builder.Ignore(j => j.CanAcknowledgeEscalation);
+
         // Unresolved properties stay null (AD-13).
         builder.HasOne<Property>()
             .WithMany()

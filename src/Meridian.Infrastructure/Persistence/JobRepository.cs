@@ -80,6 +80,19 @@ internal sealed class JobRepository : IJobRepository
     public Task<bool> MessageHasJobsAsync(Guid messageId, CancellationToken cancellationToken) =>
         _db.Jobs.AnyAsync(j => j.Messages.Any(m => m.Id == messageId), cancellationToken);
 
+    public async Task<IReadOnlyList<Job>> ListEscalatingAsync(CancellationToken cancellationToken)
+    {
+        var jobs = await _db.Jobs
+            .Include(j => j.Events)
+            .Where(j => j.Urgency == Urgency.Emergency)
+            .Where(j => j.Status != JobStatus.Attended && j.Status != JobStatus.Rejected)
+            .Where(j => j.EscalationState == EscalationState.None
+                || j.EscalationState == EscalationState.NotifiedRachel
+                || j.EscalationState == EscalationState.NotifiedBackup)
+            .ToListAsync(cancellationToken);
+        return jobs.Where(j => j.IsEscalating).ToList();
+    }
+
     public async Task<IReadOnlyList<Job>> ListAsync(CancellationToken cancellationToken) =>
         await _db.Jobs
             .AsNoTracking()

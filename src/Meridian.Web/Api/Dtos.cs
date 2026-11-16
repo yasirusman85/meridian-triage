@@ -15,6 +15,7 @@ public sealed record SubmittedJobDto(Guid JobId, string Reference, string Outcom
 /// <summary>
 /// A job in the review queue. <c>SuggestedContractor*</c> are null when a person must choose (Unsure, or no assignment);
 /// <c>SuggestedContractorRule</c> says whether it is the building's usual contractor or the company default.
+/// <c>EscalationState</c> is the emergency escalation (AD-6), with who acknowledged it and when.
 /// </summary>
 public sealed record JobListItemDto(
     Guid Id,
@@ -35,7 +36,10 @@ public sealed record JobListItemDto(
     Guid? SuggestedContractorId,
     string? SuggestedContractorName,
     string? SuggestedContractorPhone,
-    ContractorRule? SuggestedContractorRule);
+    ContractorRule? SuggestedContractorRule,
+    EscalationState EscalationState,
+    string? EscalationAcknowledgedBy,
+    DateTime? EscalationAcknowledgedAtUtc);
 
 /// <summary>A message written to the outbox for a job (AD-8); <c>status</c> is <c>Simulated</c> in the first version.</summary>
 public sealed record OutboundMessageDto(

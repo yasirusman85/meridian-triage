@@ -19,4 +19,12 @@ internal sealed class FakeOutbox : IOutbox
 
     public Task<IReadOnlyList<OutboundMessage>> ListForJobAsync(Guid jobId, CancellationToken cancellationToken) =>
         Task.FromResult<IReadOnlyList<OutboundMessage>>(Sent.Where(o => o.JobId == jobId).ToList());
+
+    public Task<IReadOnlyList<OutboundMessage>> ListByTemplatesAsync(
+        IReadOnlyCollection<string> templateIds,
+        CancellationToken cancellationToken) =>
+        Task.FromResult<IReadOnlyList<OutboundMessage>>(Sent
+            .Where(o => templateIds.Contains(o.TemplateId))
+            .OrderByDescending(o => o.CreatedAtUtc)
+            .ToList());
 }

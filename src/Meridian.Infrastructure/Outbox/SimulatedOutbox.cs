@@ -49,4 +49,23 @@ internal sealed class SimulatedOutbox : IOutbox
             .ThenBy(o => o.Id)
             .ToListAsync(cancellationToken);
     }
+
+    public async Task<IReadOnlyList<OutboundMessage>> ListByTemplatesAsync(
+        IReadOnlyCollection<string> templateIds,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(templateIds);
+        if (templateIds.Count == 0)
+        {
+            return Array.Empty<OutboundMessage>();
+        }
+
+        var ids = templateIds.ToList();
+        return await _db.OutboundMessages
+            .AsNoTracking()
+            .Where(o => ids.Contains(o.TemplateId))
+            .OrderByDescending(o => o.CreatedAtUtc)
+            .ThenByDescending(o => o.Id)
+            .ToListAsync(cancellationToken);
+    }
 }

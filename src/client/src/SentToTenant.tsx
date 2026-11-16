@@ -1,5 +1,5 @@
 import { useState, type SyntheticEvent } from 'react';
-import { listOutbound, type OutboundMessage } from './api';
+import { listOutbound, STAFF_TEMPLATE_IDS, type OutboundMessage } from './api';
 
 const TEMPLATE_LABELS: Record<string, string> = {
   acknowledgement: 'Acknowledgement',
@@ -16,7 +16,8 @@ export function SentToTenant({ jobId }: { jobId: string }) {
       return;
     }
     try {
-      setMessages(await listOutbound(jobId));
+      // Staff notifications are filed under the job too; they belong in the notifications panel.
+      setMessages((await listOutbound(jobId)).filter((m) => !STAFF_TEMPLATE_IDS.includes(m.templateId)));
       setError(null);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not load messages.');

@@ -1,3 +1,6 @@
+/** Staff escalation of an emergency, separate from the lifecycle status. */
+export type EscalationState = 'None' | 'NotifiedRachel' | 'NotifiedBackup' | 'Acknowledged' | 'Failed';
+
 export type JobStatus = 'Prepared' | 'Approved' | 'SentToContractor' | 'Attended' | 'Rejected';
 export type Urgency = 'Routine' | 'Urgent' | 'Emergency';
 export type Category =
@@ -39,6 +42,10 @@ export interface JobListItem {
   suggestedContractorPhone: string | null;
   /** "Building": the building's usual contractor; "Default": the company-wide default for the category. */
   suggestedContractorRule: 'Building' | 'Default' | null;
+  escalationState: EscalationState;
+  /** Who acknowledged the emergency, e.g. "rachel"; null until acknowledged. */
+  escalationAcknowledgedBy: string | null;
+  escalationAcknowledgedAtUtc: string | null;
 }
 
 export interface SubmittedJob {
@@ -59,6 +66,30 @@ export interface OutboundMessage {
   body: string;
   status: 'Simulated';
   createdAtUtc: string;
+}
+
+/** Template ids of staff notifications; they are listed in the notifications panel, not as "sent to tenant". */
+export const STAFF_TEMPLATE_IDS: readonly string[] = ['escalation-primary', 'escalation-backup'];
+
+/** A staff notification (simulated SMS) about an emergency, newest first. */
+export interface StaffNotification {
+  id: string;
+  jobId: string;
+  jobReference: string | null;
+  channel: string;
+  recipient: string;
+  templateId: string;
+  body: string;
+  status: 'Simulated';
+  createdAtUtc: string;
+}
+
+export interface EscalationResult {
+  jobId: string;
+  reference: string;
+  escalationState: EscalationState;
+  acknowledgedBy: string | null;
+  acknowledgedAtUtc: string | null;
 }
 
 export interface SubmitMessageResponse {
@@ -117,4 +148,24 @@ export async function submitMessage(sender: string, text: string): Promise<Submi
     throw new ApiError(await readProblem(response));
   }
   return (await response.json()) as SubmitMessageResponse;
+}
+
+export async function listNotifications(): Promise<StaffNotification[]> {
+  const response = await fetch('/api/notifications');
+  if (!response.ok) {
+    throw new ApiError(await readProblem(response));
+  }
+  return (await response.json()) as StaffNotification[];
+}
+
+/** Acknowledges an emergency as a staff member (sent as the X-Acting-As header). */
+export async function acknowledgeEscalation(jobId: string, actingAs: string): Promise<EscalationResult> {
+  const response = await fetch(`/api/jobs/${encodeURIComponent(jobId)}/acknowledge`, {
+    method: 'POST',
+    headers: { 'X-Acting-As': actingAs },
+  });
+  if (!response.ok) {
+    throw new ApiError(await readProblem(response));
+  }
+  return (await response.json()) as EscalationResult;
 }

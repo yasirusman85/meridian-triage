@@ -3,7 +3,7 @@ title: 'Emergencies reach Rachel, then the backup'
 type: feature
 ticket: '2'
 created: '2026-11-16'
-status: in-progress
+status: built
 baseline_revision: 'c70a9c3f77cbbf37035e0c9fcb2152bcfa019927'
 route: full
 route_source: auto
@@ -63,17 +63,28 @@ Read current `Job`, `IOutbox`, `SimulatedOutbox`, `OutboundMessage`, `RecoverOrp
 ## Tasks & Acceptance
 
 **Execution:**
-- [ ] Domain escalation state and events -- AD-6
-- [ ] Application escalation service and staff templates -- R18, R19
-- [ ] Web worker, endpoints -- AD-9
-- [ ] Infrastructure mapping, migration, config defaults -- persistence
-- [ ] Client panel, badge, acknowledge -- visibility
-- [ ] Tests -- I/O matrix
+- [x] Domain escalation state and events -- AD-6
+- [x] Application escalation service and staff templates -- R18, R19
+- [x] Web worker, endpoints -- AD-9
+- [x] Infrastructure mapping, migration, config defaults -- persistence
+- [x] Client panel, badge, acknowledge -- visibility
+- [x] Tests -- I/O matrix
 
 **Acceptance Criteria:**
 - Given the Walsh emergency with a fake clock, when ticks run at +0, +30 and +60 minutes with no acknowledgement, then Rachel then Dawn are notified and the job is marked escalation-failed, each step in its history.
 
 ## Implementation Notes
+
+- `Job` is now `partial`; every escalation member lives in `Domain/Jobs/Job.Escalation.cs` (state, five step fields, `IsEscalating`, `CanAcknowledgeEscalation`, the three methods). `NotifyEscalation(recipient, outboundId, now)` takes the outbound id as well, so the `EscalationNotified` payload (recipient, step `primary|backup`, outboundId, state) points at its SMS; the step is inferred from the current state.
+- Escalation only runs for open (not Attended/Rejected) Emergency jobs. Acknowledging is allowed on any Emergency job not already acknowledged: from either notified state, and also before the first tick (`None`) and after `Failed`, so a failed job can still be taken and leaves the top of the queue. Acknowledging a non-emergency or an already-acknowledged job is 409; a missing or unknown `X-Acting-As` is 400; an unknown job 404.
+- `EscalationService.TickAsync` runs in one unit of work and reads the candidates inside it (SQLite takes the write lock at `BEGIN`), so an acknowledgement saved at the same moment is either seen or waits. At most one step per job per tick; steps use `>=` the window, so ticks at +0, +30 and +60 give Rachel, Dawn, Failed.
+- Config: `Escalation:WindowMinutes`, `Escalation:Primary:{Id,Name,Phone}`, `Escalation:Backup:{Id,Name,Phone}` (read by `Web/Workers/EscalationConfiguration`; defaults Rachel 07700 900461, Dawn 07700 900872, both Ofcom drama-range numbers, 30 minutes). Outbound recipient is `Name (Phone)`; the event recipient and actor are the ids `rachel`/`dawn`.
+- Staff templates `escalation-primary`, `escalation-backup` in `Application/Templates/StaffTemplates.cs`; placeholders reference, address (resolved property name, else "address not resolved"), category, rules (else "none").
+- `IOutbox.ListByTemplatesAsync` and `IJobRepository.ListEscalatingAsync` are new port members. Staff SMS rows are filed under the job, so `GET /api/jobs/{id}/outbound` returns them too; the client's "Sent to tenant" expander filters them out and shows them only in the notifications panel.
+- Queue order: escalation-failed first, then urgency, then age. `QueueItem`/`JobListItemDto` gain `escalationState`, `escalationAcknowledgedBy`, `escalationAcknowledgedAtUtc` at the end.
+- The worker (`Web/Workers/EscalationWorker`) runs once at start and then every 60 s: escalation tick, then `RecoverOrphanMessages` with `DefaultMinimumAge`; failures are logged without tenant data and retried next minute. API tests remove the hosted worker and drive `RunOnceAsync` with a fake clock.
+- The client has its own small "Acting as" select (Rachel, Dawn) on the queue for the acknowledge button; when the review story's acting-as switch lands, the two should be merged into one.
+- Migration `20261116100819_Escalation` adds only the six `Jobs` columns (existing rows get `EscalationState = 'None'`) and an index on `EscalationState`.
 
 ## Plan Change Log
 
