@@ -5,6 +5,7 @@
     <ProjectReference Include="..\Meridian.Application\Meridian.Application.csproj" />
     <ProjectReference Include="..\Meridian.Infrastructure\Meridian.Infrastructure.csproj" />
     <ProjectReference Include="..\Meridian.Web\Meridian.Web.csproj" />
+    <ProjectReference Include="..\Meridian.Eval\Meridian.Eval.csproj" />
   </ItemGroup>
 
   <ItemGroup>

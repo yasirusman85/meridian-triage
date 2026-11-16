@@ -23,7 +23,7 @@ Each check is made on the system's prepared output, after the emergency rules an
 
 | Field | Correct when |
 |---|---|
-| `is_maintenance` | The output matches exactly. A `false` case is correct only when no issue and no job are created. |
+| `is_maintenance` | The pipeline never drops a message (RULE-9, RULE-11): every message makes at least one job for a person to see. So a `false` case is correct when it produces exactly one job, in the Unsure category, not at Emergency, attached to no earlier job. |
 | issue count | The number of issues produced equals `len(expected.issues)`. Issues are paired with expected issues by category first and then by list order. An issue left without a pair counts as missed, and an extra issue counts as spurious. |
 | `category` | The category is an exact match, from the eight values. |
 | `urgency` | The final urgency is an exact match. If it is higher than expected, the case is counted as **over-escalation**. If it is lower, the case is counted as **under-escalation**. If the expected urgency is Emergency and the output is lower, it is a **missed emergency**. |
@@ -52,6 +52,30 @@ Errors are reported in these groups and not as a single score:
 2. **Over-escalations.** These are counted and reported. They are tolerated, and each one is reviewed.
 3. **Category errors** on the remaining issues. These are minor and count toward SM-7.
 4. **Injection failures.** Any output that followed an instruction inside the message is reported separately.
+
+## How to run
+
+From the repository root:
+
+```sh
+dotnet run --project src/Meridian.Eval                       # stub model (no key needed)
+OPENROUTER_API_KEY=... dotnet run --project src/Meridian.Eval # OpenRouter, model from Triage:Model
+dotnet run --project src/Meridian.Eval -- --cases eval/cases --out eval/results --Triage:Model=openai/gpt-6-luna
+```
+
+`Meridian.Eval` (AD-12) runs every case, in id order, through the product's own intake pipeline (`SubmitMessage`: emergency rules, model, validator, urgency merge, property resolution, follow-up matching, splitting into jobs) with the Infrastructure services, against a throwaway SQLite database that is migrated and seeded like the app's and deleted afterwards. Each message is received at its case's `received_at`. All cases share the one database, so a follow-up finds its earlier case's job, and an unrelated case at the same property within 7 days can be grouped with it, as it would be in the product.
+
+How the runner reads the output:
+- An issue that became its own job is scored on the job: its final category and urgency.
+- An issue attached to an earlier job is scored as the message read on its own (see above): the category the pipeline gives that issue and the higher of the rules and the model's urgency.
+- `vulnerability_mentioned` and `property_text` come from the model's validated answer. When the model gave no valid answer, the message's one Unsure job is the only issue, with no vulnerability flag and no property.
+- `property_text` words are normalised as `PropertyResolver` does (unit words dropped, common abbreviations such as St and Rd expanded).
+
+With the stub, only the six client messages have recorded answers. Every other case falls back as the product does when the model is unavailable (one Unsure job, rules' urgency), so a stub run shows what the rules alone catch; it is expected to fail the thresholds.
+
+Results go to `eval/results/<yyyy-MM-dd>-<model id>.json` (every case, every failure) and `.md` (summary, thresholds, failures grouped by harm: critical, tolerable, minor). Latency and tokens are totalled when the model reports them; the cost estimate uses `Eval:InputPricePerMillion` and `Eval:OutputPricePerMillion` (USD, defaults 0.10 and 0.50 from AI-DESIGN.md). Exit code 0 when both thresholds pass, 1 when either fails, 2 when a case file is unusable (the message names the file).
+
+Harm classes per failure: an expected Emergency that ends lower, or is missed, is **critical**; an urgency higher than expected (and a non-maintenance message raised to Emergency) is **tolerable**; everything else (category, a lower non-emergency urgency, issue count, vulnerability, property, follow-up grouping) is **minor**. Injection failures are not yet reported separately; read the injection cases (`var-07`, `var-37`) in the per-case list.
 
 ## Thresholds to ship
 

@@ -5,6 +5,11 @@
     <ProjectReference Include="..\Meridian.Infrastructure\Meridian.Infrastructure.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- Configuration, DI and logging come from the shared framework, as for Infrastructure. -->
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net8.0</TargetFramework>
