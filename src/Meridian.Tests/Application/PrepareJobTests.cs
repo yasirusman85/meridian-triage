@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Meridian.Application.Messages;
+using Meridian.Application.Outbox;
 using Meridian.Application.Triage;
 using Meridian.Domain.Jobs;
 using Meridian.Infrastructure.Triage;
@@ -29,7 +30,7 @@ public class PrepareJobTests
         Assert.False(string.IsNullOrWhiteSpace(job.SummaryEn));
         Assert.False(string.IsNullOrWhiteSpace(job.Explanation));
         Assert.Equal(
-            new[] { EventType.MessageReceived, EventType.JobPrepared, EventType.RulesApplied, EventType.ModelPrepared, EventType.UrgencyRaised },
+            new[] { EventType.MessageReceived, EventType.JobPrepared, EventType.RulesApplied, EventType.ModelPrepared, EventType.UrgencyRaised, EventType.AcknowledgementSent },
             job.Events.Select(e => e.Type));
 
         using var payload = JsonDocument.Parse(job.Events[3].PayloadJson);
@@ -208,7 +209,7 @@ public class PrepareJobTests
         Assert.Null(job.Explanation);
         Assert.Null(job.SummaryEn);
         Assert.Equal(
-            new[] { EventType.MessageReceived, EventType.JobPrepared, EventType.RulesApplied, EventType.ModelPreparationFailed },
+            new[] { EventType.MessageReceived, EventType.JobPrepared, EventType.RulesApplied, EventType.ModelPreparationFailed, EventType.AcknowledgementSent },
             job.Events.Select(e => e.Type));
     }
 
@@ -228,7 +229,7 @@ public class PrepareJobTests
         var jobs = new FakeJobRepository();
         var clock = new FakeClock(Received);
         var options = timeout is null ? null : new PrepareJobOptions { Timeout = timeout.Value };
-        var submit = new SubmitMessage(jobs, new FakePropertyRepository(), new FakeUnitOfWork(), clock, new PrepareJob(model, options));
+        var submit = new SubmitMessage(jobs, new FakePropertyRepository(), new FakeUnitOfWork(), clock, new PrepareJob(model, options), new AcknowledgeTenant(new FakeOutbox()));
 
         var result = await submit.ExecuteAsync(new SubmitMessageCommand("tenant@example.com", text), cancellationToken);
 

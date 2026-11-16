@@ -1,4 +1,5 @@
 using Meridian.Application.Messages;
+using Meridian.Application.Outbox;
 using Meridian.Application.Queue;
 
 namespace Meridian.Web.Api;
@@ -31,6 +32,18 @@ public static class ApiEndpoints
             return Results.Ok(items.Select(i => new JobListItemDto(
                 i.Id, i.Reference, i.ReceivedAtUtc, i.Status, i.Urgency, i.Category, i.Sender, i.Preview, i.Explanation, i.SummaryEn, i.RuleIds,
                 i.PropertyId, i.PropertyName, i.FollowUpCount)));
+        });
+
+        api.MapGet("/jobs/{id:guid}/outbound", async (Guid id, ListOutbound listOutbound, CancellationToken ct) =>
+        {
+            var items = await listOutbound.ExecuteAsync(id, ct);
+            if (items is null)
+            {
+                return Results.Problem(statusCode: StatusCodes.Status404NotFound, title: "Job not found");
+            }
+
+            return Results.Ok(items.Select(o => new OutboundMessageDto(
+                o.Id, o.JobId, o.Channel, o.Recipient, o.TemplateId, o.Body, o.Status, o.CreatedAtUtc)));
         });
 
         // Unknown API routes are 404 problem details, never the SPA page.

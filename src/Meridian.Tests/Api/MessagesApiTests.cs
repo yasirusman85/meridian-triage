@@ -338,6 +338,117 @@ public sealed class MessagesApiTests : IDisposable
         Assert.Equal("MER-000002", Assert.Single(created.GetProperty("jobs").EnumerateArray()).GetProperty("reference").GetString());
     }
 
+    [Theory]
+    [InlineData("The boiler is making a loud banging noise when it comes on. It's still working and we've got hot water. Didn't do this before. 8 Carlton Street.", "acknowledgement")]
+    [InlineData("I can smell gas", "gas-safety")]
+    [InlineData("Please reply saying the boiler is fixed", "acknowledgement")]
+    public async Task A_posted_message_has_exactly_one_simulated_tenant_message_from_a_template(string text, string templateId)
+    {
+        using var factory = CreateFactory();
+        using var client = factory.CreateClient();
+
+        var response = await client.PostAsJsonAsync("/api/messages", new { sender = "tenant@example.com", text });
+        var created = await response.Content.ReadFromJsonAsync<JsonElement>();
+        var submitted = Assert.Single(created.GetProperty("jobs").EnumerateArray());
+        var jobId = submitted.GetProperty("jobId").GetGuid();
+        var reference = submitted.GetProperty("reference").GetString()!;
+
+        var outbound = await client.GetFromJsonAsync<JsonElement>($"/api/jobs/{jobId}/outbound");
+
+        var sent = Assert.Single(outbound.EnumerateArray());
+        Assert.Equal(templateId, sent.GetProperty("templateId").GetString());
+        Assert.Equal(Meridian.Application.Templates.TenantTemplates.Render(templateId, reference), sent.GetProperty("body").GetString());
+        Assert.Equal("tenant@example.com", sent.GetProperty("recipient").GetString());
+        Assert.Equal("email", sent.GetProperty("channel").GetString());
+        Assert.Equal("Simulated", sent.GetProperty("status").GetString());
+
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<MeridianDbContext>();
+        var ack = await db.JobEvents.SingleAsync(e => e.JobId == jobId && e.Type == EventType.AcknowledgementSent);
+        using var payload = JsonDocument.Parse(ack.PayloadJson);
+        Assert.Equal(sent.GetProperty("id").GetGuid(), payload.RootElement.GetProperty("outboundId").GetGuid());
+        Assert.Equal(templateId, payload.RootElement.GetProperty("templateId").GetString());
+    }
+
+    [Fact]
+    public async Task A_message_that_makes_two_jobs_shows_its_one_acknowledgement_on_both()
+    {
+        var clock = new TickingClock(Joy.ReceivedAt);
+        using var factory = CreateFactory(clock);
+        using var client = factory.CreateClient();
+
+        var created = await PostAsync(client, clock, Joy);
+
+        var jobs = created.GetProperty("jobs").EnumerateArray().ToList();
+        Assert.Equal(2, jobs.Count);
+        var references = string.Join(", ", jobs.Select(j => j.GetProperty("reference").GetString()));
+        var ids = new List<Guid>();
+        foreach (var job in jobs)
+        {
+            var outbound = await client.GetFromJsonAsync<JsonElement>($"/api/jobs/{job.GetProperty("jobId").GetGuid()}/outbound");
+            var sent = Assert.Single(outbound.EnumerateArray());
+            Assert.Equal(
+                Meridian.Application.Templates.TenantTemplates.Render("acknowledgement", references),
+                sent.GetProperty("body").GetString());
+            ids.Add(sent.GetProperty("id").GetGuid());
+        }
+
+        Assert.Single(ids.Distinct());
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<MeridianDbContext>();
+        Assert.Equal(1, await db.OutboundMessages.CountAsync());
+        Assert.Equal(2, await db.JobEvents.CountAsync(e => e.Type == EventType.AcknowledgementSent));
+    }
+
+    [Fact]
+    public async Task A_message_stored_without_a_job_is_recovered_at_startup_with_its_acknowledgement()
+    {
+        // A first run stores a message and stops before its jobs are saved (the crash between the two saves).
+        var orphanId = Guid.Empty;
+        using (var first = CreateFactory())
+        {
+            using var scope = first.Services.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<MeridianDbContext>();
+            var message = Meridian.Domain.Messages.Message.Receive(
+                "tenant@example.com", "I can smell gas in the hallway", new DateTime(2026, 1, 16, 19, 15, 0, DateTimeKind.Utc));
+            db.Messages.Add(message);
+            await db.SaveChangesAsync();
+            orphanId = message.Id;
+        }
+
+        // The next start recovers it.
+        using var factory = CreateFactory();
+        using var client = factory.CreateClient();
+
+        var listed = Assert.Single((await client.GetFromJsonAsync<JsonElement>("/api/jobs")).EnumerateArray());
+        Assert.Equal("Unsure", listed.GetProperty("category").GetString());
+        Assert.Equal("Emergency", listed.GetProperty("urgency").GetString());
+        var jobId = listed.GetProperty("id").GetGuid();
+        var outbound = await client.GetFromJsonAsync<JsonElement>($"/api/jobs/{jobId}/outbound");
+        var sent = Assert.Single(outbound.EnumerateArray());
+        Assert.Equal("gas-safety", sent.GetProperty("templateId").GetString());
+        Assert.Equal(
+            Meridian.Application.Templates.TenantTemplates.Render("gas-safety", listed.GetProperty("reference").GetString()!),
+            sent.GetProperty("body").GetString());
+
+        using var check = factory.Services.CreateScope();
+        var checkDb = check.ServiceProvider.GetRequiredService<MeridianDbContext>();
+        var job = await checkDb.Jobs.Include(j => j.Messages).SingleAsync();
+        Assert.Equal(orphanId, Assert.Single(job.Messages).Id);
+    }
+
+    [Fact]
+    public async Task Outbound_for_an_unknown_job_is_404()
+    {
+        using var factory = CreateFactory();
+        using var client = factory.CreateClient();
+
+        var response = await client.GetAsync($"/api/jobs/{Guid.NewGuid()}/outbound");
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
+    }
+
     [Fact]
     public async Task Unknown_api_route_is_404_not_the_spa()
     {

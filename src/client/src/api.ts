@@ -40,6 +40,19 @@ export interface SubmittedJob {
   outcome: 'created' | 'followUp';
 }
 
+/** A message written to the outbox for a job; sending is simulated in the first version. */
+export interface OutboundMessage {
+  id: string;
+  jobId: string;
+  channel: string;
+  recipient: string;
+  /** The fixed template the body came from, e.g. "acknowledgement" or "gas-safety". */
+  templateId: string;
+  body: string;
+  status: 'Simulated';
+  createdAtUtc: string;
+}
+
 export interface SubmitMessageResponse {
   messageId: string;
   /** Every job the message made or was attached to. */
@@ -76,6 +89,14 @@ export async function listJobs(): Promise<JobListItem[]> {
     throw new ApiError(await readProblem(response));
   }
   return (await response.json()) as JobListItem[];
+}
+
+export async function listOutbound(jobId: string): Promise<OutboundMessage[]> {
+  const response = await fetch(`/api/jobs/${encodeURIComponent(jobId)}/outbound`);
+  if (!response.ok) {
+    throw new ApiError(await readProblem(response));
+  }
+  return (await response.json()) as OutboundMessage[];
 }
 
 export async function submitMessage(sender: string, text: string): Promise<SubmitMessageResponse> {

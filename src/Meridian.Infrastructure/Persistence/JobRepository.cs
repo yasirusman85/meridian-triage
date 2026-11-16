@@ -61,6 +61,25 @@ internal sealed class JobRepository : IJobRepository
         return jobs.Where(j => j.CreatedAtUtc >= openedSinceUtc).ToList();
     }
 
+    public async Task<IReadOnlyList<Message>> ListMessagesWithoutJobsAsync(
+        DateTime receivedBeforeUtc,
+        CancellationToken cancellationToken)
+    {
+        var messages = await _db.Messages
+            .Where(m => !_db.Jobs.Any(j => j.Messages.Any(x => x.Id == m.Id)))
+            .ToListAsync(cancellationToken);
+
+        // Times are compared in memory, as above.
+        return messages
+            .Where(m => m.ReceivedAtUtc < receivedBeforeUtc)
+            .OrderBy(m => m.ReceivedAtUtc)
+            .ThenBy(m => m.Id)
+            .ToList();
+    }
+
+    public Task<bool> MessageHasJobsAsync(Guid messageId, CancellationToken cancellationToken) =>
+        _db.Jobs.AnyAsync(j => j.Messages.Any(m => m.Id == messageId), cancellationToken);
+
     public async Task<IReadOnlyList<Job>> ListAsync(CancellationToken cancellationToken) =>
         await _db.Jobs
             .AsNoTracking()

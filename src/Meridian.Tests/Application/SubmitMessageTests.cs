@@ -1,5 +1,6 @@
 using Meridian.Application.Abstractions;
 using Meridian.Application.Messages;
+using Meridian.Application.Outbox;
 using Meridian.Application.Triage;
 using Meridian.Domain.Jobs;
 using Meridian.Domain.Messages;
@@ -82,7 +83,7 @@ public class SubmitMessageTests
             executionsWhenCalled = uow.Executions;
             messagesWhenCalled = jobs.Messages.Count;
         };
-        var submit = new SubmitMessage(jobs, new FakePropertyRepository(), uow, clock, new PrepareJob(model));
+        var submit = new SubmitMessage(jobs, new FakePropertyRepository(), uow, clock, new PrepareJob(model), new AcknowledgeTenant(new FakeOutbox()));
 
         var result = await submit.ExecuteAsync(new SubmitMessageCommand("tenant@example.com", "Boiler broken"), default);
 
@@ -93,7 +94,8 @@ public class SubmitMessageTests
         Assert.Equal(job.Id, Assert.Single(result.Jobs).JobId);
         Assert.Equal(Category.Unsure, job.Category);
         Assert.Null(job.PropertyId);
-        Assert.Equal(EventType.ModelPreparationFailed, job.Events[^1].Type);
+        Assert.Equal(EventType.ModelPreparationFailed, job.Events[^2].Type);
+        Assert.Equal(EventType.AcknowledgementSent, job.Events[^1].Type);
     }
 
     private static (SubmitMessage Submit, FakeJobRepository Jobs, FakeUnitOfWork Uow) Create()
@@ -102,7 +104,7 @@ public class SubmitMessageTests
         var uow = new FakeUnitOfWork();
         var clock = new FakeClock(Now);
         var prepare = new PrepareJob(new FakeTriageModel());
-        return (new SubmitMessage(jobs, new FakePropertyRepository(), uow, clock, prepare), jobs, uow);
+        return (new SubmitMessage(jobs, new FakePropertyRepository(), uow, clock, prepare, new AcknowledgeTenant(new FakeOutbox())), jobs, uow);
     }
 
     internal sealed class FakeJobRepository : IJobRepository
@@ -129,6 +131,15 @@ public class SubmitMessageTests
             Task.FromResult<IReadOnlyList<Job>>(Added
                 .Where(j => j.PropertyId is { } id && propertyIds.Contains(id) && j.IsOpen && j.CreatedAtUtc >= openedSinceUtc)
                 .ToList());
+
+        public Task<IReadOnlyList<Message>> ListMessagesWithoutJobsAsync(DateTime receivedBeforeUtc, CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<Message>>(Messages
+                .Where(m => m.ReceivedAtUtc < receivedBeforeUtc && !Added.Any(j => j.Messages.Any(x => x.Id == m.Id)))
+                .OrderBy(m => m.ReceivedAtUtc)
+                .ToList());
+
+        public Task<bool> MessageHasJobsAsync(Guid messageId, CancellationToken cancellationToken) =>
+            Task.FromResult(Added.Any(j => j.Messages.Any(m => m.Id == messageId)));
 
         public Task<IReadOnlyList<Job>> ListAsync(CancellationToken cancellationToken) =>
             Task.FromResult<IReadOnlyList<Job>>(Added);

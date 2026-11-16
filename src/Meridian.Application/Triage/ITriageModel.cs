@@ -56,4 +56,7 @@ public static class TriageFailureReasons
     public const string NoRecordedResponse = "no-recorded-response";
     public const string InvalidOutput = "invalid-output";
     public const string Cancelled = "cancelled";
+
+    /// <summary>Intake stopped before the message's jobs were saved; recovery made the job without asking the model.</summary>
+    public const string Interrupted = "interrupted";
 }

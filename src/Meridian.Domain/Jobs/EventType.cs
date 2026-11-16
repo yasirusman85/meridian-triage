@@ -23,4 +23,7 @@ public enum EventType
 
     /// <summary>A later message was attached to this open job as a follow-up (R8, AD-13); it may raise urgency.</summary>
     FollowUpAttached,
+
+    /// <summary>A fixed acknowledgement (or the gas safety message) was written to the outbox for the tenant (R16).</summary>
+    AcknowledgementSent,
 }

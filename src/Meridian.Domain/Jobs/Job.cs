@@ -274,6 +274,32 @@ public sealed class Job
     }
 
     /// <summary>
+    /// Records that a tenant acknowledgement was written to the outbox (R16, AD-8): appends
+    /// <see cref="EventType.AcknowledgementSent"/> with the template id and the outbound message id.
+    /// </summary>
+    /// <param name="outboundId">The id of the stored outbound message.</param>
+    /// <param name="templateId">The fixed template it was rendered from, e.g. <c>acknowledgement</c> or <c>gas-safety</c>.</param>
+    public void RecordAcknowledgement(Guid outboundId, string templateId, DateTime nowUtc)
+    {
+        if (outboundId == Guid.Empty)
+        {
+            throw new ArgumentException("An outbound message id is required.", nameof(outboundId));
+        }
+
+        if (string.IsNullOrWhiteSpace(templateId))
+        {
+            throw new ArgumentException("A template id is required.", nameof(templateId));
+        }
+
+        Guards.RequireUtc(nowUtc, nameof(nowUtc));
+        Append(
+            EventType.AcknowledgementSent,
+            nowUtc,
+            JobEvent.SystemActor,
+            new { templateId, outboundId });
+    }
+
+    /// <summary>
     /// The only way urgency goes down (AD-4): a person sets the urgency to <paramref name="level"/>, higher or lower,
     /// and <see cref="EventType.UrgencySetByPerson"/> records who, from what, to what and why. Called from the review
     /// use case only.

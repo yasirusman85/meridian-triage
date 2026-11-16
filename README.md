@@ -44,8 +44,9 @@ Everything the code trusts from a model goes through one validator; invalid outp
 - **Intake:** a pasted message is stored unchanged and gets a `MER-` job reference.
 - **Emergency rules:** gas, carbon monoxide, water through a ceiling, and no heating from October to April (UK time) make a job an emergency before the model is called.
 - **AI preparation:** category, urgency, English summary and explanation, through the model interface, with a 20-second timeout, one retry and a fall-back to Unsure.
+- **Splitting and follow-ups:** one email with several problems becomes several jobs, each matched to a known property; a repeat message about an open job at the same property is attached to it as a follow-up.
 - **Urgency only goes up** unless a person lowers it, with the reason recorded.
-- **Tenant acknowledgement** with the job reference, and a fixed gas safety message (National Gas Emergency, 0800 111 999) for gas reports. Sending is simulated and visible on the job.
+- **Tenant acknowledgement** for every message, quoting the reference of each job it made or joined, and a fixed gas safety message (National Gas Emergency, 0800 111 999) for gas reports. Sending is simulated and visible on the job. A message stored without a job (the app stopped mid-intake) still gets one, with its acknowledgement, at the next start.
 - **Event log:** every step of every job, including the model's raw output, model id and prompt version.
 - **Review queue page** in React, ordered by urgency then age.
 - **Eval set:** 52 labelled cases in [`eval/`](eval/README.md).
@@ -54,7 +55,6 @@ Everything the code trusts from a model goes through one validator; invalid outp
 
 ## Still in progress
 
-- Splitting one email into several jobs, and grouping repeat messages into one job.
 - The built-in contractor map.
 - Approve, edit and reject in the queue.
 - A job history page.

@@ -1,4 +1,5 @@
 using Meridian.Domain.Jobs;
+using Meridian.Domain.Outbox;
 
 namespace Meridian.Web.Api;
 
@@ -25,3 +26,14 @@ public sealed record JobListItemDto(
     Guid? PropertyId,
     string? PropertyName,
     int FollowUpCount);
+
+/// <summary>A message written to the outbox for a job (AD-8); <c>status</c> is <c>Simulated</c> in the first version.</summary>
+public sealed record OutboundMessageDto(
+    Guid Id,
+    Guid JobId,
+    string Channel,
+    string Recipient,
+    string TemplateId,
+    string Body,
+    OutboundStatus Status,
+    DateTime CreatedAtUtc);

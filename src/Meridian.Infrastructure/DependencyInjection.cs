@@ -1,5 +1,7 @@
 using Meridian.Application.Abstractions;
+using Meridian.Application.Outbox;
 using Meridian.Application.Triage;
+using Meridian.Infrastructure.Outbox;
 using Meridian.Infrastructure.Persistence;
 using Meridian.Infrastructure.Triage;
 using Microsoft.EntityFrameworkCore;
@@ -36,6 +38,7 @@ public static class DependencyInjection
         services.AddScoped<IJobRepository, JobRepository>();
         services.AddScoped<IPropertyRepository, PropertyRepository>();
         services.AddScoped<IUnitOfWork, EfUnitOfWork>();
+        services.AddScoped<IOutbox, SimulatedOutbox>();
         services.AddSingleton<IClock, SystemClock>();
 
         // AD-1: the recorded-response stub is the default; OpenRouter only when the key is set (or Triage:Provider says so).

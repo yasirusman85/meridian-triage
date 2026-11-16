@@ -1,5 +1,6 @@
 using Meridian.Domain.Jobs;
 using Meridian.Domain.Messages;
+using Meridian.Domain.Outbox;
 using Meridian.Domain.Properties;
 using Microsoft.EntityFrameworkCore;
 
@@ -21,6 +22,8 @@ public sealed class MeridianDbContext : DbContext
     public DbSet<Building> Buildings => Set<Building>();
 
     public DbSet<Property> Properties => Set<Property>();
+
+    public DbSet<OutboundMessage> OutboundMessages => Set<OutboundMessage>();
 
     public DbSet<JobNumberSequence> JobNumberSequences => Set<JobNumberSequence>();
 

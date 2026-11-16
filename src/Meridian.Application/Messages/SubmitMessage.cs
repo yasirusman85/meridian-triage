@@ -1,4 +1,5 @@
 using Meridian.Application.Abstractions;
+using Meridian.Application.Outbox;
 using Meridian.Application.Triage;
 using Meridian.Domain.Jobs;
 using Meridian.Domain.Messages;
@@ -38,6 +39,9 @@ public sealed record SubmitMessageResult(
 /// the message makes one Unsure job, and a valid answer with no issues makes one Unsure job flagged for a person.
 /// Every job the message touches gets the rule result (<c>RulesApplied</c>), so a rule emergency applies whatever
 /// the model does (RULE-11).
+/// In the same second unit of work the sender gets one fixed acknowledgement quoting every job reference the message
+/// made or matched (<see cref="AcknowledgeTenant"/>, R16). A crash between the two saves leaves a message with no
+/// job; <see cref="RecoverOrphanMessages"/> turns it into one Unsure job and acknowledges it (RULE-11).
 /// </summary>
 public sealed class SubmitMessage
 {
@@ -46,19 +50,22 @@ public sealed class SubmitMessage
     private readonly IUnitOfWork _unitOfWork;
     private readonly IClock _clock;
     private readonly PrepareJob _prepareJob;
+    private readonly AcknowledgeTenant _acknowledge;
 
     public SubmitMessage(
         IJobRepository jobs,
         IPropertyRepository properties,
         IUnitOfWork unitOfWork,
         IClock clock,
-        PrepareJob prepareJob)
+        PrepareJob prepareJob,
+        AcknowledgeTenant acknowledge)
     {
         _jobs = jobs;
         _properties = properties;
         _unitOfWork = unitOfWork;
         _clock = clock;
         _prepareJob = prepareJob;
+        _acknowledge = acknowledge;
     }
 
     public static IReadOnlyDictionary<string, string[]> Validate(SubmitMessageCommand command)
@@ -102,7 +109,7 @@ public sealed class SubmitMessage
         // 3. Model preparation; never throws for a model problem.
         var preparation = await _prepareJob.AskAsync(message, cancellationToken);
 
-        // 4. Jobs and follow-ups. Saved even if the caller has gone away, so the stored message always gets its jobs.
+        // 4. Jobs, follow-ups and the tenant's acknowledgement (R16). Saved even if the caller has gone away, so the stored message always gets its jobs.
         var jobs = await _unitOfWork.ExecuteAsync(
             ct => MakeJobsAsync(message, hits, preparation, ct),
             CancellationToken.None);
@@ -121,6 +128,7 @@ public sealed class SubmitMessage
         {
             var failed = await NewJobAsync(message, hits, null, cancellationToken);
             PrepareJob.RecordFailure(failed, preparation, _clock.UtcNow);
+            _acknowledge.Send(message, hits, new[] { failed }, _clock.UtcNow);
             return new[] { new SubmittedJob(failed.Id, failed.Reference, false) };
         }
 
@@ -128,6 +136,7 @@ public sealed class SubmitMessage
         {
             var flagged = await NewJobAsync(message, hits, null, cancellationToken);
             PrepareJob.RecordNotMaintenance(flagged, preparation, _clock.UtcNow);
+            _acknowledge.Send(message, hits, new[] { flagged }, _clock.UtcNow);
             return new[] { new SubmittedJob(flagged.Id, flagged.Reference, false) };
         }
 
@@ -142,6 +151,7 @@ public sealed class SubmitMessage
                 cancellationToken);
 
         var result = new List<SubmittedJob>();
+        var created = new List<Job>();
         var followUps = new Dictionary<Job, Urgency>();
         for (var index = 0; index < response.Issues.Count; index++)
         {
@@ -162,6 +172,7 @@ public sealed class SubmitMessage
 
             var job = await NewJobAsync(message, hits, property.Property?.Id, cancellationToken);
             PrepareJob.RecordIssue(job, preparation, index, property, _clock.UtcNow);
+            created.Add(job);
             result.Add(new SubmittedJob(job.Id, job.Reference, false));
         }
 
@@ -172,7 +183,10 @@ public sealed class SubmitMessage
         }
 
         // Two issues attached to the same job are one follow-up.
-        return result.DistinctBy(j => j.JobId).ToList();
+        var touched = result.DistinctBy(j => j.JobId).ToList();
+        var jobsById = followUps.Keys.Concat(created).ToDictionary(j => j.Id);
+        _acknowledge.Send(message, hits, touched.Select(j => jobsById[j.JobId]).ToList(), _clock.UtcNow);
+        return touched;
     }
 
     private async Task<Job> NewJobAsync(Message message, IReadOnlyList<RuleHit> hits, Guid? propertyId, CancellationToken cancellationToken)

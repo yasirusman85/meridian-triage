@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Meridian.Application.Messages;
+using Meridian.Application.Outbox;
 using Meridian.Application.Triage;
 using Meridian.Domain.Jobs;
 using Meridian.Infrastructure.Triage;
@@ -207,8 +208,8 @@ public class SubmitMessageSplittingTests
         Assert.Equal(Urgency.Emergency, job.Urgency);
         var types = job.Events.Select(e => e.Type).ToList();
         Assert.Equal(
-            new[] { EventType.FollowUpAttached, EventType.UrgencyRaised, EventType.RulesApplied },
-            types.TakeLast(3));
+            new[] { EventType.FollowUpAttached, EventType.UrgencyRaised, EventType.RulesApplied, EventType.AcknowledgementSent },
+            types.TakeLast(4));
     }
 
     [Fact]
@@ -302,7 +303,8 @@ public class SubmitMessageSplittingTests
         var failed = pipeline.Jobs.Added[1];
         Assert.Equal(Category.Unsure, failed.Category);
         Assert.Null(failed.PropertyId);
-        Assert.Equal(EventType.ModelPreparationFailed, failed.Events[^1].Type);
+        Assert.Equal(EventType.ModelPreparationFailed, failed.Events[^2].Type);
+        Assert.Equal(EventType.AcknowledgementSent, failed.Events[^1].Type);
     }
 
     internal static string Issue(string category, string urgency, string propertyText, string confidence = "high") =>
@@ -357,7 +359,7 @@ public class SubmitMessageSplittingTests
         public Pipeline(ITriageModel model, DateTime now)
         {
             Clock = new FakeClock(now);
-            _submit = new SubmitMessage(Jobs, new FakePropertyRepository(), new FakeUnitOfWork(), Clock, new PrepareJob(model));
+            _submit = new SubmitMessage(Jobs, new FakePropertyRepository(), new FakeUnitOfWork(), Clock, new PrepareJob(model), new AcknowledgeTenant(new FakeOutbox()));
         }
 
         public FakeJobRepository Jobs { get; } = new();

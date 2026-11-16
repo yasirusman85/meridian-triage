@@ -1,5 +1,6 @@
 using System.Text.Json.Serialization;
 using Meridian.Application.Messages;
+using Meridian.Application.Outbox;
 using Meridian.Application.Queue;
 using Meridian.Application.Triage;
 using Meridian.Infrastructure;
@@ -18,10 +19,20 @@ builder.Services.AddMeridianInfrastructure();
 builder.Services.AddScoped<PrepareJob>();
 builder.Services.AddScoped<SubmitMessage>();
 builder.Services.AddScoped<ListQueue>();
+builder.Services.AddScoped<AcknowledgeTenant>();
+builder.Services.AddScoped<ListOutbound>();
+builder.Services.AddScoped<RecoverOrphanMessages>();
 
 var app = builder.Build();
 
 await app.Services.MigrateMeridianDatabaseAsync();
+
+// RULE-11: a message stored by an intake that stopped before its jobs were saved still gets a job and its
+// acknowledgement. Nothing is in flight before the app serves requests, so no minimum age.
+await using (var scope = app.Services.CreateAsyncScope())
+{
+    await scope.ServiceProvider.GetRequiredService<RecoverOrphanMessages>().ExecuteAsync(TimeSpan.Zero, CancellationToken.None);
+}
 
 app.UseExceptionHandler();
 app.UseStatusCodePages();

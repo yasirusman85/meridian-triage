@@ -59,17 +59,24 @@ Read the current `SubmitMessage`, `Job`, `MeridianDbContext`, migrations and `Ap
 ## Tasks & Acceptance
 
 **Execution:**
-- [ ] Application: port and templates -- AD-7, AD-8
-- [ ] Domain: entity, event -- AD-5
-- [ ] Infrastructure: adapter, mapping, migration -- persistence
-- [ ] Application: send after rules in `SubmitMessage` -- R16
-- [ ] Web and client: show outbound per job -- visibility
-- [ ] Tests: matrix rows -- I/O matrix
+- [x] Application: port and templates -- AD-7, AD-8
+- [x] Domain: entity, event -- AD-5
+- [x] Infrastructure: adapter, mapping, migration -- persistence
+- [x] Application: send after rules in `SubmitMessage` -- R16
+- [x] Web and client: show outbound per job -- visibility
+- [x] Tests: matrix rows -- I/O matrix
 
 **Acceptance Criteria:**
 - Given any posted message, when its job's outbound messages are read, then exactly one tenant message exists and its body equals a template with only the reference filled in.
 
 ## Implementation Notes
+
+- The port's input is `OutboundRequest(JobId, Channel, Recipient, TemplateId, Body)` in `IOutbox.cs`; the stored row is the Domain entity `OutboundMessage` (named once, to avoid two types called `OutboundMessage`).
+- The send step is a small application class, `Outbox/AcknowledgeTenant`, so `SubmitMessage` changes only by one constructor dependency and one call after `_jobs.Add` inside the first unit of work. `SimulatedOutbox.Send` only tracks the row, so it commits with the message, job and rules.
+- Template choice reads `job.RuleIds`: `gas-safety` when `gas` or `carbon-monoxide` has fired on the job, else `acknowledgement`. For a future follow-up on a gas job this means the follow-up gets the gas safety message again, which is the safer reading.
+- Follow-up matching does not exist yet, so "a follow-up gets one too" is covered only by "one per incoming message"; the follow-up story must call `AcknowledgeTenant.Send` with the existing job.
+- `GET /api/jobs/{id}/outbound` returns 404 problem details for an unknown job. The client shows a "Sent to tenant" expander per job that loads on first open.
+- Migration `20261116092202_Outbox` adds only the `OutboundMessages` table (FK to `Jobs`, restrict, index on `JobId, CreatedAtUtc`).
 
 ## Plan Change Log
 
