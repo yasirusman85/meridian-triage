@@ -1,0 +1,23 @@
+# Stories of epic-attendance-and-numbers. Epic ids: R1 = parent R20, R2 = R21, R3 = R24.
+
+[[entry]]
+id = 1
+type = "story"
+title = "Contractors mark jobs attended"
+description = "Approving and sending a job writes a contractor outbound message with a single-job token link; the link page lets the contractor mark it attended; emergencies past their 24-hour window raise a fallback-contractor alert."
+verify = "Sending an approved job shows its contractor link; opening it marks only that job Attended; an emergency not attended within 24 hours shows the fallback alert, with a fake clock."
+covers = ["R1", "R2"]
+after = ["1.6", "2.2"]
+hitl = false
+risk = "medium"
+
+[[entry]]
+id = 2
+type = "story"
+title = "The MD sees how many jobs and how fast"
+description = "Numbers page computed from events only: jobs by category and urgency, time to first human look, time to approval, time to attendance, share of 24-hour and five-day promises met."
+verify = "After running the six seeded messages through to attendance, the numbers page counts and times match the job histories."
+covers = ["R3"]
+after = [1]
+hitl = false
+risk = "low"

@@ -1,0 +1,23 @@
+# Stories of epic-out-of-hours-safety. Epic ids: R1 = parent R16, R2 = R17, R3 = R18, R4 = R19.
+
+[[entry]]
+id = 1
+type = "story"
+title = "Every tenant gets an acknowledgement"
+description = "Outbox port and simulated adapter storing OutboundMessage rows; fixed acknowledgement template with job reference sent on intake; the gas safety message replaces it when a gas rule fired; outbound messages listed on the job."
+verify = "Pasting the Walsh message shows an acknowledgement with its MER reference on the job; a gas message shows the gas safety text with 0800 111 999 instead; no outbound body contains model output."
+covers = ["R1", "R2"]
+after = ["1.3"]
+hitl = false
+risk = "medium"
+
+[[entry]]
+id = 2
+type = "story"
+title = "Emergencies reach Rachel, then the backup"
+description = "Background worker every minute: notify Rachel at once for emergency jobs, the backup after 30 minutes unacknowledged, escalation-failed after a further 30 minutes; staff acknowledge from the queue; every step an event; notifications panel in the UI."
+verify = "With a fake clock, an unacknowledged emergency notifies Rachel, then Dawn at +30 min, then is marked escalation-failed at +60 min; acknowledging stops escalation; all steps appear in the job history."
+covers = ["R3", "R4"]
+after = [1, "1.6"]
+hitl = false
+risk = "high"

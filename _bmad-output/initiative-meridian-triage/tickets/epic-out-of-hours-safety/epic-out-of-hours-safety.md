@@ -4,9 +4,9 @@ title: "Tenants are answered and emergencies reach a person at any hour"
 parent: initiative-meridian-triage
 covers: [R16, R17, R18, R19]
 sources: []
-companions: []
+companions: [_bmad-output/initiative-meridian-triage/architecture-meridian-triage/architecture-meridian-triage.md]
 after: []
-refined: false
+refined: true
 risk: medium
 ---
 
@@ -19,6 +19,17 @@ Every message gets a fixed-template acknowledgement with its job reference, gas 
 ## Outcome
 
 No tenant goes unanswered and no emergency waits for someone to open the inbox.
+
+## Requirements
+
+- R1 (parent R16): Every message gets an acknowledgement with a job reference within 5 minutes; a gas message gets the fixed gas safety message instead.
+- R2 (parent R17): Every text a tenant receives comes from a fixed template.
+- R3 (parent R18): An emergency notifies Rachel at once and the backup if she has not acknowledged within 30 minutes.
+- R4 (parent R19): An emergency acknowledged by neither is marked escalation-failed and held at the top of the queue; notifications are visible in the product.
+
+## Constraints
+
+- prd RULE-5, RULE-6, RULE-8; architecture AD-6, AD-7, AD-8, AD-9 bind this epic.
 
 ## Done when
 
@@ -38,3 +49,4 @@ No tenant goes unanswered and no emergency waits for someone to open the inbox.
 ## Notes
 
 - Decision: 2026-11-11, user approved the three-epic split (triage core, out-of-hours safety, attendance and numbers).
+- Decision: 2026-11-16, refined from the parent's lines alone (user's defaults: no stops).
