@@ -58,6 +58,14 @@ namespace Meridian.Infrastructure.Persistence.Migrations
                         .HasMaxLength(32)
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("_ruleIds")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue("")
+                        .HasColumnName("RuleIds");
+
                     b.HasKey("Id");
 
                     b.HasIndex("Reference")

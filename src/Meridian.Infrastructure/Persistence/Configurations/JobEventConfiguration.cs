@@ -13,7 +13,7 @@ internal sealed class JobEventConfiguration : IEntityTypeConfiguration<JobEvent>
         builder.Property(e => e.Id).ValueGeneratedNever();
         builder.Property(e => e.Type).IsRequired().HasMaxLength(64);
         builder.Property(e => e.OccurredAtUtc).IsRequired();
-        builder.Property(e => e.Actor).IsRequired().HasMaxLength(64);
+        builder.Property(e => e.Actor).IsRequired().HasMaxLength(JobEvent.MaxActorLength);
         builder.Property(e => e.PayloadJson).IsRequired();
         builder.HasIndex(e => new { e.JobId, e.OccurredAtUtc });
     }

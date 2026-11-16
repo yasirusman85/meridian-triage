@@ -5,6 +5,9 @@ public sealed class JobEvent
 {
     public const string SystemActor = "system";
 
+    /// <summary>Length of the stored actor column.</summary>
+    public const int MaxActorLength = 64;
+
     private JobEvent()
     {
         Actor = string.Empty;

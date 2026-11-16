@@ -126,7 +126,14 @@ export function QueuePage() {
                   <td>{job.reference}</td>
                   <td>{formatReceived(job.receivedAtUtc)}</td>
                   <td>{job.status}</td>
-                  <td className={`urgency-${job.urgency.toLowerCase()}`}>{job.urgency}</td>
+                  <td>
+                    <span className={`urgency-${job.urgency.toLowerCase()}`}>{job.urgency}</span>
+                    {job.ruleIds.map((rule) => (
+                      <span key={rule} className="rule-label" title="Set by a fixed emergency rule, not the AI">
+                        rule: {rule}
+                      </span>
+                    ))}
+                  </td>
                   <td>{job.category}</td>
                   <td className="summary">
                     {job.summaryEn ? (

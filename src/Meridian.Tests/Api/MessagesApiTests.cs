@@ -1,9 +1,11 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
+using Meridian.Application.Abstractions;
 using Meridian.Domain.Jobs;
 using Meridian.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -107,6 +109,56 @@ public sealed class MessagesApiTests : IDisposable
         }
     }
 
+    [Fact]
+    public async Task The_Walsh_message_received_on_a_Friday_in_January_is_Emergency_with_its_rule_in_the_queue()
+    {
+        const string walshText =
+            "URGENT URGENT no hot water and no heating at all since this morning, I have a baby in the house, this is unacceptable, I have called three times. 14b Alder Court. Please someone call me TONIGHT.";
+        var clock = new TickingClock(new DateTime(2026, 1, 16, 19, 15, 0, DateTimeKind.Utc));
+        using var factory = CreateFactory(clock);
+        using var client = factory.CreateClient();
+
+        var response = await client.PostAsJsonAsync("/api/messages", new { sender = "m.walsh@example.com", text = walshText });
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        var jobId = (await response.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("jobId").GetGuid();
+        var listed = Assert.Single((await client.GetFromJsonAsync<JsonElement>("/api/jobs")).EnumerateArray());
+        Assert.Equal("Emergency", listed.GetProperty("urgency").GetString());
+        Assert.Equal(
+            new[] { "no-heating-winter" },
+            listed.GetProperty("ruleIds").EnumerateArray().Select(r => r.GetString()));
+
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<MeridianDbContext>();
+        var events = (await db.JobEvents.Where(e => e.JobId == jobId).ToListAsync())
+            .OrderBy(e => e.OccurredAtUtc)
+            .ToList();
+        var rules = events.FindIndex(e => e.Type == EventType.RulesApplied);
+        var outcome = events.FindIndex(e => e.Type is EventType.ModelPrepared or EventType.ModelPreparationFailed);
+        Assert.True(rules >= 0 && outcome > rules, string.Join(", ", events.Select(e => e.Type)));
+        using (var applied = JsonDocument.Parse(events[rules].PayloadJson))
+        {
+            var rule = Assert.Single(applied.RootElement.GetProperty("rules").EnumerateArray());
+            Assert.Equal("no-heating-winter", rule.GetProperty("id").GetString());
+            Assert.Equal("no hot water", rule.GetProperty("matchedPhrase").GetString());
+        }
+
+        var job = await db.Jobs.SingleAsync(j => j.Id == jobId);
+        Assert.Equal(new[] { "no-heating-winter" }, job.RuleIds);
+    }
+
+    [Fact]
+    public async Task A_job_with_no_rule_hit_lists_an_empty_rule_list()
+    {
+        using var factory = CreateFactory();
+        using var client = factory.CreateClient();
+
+        await client.PostAsJsonAsync("/api/messages", new { sender = "tenant@example.com", text = "Tap dripping" });
+
+        var listed = Assert.Single((await client.GetFromJsonAsync<JsonElement>("/api/jobs")).EnumerateArray());
+        Assert.Empty(listed.GetProperty("ruleIds").EnumerateArray());
+    }
+
     [Theory]
     [InlineData("a.nowak@example.com", "")]
     [InlineData("a.nowak@example.com", "   \n ")]
@@ -196,7 +248,34 @@ public sealed class MessagesApiTests : IDisposable
         }
     }
 
-    private WebApplicationFactory<Program> CreateFactory() =>
+    private WebApplicationFactory<Program> CreateFactory(IClock? clock = null) =>
         new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
-            builder.UseSetting("ConnectionStrings:Meridian", $"Data Source={_dbPath}"));
+        {
+            builder.UseSetting("ConnectionStrings:Meridian", $"Data Source={_dbPath}");
+            if (clock is not null)
+            {
+                builder.ConfigureTestServices(services => services.AddSingleton(clock));
+            }
+        });
+
+    /// <summary>A fixed start time that moves on a millisecond per read, so events of different saves sort apart.</summary>
+    private sealed class TickingClock : IClock
+    {
+        private DateTime _next;
+
+        public TickingClock(DateTime start) => _next = start;
+
+        public DateTime UtcNow
+        {
+            get
+            {
+                lock (this)
+                {
+                    var now = _next;
+                    _next = _next.AddMilliseconds(1);
+                    return now;
+                }
+            }
+        }
+    }
 }

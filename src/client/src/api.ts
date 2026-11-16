@@ -23,6 +23,8 @@ export interface JobListItem {
   explanation: string | null;
   /** English summary from the AI; null when it was not prepared. */
   summaryEn: string | null;
+  /** Ids of the emergency rules that fired on the job's messages, e.g. "gas"; empty when none fired. */
+  ruleIds: string[];
 }
 
 export interface SubmitMessageResponse {

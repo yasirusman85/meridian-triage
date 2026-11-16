@@ -3,14 +3,14 @@ title: 'Emergency rules and urgency only going up'
 type: feature
 ticket: '3'
 created: '2026-11-16'
-status: in-progress
+status: built
 baseline_revision: '8e7f11a796d767e3fb07a287c799ef86ec9964e2'
 route: full
 route_source: auto
 risk: high
-review: ''
-review_source: ''
-lenses_ran: []
+review: quick
+review_source: pinned
+lenses_ran: [inline]
 review_loop_iteration: 0
 context:
   - '{project-root}/_bmad-output/initiative-meridian-triage/architecture-meridian-triage/architecture-meridian-triage.md'
@@ -62,12 +62,12 @@ context:
 ## Tasks & Acceptance
 
 **Execution:**
-- [ ] `src/Meridian.Domain/Rules/` -- rules and phrase data -- R4
-- [ ] `src/Meridian.Domain/Jobs/` -- `ApplyRules`, `SetUrgencyByPerson`, events, `RuleIds` -- R5, R9, AD-4
-- [ ] `src/Meridian.Application/` -- rules before model in the pipeline -- AD-3
-- [ ] `src/Meridian.Infrastructure/` -- mapping and migration -- persistence
-- [ ] `src/Meridian.Web/`, `src/client/` -- show fired rules -- R11 seed
-- [ ] `src/Meridian.Tests/` -- matrix rows and eval-case theory -- I/O matrix
+- [x] `src/Meridian.Domain/Rules/` -- rules and phrase data -- R4
+- [x] `src/Meridian.Domain/Jobs/` -- `ApplyRules`, `SetUrgencyByPerson`, events, `RuleIds` -- R5, R9, AD-4
+- [x] `src/Meridian.Application/` -- rules before model in the pipeline -- AD-3
+- [x] `src/Meridian.Infrastructure/` -- mapping and migration -- persistence
+- [x] `src/Meridian.Web/`, `src/client/` -- show fired rules -- R11 seed
+- [x] `src/Meridian.Tests/` -- matrix rows and eval-case theory -- I/O matrix
 
 **Acceptance Criteria:**
 - Given the Walsh message received on a Friday in January, when it is pasted, then its job is Emergency with rule `no-heating-winter` shown in the queue, whatever the stub answers.
@@ -75,9 +75,26 @@ context:
 
 ## Implementation Notes
 
+- Rules are regular-expression phrase lists in `Rules/EmergencyPhrases.cs`, matched case-insensitively on the text as received, so `RuleHit.MatchedPhrase` is the tenant's own span. Proximity patterns (water near ceiling, heating near "not/stopped/cold") do not cross `.`, `!`, `?` or a new line, which keeps "we've got hot water. Didn't do this before." (real-06) from firing. All quantifiers are bounded; a 70 000-character message evaluates in milliseconds.
+- Rule ids: `gas`, `carbon-monoxide`, `water-through-ceiling`, `no-heating-winter` (`EmergencyRuleIds`). At most one hit per rule, in that order. "No hot water" alone also fires the winter rule (Intent: "no heating or hot water"). A light fitting counts as a ceiling ("dripping from the light fitting upstairs").
+- Urdu gas is matched in Urdu script (گیس, Arabic or Farsi kaf/yeh) and in Latin script (`gas`, `gais`); the eval set has only the script form (var-05).
+- Winter window: `TimeZoneInfo` `Europe/London` (or `GMT Standard Time`); if neither exists, a built-in UK BST rule. Tests cover the BST edges on 30 September and 30 April.
+- `Job.ApplyRules` always appends `RulesApplied` (`{"rules":[{"id","matchedPhrase"}]}`), merges fired ids into `RuleIds` (comma-separated column `RuleIds`, backed by field `_ruleIds`, default `''`), then calls `RaiseUrgency(Emergency, "rule:<first id>")`. It may be called again for later messages (follow-ups, story 4); ids are de-duplicated. Unknown rule ids are refused, so a comma can never enter the column.
+- `Job.SetUrgencyByPerson(level, actor, reason, nowUtc)` sets any level, up or down, and appends `UrgencySetByPerson` with the person as event actor and `{from,to,reason}`. Reason and actor are required; actor may not be `system` and is at most 64 characters (`JobEvent.MaxActorLength`, now also used by the EF mapping). Fired `RuleIds` stay on the job after a person lowers it. No caller yet (review story).
+- `SubmitMessage` evaluates the rules inside the first unit of work, right after `Job.CreateFromMessage`, so the rule result is committed before `PrepareJob` calls the model; `PrepareJob` is unchanged.
+- Event order: in the job's event list `RulesApplied` always precedes the model outcome. In the database the two are in different saves, so with the real clock they get different timestamps; same-save ties remain the deferred sequence-number item (story 1.7).
+- The eval theory runs every `eval/cases/*.json` with an expected Emergency except the AI-only ones (`var-15`, `var-30`, `var-31`, `var-38`, and `real-04`, whose notes say a keyword rule may not fire): 17 cases, all hit. A second theory asserts no hit on the 30 cases with no expected Emergency (no over-escalation by rule on the set).
+- Migration `EmergencyRules` generated with `dotnet-ef` 8.0.34.
+
 ## Plan Change Log
 
 ## Review Triage Log
+
+**Pass 1 (inline, 2026-11-16).** high 0, medium 0, low 1. Build, 232 tests and client build pass; the eval-set theory finds a rule hit on all 17 rule-catchable emergencies and none on 30 non-emergencies.
+
+| Verdict | Route | Finding | Evidence / action |
+|---|---|---|---|
+| low | defer | Non-English gas phrases beyond the eval cases are unverified by a native speaker | Recorded for AI-DESIGN/README limits; over-escalation is tolerable, and the AI can still raise. |
 
 ## Verification
 

@@ -16,4 +16,5 @@ public sealed record JobListItemDto(
     string Sender,
     string Preview,
     string? Explanation,
-    string? SummaryEn);
+    string? SummaryEn,
+    IReadOnlyList<string> RuleIds);

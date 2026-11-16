@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Meridian.Domain.Messages;
+using Meridian.Domain.Rules;
 
 namespace Meridian.Domain.Jobs;
 
@@ -11,6 +12,9 @@ public sealed class Job
 {
     private readonly List<Message> _messages = new();
     private readonly List<JobEvent> _events = new();
+
+    /// <summary>Fired rule ids, comma-separated, in the order they first fired; stored as the <c>RuleIds</c> column.</summary>
+    private string _ruleIds = string.Empty;
 
     private Job()
     {
@@ -41,6 +45,10 @@ public sealed class Job
 
     /// <summary>Language of the tenant's message as reported by the model (e.g. <c>pl</c>). Null until prepared.</summary>
     public string? Language { get; private set; }
+
+    /// <summary>Ids of the emergency rules that fired on this job's messages (see <see cref="EmergencyRuleIds"/>), for the job view.</summary>
+    public IReadOnlyList<string> RuleIds =>
+        _ruleIds.Length == 0 ? Array.Empty<string>() : _ruleIds.Split(RuleIdSeparator);
 
     public IReadOnlyList<Message> Messages => _messages;
 
@@ -161,6 +169,79 @@ public sealed class Job
     }
 
     /// <summary>
+    /// Records the emergency rules' result for a message (R4): appends <see cref="EventType.RulesApplied"/> listing
+    /// each rule id and matched phrase (an empty list when none fired), remembers the fired rule ids, and raises the
+    /// job to Emergency with reason <c>rule:&lt;id&gt;</c> of the first hit. Never lowers urgency (AD-4).
+    /// </summary>
+    /// <param name="hits">The result of <see cref="EmergencyRules.Evaluate"/>.</param>
+    public void ApplyRules(IReadOnlyList<RuleHit> hits, DateTime nowUtc)
+    {
+        ArgumentNullException.ThrowIfNull(hits);
+        Guards.RequireUtc(nowUtc, nameof(nowUtc));
+        foreach (var hit in hits)
+        {
+            if (hit is null || !EmergencyRuleIds.All.Contains(hit.RuleId))
+            {
+                throw new ArgumentException("Unknown emergency rule.", nameof(hits));
+            }
+        }
+
+        Append(
+            EventType.RulesApplied,
+            nowUtc,
+            JobEvent.SystemActor,
+            new { rules = hits.Select(h => new { id = h.RuleId, matchedPhrase = h.MatchedPhrase }) });
+
+        if (hits.Count == 0)
+        {
+            return;
+        }
+
+        var ruleIds = RuleIds.Concat(hits.Select(h => h.RuleId)).Distinct(StringComparer.Ordinal);
+        _ruleIds = string.Join(RuleIdSeparator, ruleIds);
+        RaiseUrgency(Urgency.Emergency, RuleReasonPrefix + hits[0].RuleId, nowUtc);
+    }
+
+    /// <summary>
+    /// The only way urgency goes down (AD-4): a person sets the urgency to <paramref name="level"/>, higher or lower,
+    /// and <see cref="EventType.UrgencySetByPerson"/> records who, from what, to what and why. Called from the review
+    /// use case only.
+    /// </summary>
+    /// <param name="actor">The acting person (e.g. Rachel); never the system actor.</param>
+    /// <param name="reason">Why the person changed it; required.</param>
+    public void SetUrgencyByPerson(Urgency level, string actor, string reason, DateTime nowUtc)
+    {
+        if (!Enum.IsDefined(level))
+        {
+            throw new ArgumentOutOfRangeException(nameof(level), level, "Unknown urgency.");
+        }
+
+        if (string.IsNullOrWhiteSpace(actor) || string.Equals(actor.Trim(), JobEvent.SystemActor, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new ArgumentException("A person is required.", nameof(actor));
+        }
+
+        if (actor.Length > JobEvent.MaxActorLength)
+        {
+            throw new ArgumentException($"Actor must be at most {JobEvent.MaxActorLength} characters.", nameof(actor));
+        }
+
+        if (string.IsNullOrWhiteSpace(reason))
+        {
+            throw new ArgumentException("A reason is required.", nameof(reason));
+        }
+
+        Guards.RequireUtc(nowUtc, nameof(nowUtc));
+        var from = Urgency;
+        Urgency = level;
+        Append(
+            EventType.UrgencySetByPerson,
+            nowUtc,
+            actor,
+            new { from = from.ToString(), to = level.ToString(), reason });
+    }
+
+    /// <summary>
     /// The only automatic urgency change (AD-4): raises to <paramref name="level"/> and appends
     /// <see cref="EventType.UrgencyRaised"/>; a value lower than or equal to the current urgency is ignored.
     /// </summary>
@@ -192,6 +273,9 @@ public sealed class Job
             new { from = from.ToString(), to = level.ToString(), reason });
         return true;
     }
+
+    private const char RuleIdSeparator = ',';
+    private const string RuleReasonPrefix = "rule:";
 
     private void RequireNoModelOutcome()
     {

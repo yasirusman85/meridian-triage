@@ -23,6 +23,16 @@ internal sealed class JobConfiguration : IEntityTypeConfiguration<Job>
         builder.Property(j => j.Language).HasMaxLength(16);
         builder.Ignore(j => j.HasModelOutcome);
 
+        // Fired emergency rule ids, comma-separated (e.g. "gas,carbon-monoxide"); empty when none fired.
+        builder.Ignore(j => j.RuleIds);
+        builder.Property<string>("_ruleIds")
+            .HasField("_ruleIds")
+            .UsePropertyAccessMode(PropertyAccessMode.Field)
+            .HasColumnName("RuleIds")
+            .IsRequired()
+            .HasMaxLength(256)
+            .HasDefaultValue(string.Empty);
+
         builder.HasMany(j => j.Messages)
             .WithOne()
             .HasForeignKey(m => m.JobId)

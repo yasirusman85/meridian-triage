@@ -2,6 +2,7 @@ using Meridian.Application.Abstractions;
 using Meridian.Application.Triage;
 using Meridian.Domain.Jobs;
 using Meridian.Domain.Messages;
+using Meridian.Domain.Rules;
 
 namespace Meridian.Application.Messages;
 
@@ -21,9 +22,10 @@ public sealed record SubmitMessageResult(
 }
 
 /// <summary>
-/// Stores a pasted message unchanged and creates its placeholder job, in one transaction, then runs model
-/// preparation (<see cref="PrepareJob"/>). The message and job are saved before the model is called, so a model
-/// failure never loses a message. Emergency rules and splitting arrive in later stories (AD-3).
+/// Stores a pasted message unchanged, creates its placeholder job and runs the emergency rules on it, in one
+/// transaction, then runs model preparation (<see cref="PrepareJob"/>). The message, job and rule result are saved
+/// before the model is called, so a model failure never loses a message or a rule emergency (AD-3, RULE-11).
+/// Splitting arrives in a later story.
 /// </summary>
 public sealed class SubmitMessage
 {
@@ -72,12 +74,15 @@ public sealed class SubmitMessage
                 var number = await _jobs.NextJobNumberAsync(ct);
                 var message = Message.Receive(command.Sender!, command.Text!, now);
                 var created = Job.CreateFromMessage(message, JobReference.FromNumber(number), now);
+
+                // AD-3: emergency rules before the model; they can only raise urgency (AD-4).
+                created.ApplyRules(EmergencyRules.Evaluate(message.Text, message.ReceivedAtUtc), now);
                 _jobs.Add(created);
                 return created;
             },
             cancellationToken);
 
-        // After the commit: the message is safe whatever the model does (RULE-11).
+        // After the commit: the message and any rule emergency are safe whatever the model does (RULE-11).
         await _prepareJob.ExecuteAsync(job.Id, cancellationToken);
 
         return SubmitMessageResult.Created(job.Id, job.Reference);
