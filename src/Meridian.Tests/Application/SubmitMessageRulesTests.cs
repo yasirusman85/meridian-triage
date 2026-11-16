@@ -66,21 +66,23 @@ public class SubmitMessageRulesTests
     }
 
     [Fact]
-    public async Task Rules_run_and_are_stored_before_the_model_is_called()
+    public async Task Rules_run_before_the_model_and_every_job_gets_RulesApplied_then_the_model_outcome()
     {
         var jobs = new FakeJobRepository();
         var uow = new FakeUnitOfWork();
         var clock = new FakeClock(FridayInJanuary);
         var model = new FakeTriageModel();
-        IReadOnlyList<EventType>? eventsWhenCalled = null;
-        model.OnCall = () => eventsWhenCalled = jobs.Added.Single().Events.Select(e => e.Type).ToList();
-        var submit = new SubmitMessage(jobs, uow, clock, new PrepareJob(model, jobs, uow, clock));
+        int? messagesWhenCalled = null;
+        model.OnCall = () => messagesWhenCalled = jobs.Messages.Count;
+        var submit = new SubmitMessage(jobs, new FakePropertyRepository(), uow, clock, new PrepareJob(model));
 
         await submit.ExecuteAsync(new SubmitMessageCommand("tenant@example.com", "water coming through the ceiling"), default);
 
+        Assert.Equal(1, messagesWhenCalled);
+        var job = Assert.Single(jobs.Added);
         Assert.Equal(
-            new[] { EventType.MessageReceived, EventType.JobPrepared, EventType.RulesApplied, EventType.UrgencyRaised },
-            eventsWhenCalled);
+            new[] { EventType.MessageReceived, EventType.JobPrepared, EventType.RulesApplied, EventType.UrgencyRaised, EventType.ModelPreparationFailed },
+            job.Events.Select(e => e.Type));
         Assert.Equal(2, uow.Executions);
     }
 
@@ -117,7 +119,7 @@ public class SubmitMessageRulesTests
         var jobs = new FakeJobRepository();
         var uow = new FakeUnitOfWork();
         var clock = new FakeClock(now);
-        var prepare = new PrepareJob(model, jobs, uow, clock, new PrepareJobOptions { Timeout = TimeSpan.FromMilliseconds(100) });
-        return (new SubmitMessage(jobs, uow, clock, prepare), jobs);
+        var prepare = new PrepareJob(model, new PrepareJobOptions { Timeout = TimeSpan.FromMilliseconds(100) });
+        return (new SubmitMessage(jobs, new FakePropertyRepository(), uow, clock, prepare), jobs);
     }
 }

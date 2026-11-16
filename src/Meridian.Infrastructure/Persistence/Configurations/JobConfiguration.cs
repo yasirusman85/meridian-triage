@@ -1,4 +1,6 @@
 using Meridian.Domain.Jobs;
+using Meridian.Domain.Messages;
+using Meridian.Domain.Properties;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -33,10 +35,30 @@ internal sealed class JobConfiguration : IEntityTypeConfiguration<Job>
             .HasMaxLength(256)
             .HasDefaultValue(string.Empty);
 
-        builder.HasMany(j => j.Messages)
-            .WithOne()
-            .HasForeignKey(m => m.JobId)
+        builder.Ignore(j => j.FollowUpCount);
+        builder.Ignore(j => j.IsOpen);
+
+        // Unresolved properties stay null (AD-13).
+        builder.HasOne<Property>()
+            .WithMany()
+            .HasForeignKey(j => j.PropertyId)
+            .IsRequired(false)
             .OnDelete(DeleteBehavior.Restrict);
+        builder.HasIndex(j => j.PropertyId);
+
+        // Many jobs per message (one per issue) and many messages per job (the first plus follow-ups).
+        builder.HasMany(j => j.Messages)
+            .WithMany()
+            .UsingEntity<Dictionary<string, object>>(
+                "JobMessages",
+                right => right.HasOne<Message>().WithMany().HasForeignKey("MessageId").OnDelete(DeleteBehavior.Restrict),
+                left => left.HasOne<Job>().WithMany().HasForeignKey("JobId").OnDelete(DeleteBehavior.Restrict),
+                join =>
+                {
+                    join.ToTable("JobMessages");
+                    join.HasKey("JobId", "MessageId");
+                    join.HasIndex("MessageId");
+                });
         builder.Navigation(j => j.Messages).UsePropertyAccessMode(PropertyAccessMode.Field);
 
         builder.HasMany(j => j.Events)

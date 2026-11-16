@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
-import { ApiError, listJobs, submitMessage, type JobListItem } from './api';
+import { ApiError, listJobs, submitMessage, type JobListItem, type SubmittedJob } from './api';
 
 // Stored times are UTC; the UI shows Europe/London (AD-9).
 const londonTime = new Intl.DateTimeFormat('en-GB', {
@@ -19,6 +19,19 @@ function shorten(value: string, max: number): string {
   return chars.length <= max ? value : `${chars.slice(0, max - 1).join('').trimEnd()}…`;
 }
 
+function describeSubmitted(jobs: SubmittedJob[]): string {
+  const created = jobs.filter((j) => j.outcome === 'created').map((j) => j.reference);
+  const followUps = jobs.filter((j) => j.outcome === 'followUp').map((j) => j.reference);
+  const parts: string[] = [];
+  if (created.length > 0) {
+    parts.push(`Added as ${created.join(', ')}`);
+  }
+  if (followUps.length > 0) {
+    parts.push(`Attached as a follow-up to ${followUps.join(', ')}`);
+  }
+  return parts.join('; ');
+}
+
 function errorText(error: unknown): string {
   if (error instanceof ApiError) {
     const fieldErrors = Object.values(error.problem.errors ?? {}).flat();
@@ -34,7 +47,7 @@ export function QueuePage() {
   const [text, setText] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [lastReference, setLastReference] = useState<string | null>(null);
+  const [lastResult, setLastResult] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
     try {
@@ -53,10 +66,10 @@ export function QueuePage() {
     event.preventDefault();
     setSubmitting(true);
     setSubmitError(null);
-    setLastReference(null);
+    setLastResult(null);
     try {
       const created = await submitMessage(sender, text);
-      setLastReference(created.reference);
+      setLastResult(describeSubmitted(created.jobs));
       setSender('');
       setText('');
       await refresh();
@@ -88,7 +101,7 @@ export function QueuePage() {
             <button type="submit" disabled={submitting}>
               {submitting ? 'Adding…' : 'Add to queue'}
             </button>
-            {lastReference && <span role="status">Added as {lastReference}</span>}
+            {lastResult && <span role="status">{lastResult}</span>}
             {submitError && (
               <span role="alert" className="error">
                 {submitError}
@@ -116,6 +129,7 @@ export function QueuePage() {
                 <th>Status</th>
                 <th>Urgency</th>
                 <th>Category</th>
+                <th>Property</th>
                 <th>Summary</th>
                 <th>Message</th>
               </tr>
@@ -135,6 +149,14 @@ export function QueuePage() {
                     ))}
                   </td>
                   <td>{job.category}</td>
+                  <td>
+                    {job.propertyName ?? <span className="muted">unresolved</span>}
+                    {job.followUpCount > 0 && (
+                      <span className="follow-up-label">
+                        {job.followUpCount} follow-up{job.followUpCount === 1 ? '' : 's'}
+                      </span>
+                    )}
+                  </td>
                   <td className="summary">
                     {job.summaryEn ? (
                       <>
@@ -145,6 +167,8 @@ export function QueuePage() {
                           </p>
                         )}
                       </>
+                    ) : job.explanation ? (
+                      <span className="explanation">{job.explanation}</span>
                     ) : (
                       <span className="muted">Not prepared</span>
                     )}

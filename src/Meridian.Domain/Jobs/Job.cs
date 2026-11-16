@@ -31,6 +31,9 @@ public sealed class Job
 
     public Category Category { get; private set; }
 
+    /// <summary>The property the job is at, once <c>PropertyResolver</c> matched one (AD-13); null when unresolved.</summary>
+    public Guid? PropertyId { get; private set; }
+
     /// <summary>When the job's first message was received (UTC).</summary>
     public DateTime ReceivedAtUtc { get; private set; }
 
@@ -50,18 +53,27 @@ public sealed class Job
     public IReadOnlyList<string> RuleIds =>
         _ruleIds.Length == 0 ? Array.Empty<string>() : _ruleIds.Split(RuleIdSeparator);
 
+    /// <summary>The job's messages: the first plus any follow-ups. A message may also belong to other jobs.</summary>
     public IReadOnlyList<Message> Messages => _messages;
+
+    /// <summary>Messages attached after the first one (R8).</summary>
+    public int FollowUpCount => Math.Max(0, _messages.Count - 1);
+
+    /// <summary>True while the job can still take follow-ups: not <see cref="JobStatus.Attended"/> or <see cref="JobStatus.Rejected"/>.</summary>
+    public bool IsOpen => Status is not (JobStatus.Attended or JobStatus.Rejected);
 
     public IReadOnlyList<JobEvent> Events => _events;
 
     /// <summary>
-    /// Creates the placeholder job for a freshly received message: status Prepared, category Unsure,
-    /// urgency Routine. Appends <see cref="EventType.MessageReceived"/> then <see cref="EventType.JobPrepared"/>.
+    /// Creates a job for one issue of a received message (or the message as a whole when there is no usable issue):
+    /// status Prepared, category Unsure, urgency Routine. Appends <see cref="EventType.MessageReceived"/> then
+    /// <see cref="EventType.JobPrepared"/>. A message can start several jobs.
     /// </summary>
     /// <param name="message">The received message; it becomes the job's first message.</param>
     /// <param name="reference">The job reference, e.g. <c>MER-000001</c>.</param>
     /// <param name="nowUtc">The current time from the application's clock port (AD-9).</param>
-    public static Job CreateFromMessage(Message message, string reference, DateTime nowUtc)
+    /// <param name="propertyId">The resolved property, or null when it is unresolved (AD-13).</param>
+    public static Job CreateFromMessage(Message message, string reference, DateTime nowUtc, Guid? propertyId = null)
     {
         ArgumentNullException.ThrowIfNull(message);
         if (string.IsNullOrWhiteSpace(reference) || !reference.StartsWith(JobReference.Prefix, StringComparison.Ordinal))
@@ -70,9 +82,9 @@ public sealed class Job
         }
 
         Guards.RequireUtc(nowUtc, nameof(nowUtc));
-        if (message.JobId is not null)
+        if (propertyId == Guid.Empty)
         {
-            throw new InvalidOperationException("Message already belongs to a job.");
+            throw new ArgumentException("Property id must not be empty; pass null when unresolved.", nameof(propertyId));
         }
 
         var job = new Job
@@ -84,9 +96,9 @@ public sealed class Job
             Category = Category.Unsure,
             ReceivedAtUtc = message.ReceivedAtUtc,
             CreatedAtUtc = nowUtc,
+            PropertyId = propertyId,
         };
 
-        message.AttachTo(job.Id);
         job._messages.Add(message);
 
         job.Append(
@@ -105,10 +117,49 @@ public sealed class Job
                 status = job.Status.ToString(),
                 urgency = job.Urgency.ToString(),
                 category = job.Category.ToString(),
+                propertyId = job.PropertyId,
             });
 
         return job;
     }
+
+    /// <summary>
+    /// Attaches a later message to this open job as a follow-up (R8, AD-13): links the message, appends
+    /// <see cref="EventType.FollowUpAttached"/> with the message id and this job's reference, then raises urgency to
+    /// <paramref name="proposal"/> through <see cref="RaiseUrgency"/> (never lowers it, AD-4).
+    /// </summary>
+    /// <param name="proposal">The urgency proposed for the follow-up's issue.</param>
+    public void AttachFollowUp(Message message, Urgency proposal, DateTime nowUtc)
+    {
+        ArgumentNullException.ThrowIfNull(message);
+        if (!Enum.IsDefined(proposal))
+        {
+            throw new ArgumentOutOfRangeException(nameof(proposal), proposal, "Unknown urgency.");
+        }
+
+        Guards.RequireUtc(nowUtc, nameof(nowUtc));
+        if (!IsOpen)
+        {
+            throw new InvalidOperationException($"Job {Reference} is {Status} and cannot take follow-ups.");
+        }
+
+        if (_messages.Any(m => m.Id == message.Id))
+        {
+            throw new InvalidOperationException("The message is already on this job.");
+        }
+
+        _messages.Add(message);
+        Append(
+            EventType.FollowUpAttached,
+            nowUtc,
+            JobEvent.SystemActor,
+            new { messageId = message.Id, reference = Reference, proposedUrgency = proposal.ToString() });
+        RaiseUrgency(proposal, FollowUpReason, nowUtc);
+    }
+
+    /// <summary>Explanation shown on a job whose message the model found no maintenance problem in.</summary>
+    public const string NotMaintenanceExplanation =
+        "The AI found no maintenance problem in this message. A person should check it.";
 
     /// <summary>True once a <see cref="EventType.ModelPrepared"/> or <see cref="EventType.ModelPreparationFailed"/> event exists.</summary>
     public bool HasModelOutcome =>
@@ -154,6 +205,26 @@ public sealed class Job
         Language = language;
         AppendRaw(EventType.ModelPrepared, nowUtc, JobEvent.SystemActor, payloadJson);
         RaiseUrgency(urgency, "model", nowUtc);
+    }
+
+    /// <summary>
+    /// Records a valid model answer with no issues (not maintenance): the job keeps category Unsure and its urgency,
+    /// is flagged for a person with <see cref="NotMaintenanceExplanation"/>, and gets <see cref="EventType.ModelPrepared"/>.
+    /// </summary>
+    public void ApplyNotMaintenance(string language, string payloadJson, DateTime nowUtc)
+    {
+        RequireNoModelOutcome();
+        if (string.IsNullOrWhiteSpace(language))
+        {
+            throw new ArgumentException("Language is required.", nameof(language));
+        }
+
+        RequireJsonObject(payloadJson, nameof(payloadJson));
+        Guards.RequireUtc(nowUtc, nameof(nowUtc));
+        Category = Category.Unsure;
+        Language = language;
+        Explanation = NotMaintenanceExplanation;
+        AppendRaw(EventType.ModelPrepared, nowUtc, JobEvent.SystemActor, payloadJson);
     }
 
     /// <summary>
@@ -276,6 +347,7 @@ public sealed class Job
 
     private const char RuleIdSeparator = ',';
     private const string RuleReasonPrefix = "rule:";
+    private const string FollowUpReason = "follow-up";
 
     private void RequireNoModelOutcome()
     {

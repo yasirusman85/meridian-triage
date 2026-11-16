@@ -17,6 +17,21 @@ namespace Meridian.Infrastructure.Persistence.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.34");
 
+            modelBuilder.Entity("JobMessages", b =>
+                {
+                    b.Property<Guid>("JobId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("MessageId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("JobId", "MessageId");
+
+                    b.HasIndex("MessageId");
+
+                    b.ToTable("JobMessages", (string)null);
+                });
+
             modelBuilder.Entity("Meridian.Domain.Jobs.Job", b =>
                 {
                     b.Property<Guid>("Id")
@@ -35,6 +50,9 @@ namespace Meridian.Infrastructure.Persistence.Migrations
 
                     b.Property<string>("Language")
                         .HasMaxLength(16)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("PropertyId")
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime>("ReceivedAtUtc")
@@ -67,6 +85,8 @@ namespace Meridian.Infrastructure.Persistence.Migrations
                         .HasColumnName("RuleIds");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("PropertyId");
 
                     b.HasIndex("Reference")
                         .IsUnique();
@@ -111,9 +131,6 @@ namespace Meridian.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("TEXT");
 
-                    b.Property<Guid?>("JobId")
-                        .HasColumnType("TEXT");
-
                     b.Property<DateTime>("ReceivedAtUtc")
                         .HasColumnType("TEXT");
 
@@ -127,9 +144,50 @@ namespace Meridian.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("JobId");
-
                     b.ToTable("Messages", (string)null);
+                });
+
+            modelBuilder.Entity("Meridian.Domain.Properties.Building", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("Buildings", (string)null);
+                });
+
+            modelBuilder.Entity("Meridian.Domain.Properties.Property", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("BuildingId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Unit")
+                        .HasMaxLength(16)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BuildingId", "Unit")
+                        .IsUnique();
+
+                    b.ToTable("Properties", (string)null);
                 });
 
             modelBuilder.Entity("Meridian.Infrastructure.Persistence.JobNumberSequence", b =>
@@ -152,6 +210,29 @@ namespace Meridian.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("JobMessages", b =>
+                {
+                    b.HasOne("Meridian.Domain.Jobs.Job", null)
+                        .WithMany()
+                        .HasForeignKey("JobId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Meridian.Domain.Messages.Message", null)
+                        .WithMany()
+                        .HasForeignKey("MessageId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Meridian.Domain.Jobs.Job", b =>
+                {
+                    b.HasOne("Meridian.Domain.Properties.Property", null)
+                        .WithMany()
+                        .HasForeignKey("PropertyId")
+                        .OnDelete(DeleteBehavior.Restrict);
+                });
+
             modelBuilder.Entity("Meridian.Domain.Jobs.JobEvent", b =>
                 {
                     b.HasOne("Meridian.Domain.Jobs.Job", null)
@@ -161,19 +242,25 @@ namespace Meridian.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Meridian.Domain.Messages.Message", b =>
+            modelBuilder.Entity("Meridian.Domain.Properties.Property", b =>
                 {
-                    b.HasOne("Meridian.Domain.Jobs.Job", null)
-                        .WithMany("Messages")
-                        .HasForeignKey("JobId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                    b.HasOne("Meridian.Domain.Properties.Building", "Building")
+                        .WithMany("Properties")
+                        .HasForeignKey("BuildingId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Building");
                 });
 
             modelBuilder.Entity("Meridian.Domain.Jobs.Job", b =>
                 {
                     b.Navigation("Events");
+                });
 
-                    b.Navigation("Messages");
+            modelBuilder.Entity("Meridian.Domain.Properties.Building", b =>
+                {
+                    b.Navigation("Properties");
                 });
 #pragma warning restore 612, 618
         }

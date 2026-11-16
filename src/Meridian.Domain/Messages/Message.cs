@@ -1,6 +1,9 @@
 namespace Meridian.Domain.Messages;
 
-/// <summary>A tenant message, stored exactly as received (RULE-9). The text is never altered.</summary>
+/// <summary>
+/// A tenant message, stored exactly as received (RULE-9) and only once. The text is never altered. One message can
+/// make several jobs (one per issue), and one job can have several messages (the first plus follow-ups).
+/// </summary>
 public sealed class Message
 {
     private Message()
@@ -10,8 +13,6 @@ public sealed class Message
     }
 
     public Guid Id { get; private set; }
-
-    public Guid? JobId { get; private set; }
 
     public string Sender { get; private set; }
 
@@ -41,6 +42,4 @@ public sealed class Message
             ReceivedAtUtc = receivedAtUtc,
         };
     }
-
-    internal void AttachTo(Guid jobId) => JobId = jobId;
 }

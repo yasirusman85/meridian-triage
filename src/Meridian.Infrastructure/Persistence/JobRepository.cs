@@ -1,5 +1,6 @@
 using Meridian.Application.Abstractions;
 using Meridian.Domain.Jobs;
+using Meridian.Domain.Messages;
 using Microsoft.EntityFrameworkCore;
 
 namespace Meridian.Infrastructure.Persistence;
@@ -27,6 +28,8 @@ internal sealed class JobRepository : IJobRepository
             : throw new InvalidOperationException("Job number sequence row is missing.");
     }
 
+    public void AddMessage(Message message) => _db.Messages.Add(message);
+
     public void Add(Job job) => _db.Jobs.Add(job);
 
     public Task<Job?> GetAsync(Guid id, CancellationToken cancellationToken) =>
@@ -35,6 +38,28 @@ internal sealed class JobRepository : IJobRepository
             .Include(j => j.Events)
             .AsSplitQuery()
             .SingleOrDefaultAsync(j => j.Id == id, cancellationToken);
+
+    public async Task<IReadOnlyList<Job>> ListOpenAtPropertiesAsync(
+        IReadOnlyCollection<Guid> propertyIds,
+        DateTime openedSinceUtc,
+        CancellationToken cancellationToken)
+    {
+        if (propertyIds.Count == 0)
+        {
+            return Array.Empty<Job>();
+        }
+
+        var ids = propertyIds.Cast<Guid?>().ToList();
+        // Times are compared in memory: the UTC converter stores ISO text, so a SQL comparison would be on strings.
+        var jobs = await _db.Jobs
+            .Include(j => j.Messages)
+            .Include(j => j.Events)
+            .AsSplitQuery()
+            .Where(j => ids.Contains(j.PropertyId))
+            .Where(j => j.Status != JobStatus.Attended && j.Status != JobStatus.Rejected)
+            .ToListAsync(cancellationToken);
+        return jobs.Where(j => j.CreatedAtUtc >= openedSinceUtc).ToList();
+    }
 
     public async Task<IReadOnlyList<Job>> ListAsync(CancellationToken cancellationToken) =>
         await _db.Jobs

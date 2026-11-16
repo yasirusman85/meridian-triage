@@ -30,9 +30,12 @@ public sealed class MessagesApiTests : IDisposable
 
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
         var created = await response.Content.ReadFromJsonAsync<JsonElement>();
-        var reference = created.GetProperty("reference").GetString();
+        var submitted = Assert.Single(created.GetProperty("jobs").EnumerateArray());
+        var reference = submitted.GetProperty("reference").GetString();
         Assert.Matches("^MER-\\d{6}$", reference);
-        var jobId = created.GetProperty("jobId").GetGuid();
+        Assert.Equal("created", submitted.GetProperty("outcome").GetString());
+        var jobId = submitted.GetProperty("jobId").GetGuid();
+        var messageId = created.GetProperty("messageId").GetGuid();
 
         var jobs = await client.GetFromJsonAsync<JsonElement>("/api/jobs");
         var listed = Assert.Single(jobs.EnumerateArray());
@@ -44,12 +47,17 @@ public sealed class MessagesApiTests : IDisposable
         Assert.False(string.IsNullOrWhiteSpace(listed.GetProperty("summaryEn").GetString()));
         Assert.False(string.IsNullOrWhiteSpace(listed.GetProperty("explanation").GetString()));
         Assert.Equal(NowakText[..120], listed.GetProperty("preview").GetString());
+        // "Mieszkanie 9, Beechwood House" resolves to the seeded flat.
+        Assert.Equal("Flat 9, Beechwood House", listed.GetProperty("propertyName").GetString());
+        Assert.Equal(0, listed.GetProperty("followUpCount").GetInt32());
 
         using var scope = factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<MeridianDbContext>();
         var message = await db.Messages.SingleAsync();
         Assert.Equal(NowakText, message.Text);
-        Assert.Equal(jobId, message.JobId);
+        Assert.Equal(messageId, message.Id);
+        var job = await db.Jobs.Include(j => j.Messages).SingleAsync(j => j.Id == jobId);
+        Assert.Equal(message.Id, Assert.Single(job.Messages).Id);
 
         var events = await db.JobEvents.Where(e => e.JobId == jobId).ToListAsync();
         var received = Assert.Single(events, e => e.Type == EventType.MessageReceived);
@@ -61,7 +69,7 @@ public sealed class MessagesApiTests : IDisposable
         await using var connection = new SqliteConnection($"Data Source={_dbPath}");
         await connection.OpenAsync();
         await using var command = connection.CreateCommand();
-        command.CommandText = "SELECT m.Text, j.Status, e.Type FROM Messages m JOIN Jobs j ON j.Id = m.JobId JOIN JobEvents e ON e.JobId = j.Id WHERE e.Type = 'MessageReceived'";
+        command.CommandText = "SELECT m.Text, j.Status, e.Type FROM Messages m JOIN JobMessages jm ON jm.MessageId = m.Id JOIN Jobs j ON j.Id = jm.JobId JOIN JobEvents e ON e.JobId = j.Id WHERE e.Type = 'MessageReceived'";
         await using var reader = await command.ExecuteReaderAsync();
         Assert.True(await reader.ReadAsync());
         Assert.Equal(NowakText, reader.GetString(0));
@@ -80,7 +88,7 @@ public sealed class MessagesApiTests : IDisposable
         var response = await client.PostAsJsonAsync("/api/messages", new { sender = "tenant@example.com", text });
 
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
-        var jobId = (await response.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("jobId").GetGuid();
+        var jobId = JobIdOf(await response.Content.ReadFromJsonAsync<JsonElement>());
         using var scope = factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<MeridianDbContext>();
         var events = (await db.JobEvents.Where(e => e.JobId == jobId).ToListAsync())
@@ -121,7 +129,7 @@ public sealed class MessagesApiTests : IDisposable
         var response = await client.PostAsJsonAsync("/api/messages", new { sender = "m.walsh@example.com", text = walshText });
 
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
-        var jobId = (await response.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("jobId").GetGuid();
+        var jobId = JobIdOf(await response.Content.ReadFromJsonAsync<JsonElement>());
         var listed = Assert.Single((await client.GetFromJsonAsync<JsonElement>("/api/jobs")).EnumerateArray());
         Assert.Equal("Emergency", listed.GetProperty("urgency").GetString());
         Assert.Equal(
@@ -157,6 +165,111 @@ public sealed class MessagesApiTests : IDisposable
 
         var listed = Assert.Single((await client.GetFromJsonAsync<JsonElement>("/api/jobs")).EnumerateArray());
         Assert.Empty(listed.GetProperty("ruleIds").EnumerateArray());
+    }
+
+    [Fact]
+    public async Task The_three_Walsh_messages_posted_in_order_make_one_job_with_two_follow_ups()
+    {
+        var clock = new TickingClock(Walsh.ReceivedAt);
+        using var factory = CreateFactory(clock);
+        using var client = factory.CreateClient();
+
+        var first = await PostAsync(client, clock, Walsh);
+        var second = await PostAsync(client, clock, WalshChaser);
+        var third = await PostAsync(client, clock, WalshWife);
+
+        var created = Assert.Single(first.GetProperty("jobs").EnumerateArray());
+        Assert.Equal("created", created.GetProperty("outcome").GetString());
+        var reference = created.GetProperty("reference").GetString();
+        foreach (var followUp in new[] { second, third })
+        {
+            var attached = Assert.Single(followUp.GetProperty("jobs").EnumerateArray());
+            Assert.Equal("followUp", attached.GetProperty("outcome").GetString());
+            Assert.Equal(reference, attached.GetProperty("reference").GetString());
+        }
+
+        var listed = Assert.Single((await client.GetFromJsonAsync<JsonElement>("/api/jobs")).EnumerateArray());
+        Assert.Equal(reference, listed.GetProperty("reference").GetString());
+        Assert.Equal("Heating", listed.GetProperty("category").GetString());
+        Assert.Equal("Emergency", listed.GetProperty("urgency").GetString());
+        Assert.Equal("14b Alder Court", listed.GetProperty("propertyName").GetString());
+        Assert.Equal(2, listed.GetProperty("followUpCount").GetInt32());
+        Assert.Equal("m.walsh@example.com", listed.GetProperty("sender").GetString());
+
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<MeridianDbContext>();
+        Assert.Equal(3, await db.Messages.CountAsync());
+        var job = await db.Jobs.Include(j => j.Messages).Include(j => j.Events).SingleAsync();
+        Assert.Equal(3, job.Messages.Count);
+        var attachedIds = job.Events
+            .Where(e => e.Type == EventType.FollowUpAttached)
+            .OrderBy(e => e.OccurredAtUtc)
+            .Select(e =>
+            {
+                using var payload = JsonDocument.Parse(e.PayloadJson);
+                Assert.Equal(reference, payload.RootElement.GetProperty("reference").GetString());
+                return payload.RootElement.GetProperty("messageId").GetGuid();
+            })
+            .ToList();
+        Assert.Equal(new[] { second.GetProperty("messageId").GetGuid(), third.GetProperty("messageId").GetGuid() }, attachedIds);
+    }
+
+    [Fact]
+    public async Task The_six_client_messages_on_a_fresh_database_make_five_jobs_each_with_rule_and_model_events()
+    {
+        var clock = new TickingClock(ClientMessages[0].ReceivedAt);
+        using var factory = CreateFactory(clock);
+        using var client = factory.CreateClient();
+
+        foreach (var message in ClientMessages)
+        {
+            await PostAsync(client, clock, message);
+        }
+
+        var jobs = (await client.GetFromJsonAsync<JsonElement>("/api/jobs")).EnumerateArray().ToList();
+        Assert.Equal(5, jobs.Count);
+        var bySender = jobs.GroupBy(j => j.GetProperty("sender").GetString()).ToDictionary(g => g.Key!, g => g.ToList());
+        Assert.Equal(2, bySender["joy.okafor@example.com"].Count);
+        Assert.Equal(
+            new[] { "Electrical", "Plumbing" },
+            bySender["joy.okafor@example.com"].Select(j => j.GetProperty("category").GetString()).Order());
+        Assert.All(bySender["joy.okafor@example.com"], j => Assert.Equal("Flat 4, 22 Pemberton Road", j.GetProperty("propertyName").GetString()));
+        var walsh = Assert.Single(bySender["m.walsh@example.com"]);
+        Assert.Equal(2, walsh.GetProperty("followUpCount").GetInt32());
+        Assert.Equal("Flat 9, Beechwood House", Assert.Single(bySender["a.nowak@example.com"]).GetProperty("propertyName").GetString());
+        Assert.Equal("8 Carlton Street", Assert.Single(bySender["r.patel@example.com"]).GetProperty("propertyName").GetString());
+        Assert.False(bySender.ContainsKey("s.walsh@example.com"));
+        Assert.Equal("Emergency", jobs[0].GetProperty("urgency").GetString());
+
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<MeridianDbContext>();
+        Assert.Equal(6, await db.Messages.CountAsync());
+        foreach (var job in await db.Jobs.Include(j => j.Events).Include(j => j.Messages).AsSplitQuery().ToListAsync())
+        {
+            var types = job.Events.OrderBy(e => e.OccurredAtUtc).Select(e => e.Type).ToList();
+            var rules = types.IndexOf(EventType.RulesApplied);
+            var outcome = types.FindIndex(t => t is EventType.ModelPrepared or EventType.ModelPreparationFailed);
+            Assert.True(types.IndexOf(EventType.JobPrepared) >= 0, job.Reference);
+            Assert.True(rules >= 0 && outcome > rules, $"{job.Reference}: {string.Join(", ", types)}");
+            Assert.Equal(job.Messages.Count - 1, types.Count(t => t == EventType.FollowUpAttached));
+        }
+    }
+
+    [Fact]
+    public async Task Buildings_and_properties_are_seeded_once_at_startup()
+    {
+        using (var first = CreateFactory())
+        using (first.CreateClient())
+        {
+        }
+
+        using var second = CreateFactory();
+        using var client = second.CreateClient();
+        using var scope = second.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<MeridianDbContext>();
+        Assert.Equal(SeedData.Buildings.Count, await db.Buildings.CountAsync());
+        Assert.Equal(SeedData.CreateBuildings().Sum(b => b.Properties.Count), await db.Properties.CountAsync());
+        Assert.True(await db.Properties.AnyAsync(p => p.Name == "14b Alder Court"));
     }
 
     [Theory]
@@ -222,7 +335,7 @@ public sealed class MessagesApiTests : IDisposable
 
         var next = await client2.PostAsJsonAsync("/api/messages", new { sender = "tenant@example.com", text = "Tap dripping" });
         var created = await next.Content.ReadFromJsonAsync<JsonElement>();
-        Assert.Equal("MER-000002", created.GetProperty("reference").GetString());
+        Assert.Equal("MER-000002", Assert.Single(created.GetProperty("jobs").EnumerateArray()).GetProperty("reference").GetString());
     }
 
     [Fact]
@@ -235,6 +348,52 @@ public sealed class MessagesApiTests : IDisposable
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
+
+    // The six client messages (eval real-01..06), January 2026 with the client's weekdays and times, in client order.
+    private static readonly ClientMessage Joy = new(
+        "joy.okafor@example.com",
+        "Hi there the tap in the bathroom has been dripping for about two weeks now, it's not urgent but it's quite annoying at night. Also while I'm emailing, the light in the hallway cupboard doesn't work, I think it's just the bulb but I'm not allowed to change it myself am I. Flat 4, 22 Pemberton Road. Thanks, Joy",
+        new DateTime(2026, 1, 13, 10, 42, 0, DateTimeKind.Utc));
+
+    private static readonly ClientMessage Walsh = new(
+        "m.walsh@example.com",
+        "URGENT URGENT no hot water and no heating at all since this morning, I have a baby in the house, this is unacceptable, I have called three times. 14b Alder Court. Please someone call me TONIGHT.",
+        new DateTime(2026, 1, 16, 19, 15, 0, DateTimeKind.Utc));
+
+    private static readonly ClientMessage WalshChaser = new(
+        "m.walsh@example.com",
+        "Still nothing. Michael Walsh, 14b Alder Court.",
+        new DateTime(2026, 1, 16, 19, 51, 0, DateTimeKind.Utc));
+
+    private static readonly ClientMessage WalshWife = new(
+        "s.walsh@example.com",
+        "My husband has emailed twice about the heating at 14b Alder Court, no one has responded. We have a 7 month old baby. What is going on.",
+        new DateTime(2026, 1, 16, 20, 30, 0, DateTimeKind.Utc));
+
+    private static readonly ClientMessage Nowak = new(
+        "a.nowak@example.com",
+        NowakText,
+        new DateTime(2026, 1, 14, 8, 3, 0, DateTimeKind.Utc));
+
+    private static readonly ClientMessage Patel = new(
+        "r.patel@example.com",
+        "The boiler is making a loud banging noise when it comes on. It's still working and we've got hot water. Didn't do this before. 8 Carlton Street.",
+        new DateTime(2026, 1, 12, 14, 20, 0, DateTimeKind.Utc));
+
+    private static readonly ClientMessage[] ClientMessages = { Joy, Walsh, WalshChaser, WalshWife, Nowak, Patel };
+
+    private static async Task<JsonElement> PostAsync(HttpClient client, TickingClock clock, ClientMessage message)
+    {
+        clock.Set(message.ReceivedAt);
+        var response = await client.PostAsJsonAsync("/api/messages", new { sender = message.Sender, text = message.Text });
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        return await response.Content.ReadFromJsonAsync<JsonElement>();
+    }
+
+    private sealed record ClientMessage(string Sender, string Text, DateTime ReceivedAt);
+
+    private static Guid JobIdOf(JsonElement created) =>
+        Assert.Single(created.GetProperty("jobs").EnumerateArray()).GetProperty("jobId").GetGuid();
 
     public void Dispose()
     {
@@ -266,6 +425,15 @@ public sealed class MessagesApiTests : IDisposable
         private DateTime _next;
 
         public TickingClock(DateTime start) => _next = start;
+
+        /// <summary>Moves the clock to <paramref name="next"/>, e.g. the received time of the next client message.</summary>
+        public void Set(DateTime next)
+        {
+            lock (this)
+            {
+                _next = next;
+            }
+        }
 
         public DateTime UtcNow
         {

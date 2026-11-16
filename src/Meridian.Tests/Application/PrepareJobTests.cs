@@ -1,27 +1,25 @@
 using System.Text.Json;
+using Meridian.Application.Messages;
 using Meridian.Application.Triage;
 using Meridian.Domain.Jobs;
-using Meridian.Domain.Messages;
 using Meridian.Infrastructure.Triage;
+using static Meridian.Tests.Application.SubmitMessageTests;
 
 namespace Meridian.Tests.Application;
 
-/// <summary>One test per row of the story's I/O matrix.</summary>
+/// <summary>The model step (story 2's I/O matrix), run through the intake pipeline on a message with one issue.</summary>
 public class PrepareJobTests
 {
     private const string NowakText =
         "Dzień dobry, w mieszkaniu jest pleśń na ścianie w sypialni, coraz gorzej, dziecko ma astmę. Mieszkanie 9, Beechwood House. Dziękuję.";
 
     private static readonly DateTime Received = new(2026, 11, 11, 8, 3, 0, DateTimeKind.Utc);
-    private static readonly DateTime Now = Received.AddSeconds(3);
 
     [Fact]
     public async Task Valid_recorded_response_prepares_the_job_from_the_real_stub()
     {
         var stub = StubTriageModel.FromDirectory(StubTriageModel.DefaultDirectory);
-        var (prepare, job) = Create(stub, NowakText);
-
-        var outcome = await prepare.ExecuteAsync(job.Id, default);
+        var (outcome, job) = await RunAsync(stub, NowakText);
 
         Assert.True(outcome.Prepared);
         Assert.Equal(1, outcome.Attempts);
@@ -31,10 +29,10 @@ public class PrepareJobTests
         Assert.False(string.IsNullOrWhiteSpace(job.SummaryEn));
         Assert.False(string.IsNullOrWhiteSpace(job.Explanation));
         Assert.Equal(
-            new[] { EventType.MessageReceived, EventType.JobPrepared, EventType.ModelPrepared, EventType.UrgencyRaised },
+            new[] { EventType.MessageReceived, EventType.JobPrepared, EventType.RulesApplied, EventType.ModelPrepared, EventType.UrgencyRaised },
             job.Events.Select(e => e.Type));
 
-        using var payload = JsonDocument.Parse(job.Events[2].PayloadJson);
+        using var payload = JsonDocument.Parse(job.Events[3].PayloadJson);
         var root = payload.RootElement;
         Assert.Equal("stub", root.GetProperty("modelId").GetString());
         Assert.Equal("triage.v1", root.GetProperty("promptVersion").GetString());
@@ -49,9 +47,7 @@ public class PrepareJobTests
     public async Task The_model_receives_only_the_text_and_received_time()
     {
         var model = new FakeTriageModel().Returns(TriageValidatorTests.ValidJson);
-        var (prepare, job) = Create(model, NowakText);
-
-        await prepare.ExecuteAsync(job.Id, default);
+        await RunAsync(model, NowakText);
 
         var request = Assert.Single(model.Requests);
         Assert.Equal(new TriageRequest(NowakText, Received), request);
@@ -61,9 +57,7 @@ public class PrepareJobTests
     public async Task Invalid_json_then_valid_prepares_from_the_second_attempt()
     {
         var model = new FakeTriageModel().Returns("{not json").Returns(TriageValidatorTests.ValidJson);
-        var (prepare, job) = Create(model);
-
-        var outcome = await prepare.ExecuteAsync(job.Id, default);
+        var (outcome, job) = await RunAsync(model);
 
         Assert.True(outcome.Prepared);
         Assert.Equal(2, outcome.Attempts);
@@ -81,9 +75,7 @@ public class PrepareJobTests
     {
         var roofing = TriageValidatorTests.Mutate(i => i["category"] = "Roofing");
         var model = new FakeTriageModel().Returns(roofing).Returns(roofing).Returns(TriageValidatorTests.ValidJson);
-        var (prepare, job) = Create(model);
-
-        var outcome = await prepare.ExecuteAsync(job.Id, default);
+        var (outcome, job) = await RunAsync(model);
 
         Assert.False(outcome.Prepared);
         Assert.Equal(2, model.Requests.Count);
@@ -102,9 +94,7 @@ public class PrepareJobTests
     public async Task Timeout_leaves_the_job_unsure_with_reason_timeout()
     {
         var model = new FakeTriageModel().Hangs();
-        var (prepare, job) = Create(model, timeout: TimeSpan.FromMilliseconds(100));
-
-        var outcome = await prepare.ExecuteAsync(job.Id, default);
+        var (outcome, job) = await RunAsync(model, timeout: TimeSpan.FromMilliseconds(100));
 
         Assert.False(outcome.Prepared);
         Assert.Equal(TriageFailureReasons.Timeout, outcome.FailureReason);
@@ -119,9 +109,7 @@ public class PrepareJobTests
     public async Task Timeout_is_enforced_even_if_the_adapter_ignores_cancellation()
     {
         var model = new FakeTriageModel().HangsIgnoringCancellation();
-        var (prepare, job) = Create(model, timeout: TimeSpan.FromMilliseconds(100));
-
-        var outcome = await prepare.ExecuteAsync(job.Id, default);
+        var (outcome, job) = await RunAsync(model, timeout: TimeSpan.FromMilliseconds(100));
 
         Assert.Equal(TriageFailureReasons.Timeout, outcome.FailureReason);
         AssertUnchanged(job);
@@ -137,9 +125,7 @@ public class PrepareJobTests
     public async Task Model_exception_leaves_the_job_unsure_with_reason_unavailable_and_does_not_throw()
     {
         var model = new FakeTriageModel().Throws(new HttpRequestException("connection refused"));
-        var (prepare, job) = Create(model);
-
-        var outcome = await prepare.ExecuteAsync(job.Id, default);
+        var (outcome, job) = await RunAsync(model);
 
         Assert.Equal(TriageFailureReasons.Unavailable, outcome.FailureReason);
         Assert.Equal(1, outcome.Attempts);
@@ -154,9 +140,7 @@ public class PrepareJobTests
     public async Task No_recorded_answer_leaves_the_job_unsure_with_reason_no_recorded_response()
     {
         var stub = StubTriageModel.FromDirectory(StubTriageModel.DefaultDirectory);
-        var (prepare, job) = Create(stub, "A message nobody recorded.");
-
-        var outcome = await prepare.ExecuteAsync(job.Id, default);
+        var (outcome, job) = await RunAsync(stub, "A message nobody recorded.");
 
         Assert.Equal(TriageFailureReasons.NoRecordedResponse, outcome.FailureReason);
         Assert.Equal(1, outcome.Attempts);
@@ -170,9 +154,7 @@ public class PrepareJobTests
     public async Task Low_confidence_sets_category_unsure_but_keeps_explanation_and_raises_urgency()
     {
         var low = TriageValidatorTests.Mutate(i => i["confidence"] = "low");
-        var (prepare, job) = Create(new FakeTriageModel().Returns(low));
-
-        var outcome = await prepare.ExecuteAsync(job.Id, default);
+        var (outcome, job) = await RunAsync(new FakeTriageModel().Returns(low));
 
         Assert.True(outcome.Prepared);
         Assert.Equal(Category.Unsure, job.Category);
@@ -187,24 +169,20 @@ public class PrepareJobTests
     public async Task A_proposal_lower_than_the_current_urgency_leaves_it_unchanged()
     {
         var routine = TriageValidatorTests.Mutate(i => i["urgency"] = "Routine");
-        var (prepare, job) = Create(new FakeTriageModel().Returns(routine));
-        job.RaiseUrgency(Urgency.Emergency, "test", Received);
-        var raisedBefore = job.Events.Count(e => e.Type == EventType.UrgencyRaised);
-
-        var outcome = await prepare.ExecuteAsync(job.Id, default);
+        // The gas rule raises the job to Emergency before the model's Routine proposal is applied.
+        var (outcome, job) = await RunAsync(new FakeTriageModel().Returns(routine), "I can smell gas in the kitchen");
 
         Assert.True(outcome.Prepared);
         Assert.Equal(Urgency.Emergency, job.Urgency);
-        Assert.Equal(raisedBefore, job.Events.Count(e => e.Type == EventType.UrgencyRaised));
+        var raised = Assert.Single(job.Events, e => e.Type == EventType.UrgencyRaised);
+        Assert.True(job.Events.ToList().IndexOf(raised) < job.Events.ToList().FindIndex(e => e.Type == EventType.ModelPrepared));
     }
 
     [Fact]
     public async Task An_adapter_failure_is_not_retried()
     {
         var model = new FakeTriageModel().Fails(TriageFailureReasons.Unavailable).Returns(TriageValidatorTests.ValidJson);
-        var (prepare, job) = Create(model);
-
-        var outcome = await prepare.ExecuteAsync(job.Id, default);
+        var (outcome, job) = await RunAsync(model);
 
         Assert.False(outcome.Prepared);
         Assert.Single(model.Requests);
@@ -217,9 +195,7 @@ public class PrepareJobTests
         using var cts = new CancellationTokenSource();
         var model = new FakeTriageModel().Hangs();
         model.OnCall = () => cts.CancelAfter(50);
-        var (prepare, job) = Create(model);
-
-        var outcome = await prepare.ExecuteAsync(job.Id, cts.Token);
+        var (outcome, job) = await RunAsync(model, cancellationToken: cts.Token);
 
         Assert.Equal(TriageFailureReasons.Cancelled, outcome.FailureReason);
         Assert.Single(job.Events, e => e.Type == EventType.ModelPreparationFailed);
@@ -232,7 +208,7 @@ public class PrepareJobTests
         Assert.Null(job.Explanation);
         Assert.Null(job.SummaryEn);
         Assert.Equal(
-            new[] { EventType.MessageReceived, EventType.JobPrepared, EventType.ModelPreparationFailed },
+            new[] { EventType.MessageReceived, EventType.JobPrepared, EventType.RulesApplied, EventType.ModelPreparationFailed },
             job.Events.Select(e => e.Type));
     }
 
@@ -242,13 +218,31 @@ public class PrepareJobTests
         return document.RootElement.Clone();
     }
 
-    private static (PrepareJob Prepare, Job Job) Create(ITriageModel model, string text = "Boiler broken", TimeSpan? timeout = null)
+    /// <summary>Posts one message through the pipeline and returns the model step's outcome, read from the job's events.</summary>
+    private static async Task<(Outcome Outcome, Job Job)> RunAsync(
+        ITriageModel model,
+        string text = "The hallway light does not work",
+        TimeSpan? timeout = null,
+        CancellationToken cancellationToken = default)
     {
-        var jobs = new SubmitMessageTests.FakeJobRepository();
-        var job = Job.CreateFromMessage(Message.Receive("tenant@example.com", text, Received), "MER-000001", Received);
-        jobs.Add(job);
+        var jobs = new FakeJobRepository();
+        var clock = new FakeClock(Received);
         var options = timeout is null ? null : new PrepareJobOptions { Timeout = timeout.Value };
-        var prepare = new PrepareJob(model, jobs, new SubmitMessageTests.FakeUnitOfWork(), new FakeClock(Now), options);
-        return (prepare, job);
+        var submit = new SubmitMessage(jobs, new FakePropertyRepository(), new FakeUnitOfWork(), clock, new PrepareJob(model, options));
+
+        var result = await submit.ExecuteAsync(new SubmitMessageCommand("tenant@example.com", text), cancellationToken);
+
+        Assert.True(result.Succeeded);
+        var job = Assert.Single(jobs.Added);
+        var outcomeEvent = Assert.Single(job.Events, e => e.Type is EventType.ModelPrepared or EventType.ModelPreparationFailed);
+        using var payload = JsonDocument.Parse(outcomeEvent.PayloadJson);
+        var root = payload.RootElement;
+        var reason = root.GetProperty("reason");
+        return (new Outcome(
+            outcomeEvent.Type == EventType.ModelPrepared,
+            root.GetProperty("attemptCount").GetInt32(),
+            reason.ValueKind == JsonValueKind.Null ? null : reason.GetString()), job);
     }
+
+    private sealed record Outcome(bool Prepared, int Attempts, string? FailureReason);
 }

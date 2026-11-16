@@ -146,15 +146,15 @@ public class TriageValidatorTests
     }
 
     [Fact]
-    public void Empty_issues_is_rejected()
+    public void Empty_issues_is_valid_and_means_not_maintenance()
     {
         var root = JsonNode.Parse(ValidJson)!.AsObject();
         root["issues"] = new JsonArray();
 
         var result = TriageValidator.Validate(root.ToJsonString());
 
-        Assert.False(result.IsValid);
-        Assert.Contains(result.Errors, e => e.StartsWith("issues:", StringComparison.Ordinal));
+        Assert.True(result.IsValid);
+        Assert.Empty(result.Response!.Issues);
     }
 
     [Theory]

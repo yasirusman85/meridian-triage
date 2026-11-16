@@ -24,7 +24,8 @@ Return one JSON object and nothing else: no prose, no Markdown fences. It must m
 
 Rules:
 
-- `issues` has one entry per separate maintenance problem in the message, and at least one entry.
+- `issues` has one entry per separate maintenance problem in the message. If the message reports no
+  maintenance problem at all, return an empty `issues` list; a person still reads it.
 - `category` is exactly one of: Plumbing, Electrical, Heating, Appliances, LocksAndDoors, Pest, General, Unsure.
   Use General for building problems that fit no other category (for example a broken window or a
   communal light). Use Unsure for damp or mould, and when the message does not say what the problem is or

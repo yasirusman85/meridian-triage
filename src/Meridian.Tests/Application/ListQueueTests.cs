@@ -16,9 +16,29 @@ public class ListQueueTests
         repo.Add(Make("MER-000001", T0));
         repo.Add(Make("MER-000003", T0.AddMinutes(10)));
 
-        var items = await new ListQueue(repo).ExecuteAsync(default);
+        var items = await new ListQueue(repo, new SubmitMessageTests.FakePropertyRepository()).ExecuteAsync(default);
 
         Assert.Equal(new[] { "MER-000001", "MER-000002", "MER-000003" }, items.Select(i => i.Reference));
+    }
+
+    [Fact]
+    public async Task Each_item_shows_its_property_name_or_null_and_its_follow_up_count()
+    {
+        var repo = new SubmitMessageTests.FakeJobRepository();
+        var flat = SubmitMessageTests.FakePropertyRepository.Named("Flat 4, 22 Pemberton Road");
+        var resolved = Job.CreateFromMessage(Message.Receive("joy@example.com", "tap", T0), "MER-000001", T0, flat.Id);
+        resolved.AttachFollowUp(Message.Receive("joy@example.com", "still dripping", T0.AddHours(1)), Urgency.Routine, T0.AddHours(1));
+        repo.Add(resolved);
+        repo.Add(Make("MER-000002", T0.AddMinutes(1)));
+
+        var items = await new ListQueue(repo, new SubmitMessageTests.FakePropertyRepository()).ExecuteAsync(default);
+
+        Assert.Equal("Flat 4, 22 Pemberton Road", items[0].PropertyName);
+        Assert.Equal(flat.Id, items[0].PropertyId);
+        Assert.Equal(1, items[0].FollowUpCount);
+        Assert.Equal("tap", items[0].Preview);
+        Assert.Null(items[1].PropertyName);
+        Assert.Equal(0, items[1].FollowUpCount);
     }
 
     [Fact]

@@ -14,7 +14,10 @@ public sealed record QueueItem(
     string Preview,
     string? Explanation,
     string? SummaryEn,
-    IReadOnlyList<string> RuleIds);
+    IReadOnlyList<string> RuleIds,
+    Guid? PropertyId,
+    string? PropertyName,
+    int FollowUpCount);
 
 /// <summary>The review queue: most urgent first, then oldest first (R13).</summary>
 public sealed class ListQueue
@@ -22,16 +25,19 @@ public sealed class ListQueue
     public const int PreviewLength = 120;
 
     private readonly IJobRepository _jobs;
+    private readonly IPropertyRepository _properties;
 
-    public ListQueue(IJobRepository jobs)
+    public ListQueue(IJobRepository jobs, IPropertyRepository properties)
     {
         _jobs = jobs;
+        _properties = properties;
     }
 
     public async Task<IReadOnlyList<QueueItem>> ExecuteAsync(CancellationToken cancellationToken)
     {
         var jobs = await _jobs.ListAsync(cancellationToken);
-        return Order(jobs).Select(ToItem).ToList();
+        var names = (await _properties.ListAsync(cancellationToken)).ToDictionary(p => p.Id, p => p.Name);
+        return Order(jobs).Select(j => ToItem(j, names)).ToList();
     }
 
     public static IEnumerable<Job> Order(IEnumerable<Job> jobs) =>
@@ -56,7 +62,7 @@ public sealed class ListQueue
         return text[..length];
     }
 
-    private static QueueItem ToItem(Job job)
+    private static QueueItem ToItem(Job job, IReadOnlyDictionary<Guid, string> propertyNames)
     {
         var first = job.Messages.OrderBy(m => m.ReceivedAtUtc).FirstOrDefault();
         return new QueueItem(
@@ -70,6 +76,9 @@ public sealed class ListQueue
             first is null ? string.Empty : Preview(first.Text),
             job.Explanation,
             job.SummaryEn,
-            job.RuleIds);
+            job.RuleIds,
+            job.PropertyId,
+            job.PropertyId is { } id && propertyNames.TryGetValue(id, out var name) ? name : null,
+            job.FollowUpCount);
     }
 }

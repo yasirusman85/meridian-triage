@@ -2,6 +2,9 @@ using Meridian.Application.Abstractions;
 using Meridian.Application.Messages;
 using Meridian.Application.Triage;
 using Meridian.Domain.Jobs;
+using Meridian.Domain.Messages;
+using Meridian.Domain.Properties;
+using Meridian.Infrastructure.Persistence;
 
 namespace Meridian.Tests.Application;
 
@@ -51,38 +54,45 @@ public class SubmitMessageTests
         var result = await submit.ExecuteAsync(new SubmitMessageCommand("a.nowak@example.com", text), default);
 
         Assert.True(result.Succeeded);
-        Assert.Equal("MER-000001", result.Reference);
-        // One unit of work for the message and job, one for the model outcome.
+        var submitted = Assert.Single(result.Jobs);
+        Assert.Equal("MER-000001", submitted.Reference);
+        Assert.False(submitted.IsFollowUp);
+        // One unit of work for the message, one for the jobs and model outcome.
         Assert.Equal(2, uow.Executions);
         var job = Assert.Single(jobs.Added);
-        Assert.Equal(result.JobId, job.Id);
-        Assert.Equal(text, Assert.Single(job.Messages).Text);
+        Assert.Equal(submitted.JobId, job.Id);
+        Assert.Same(Assert.Single(jobs.Messages), Assert.Single(job.Messages));
+        Assert.Equal(result.MessageId, job.Messages[0].Id);
+        Assert.Equal(text, job.Messages[0].Text);
         Assert.Equal(Now, job.ReceivedAtUtc);
         Assert.All(job.Events, e => Assert.Equal(Now, e.OccurredAtUtc));
     }
 
     [Fact]
-    public async Task Message_and_job_are_committed_before_the_model_is_called_and_a_model_failure_still_returns_the_job()
+    public async Task The_message_is_committed_before_the_model_is_called_and_a_model_failure_still_makes_one_job()
     {
         var jobs = new FakeJobRepository();
         var uow = new FakeUnitOfWork();
         var clock = new FakeClock(Now);
         var model = new FakeTriageModel().Throws(new HttpRequestException("down"));
         int? executionsWhenCalled = null;
-        int? jobsWhenCalled = null;
+        int? messagesWhenCalled = null;
         model.OnCall = () =>
         {
             executionsWhenCalled = uow.Executions;
-            jobsWhenCalled = jobs.Added.Count;
+            messagesWhenCalled = jobs.Messages.Count;
         };
-        var submit = new SubmitMessage(jobs, uow, clock, new PrepareJob(model, jobs, uow, clock));
+        var submit = new SubmitMessage(jobs, new FakePropertyRepository(), uow, clock, new PrepareJob(model));
 
         var result = await submit.ExecuteAsync(new SubmitMessageCommand("tenant@example.com", "Boiler broken"), default);
 
         Assert.True(result.Succeeded);
         Assert.Equal(1, executionsWhenCalled);
-        Assert.Equal(1, jobsWhenCalled);
+        Assert.Equal(1, messagesWhenCalled);
         var job = Assert.Single(jobs.Added);
+        Assert.Equal(job.Id, Assert.Single(result.Jobs).JobId);
+        Assert.Equal(Category.Unsure, job.Category);
+        Assert.Null(job.PropertyId);
         Assert.Equal(EventType.ModelPreparationFailed, job.Events[^1].Type);
     }
 
@@ -91,8 +101,8 @@ public class SubmitMessageTests
         var jobs = new FakeJobRepository();
         var uow = new FakeUnitOfWork();
         var clock = new FakeClock(Now);
-        var prepare = new PrepareJob(new FakeTriageModel(), jobs, uow, clock);
-        return (new SubmitMessage(jobs, uow, clock, prepare), jobs, uow);
+        var prepare = new PrepareJob(new FakeTriageModel());
+        return (new SubmitMessage(jobs, new FakePropertyRepository(), uow, clock, prepare), jobs, uow);
     }
 
     internal sealed class FakeJobRepository : IJobRepository
@@ -101,15 +111,42 @@ public class SubmitMessageTests
 
         public List<Job> Added { get; } = new();
 
+        public List<Message> Messages { get; } = new();
+
         public Task<long> NextJobNumberAsync(CancellationToken cancellationToken) => Task.FromResult(++_next);
+
+        public void AddMessage(Message message) => Messages.Add(message);
 
         public void Add(Job job) => Added.Add(job);
 
         public Task<Job?> GetAsync(Guid id, CancellationToken cancellationToken) =>
             Task.FromResult(Added.SingleOrDefault(j => j.Id == id));
 
+        public Task<IReadOnlyList<Job>> ListOpenAtPropertiesAsync(
+            IReadOnlyCollection<Guid> propertyIds,
+            DateTime openedSinceUtc,
+            CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<Job>>(Added
+                .Where(j => j.PropertyId is { } id && propertyIds.Contains(id) && j.IsOpen && j.CreatedAtUtc >= openedSinceUtc)
+                .ToList());
+
         public Task<IReadOnlyList<Job>> ListAsync(CancellationToken cancellationToken) =>
             Task.FromResult<IReadOnlyList<Job>>(Added);
+    }
+
+    /// <summary>The seeded properties (<see cref="SeedData"/>), in memory.</summary>
+    internal sealed class FakePropertyRepository : IPropertyRepository
+    {
+        public static readonly IReadOnlyList<Property> Seeded =
+            SeedData.CreateBuildings().SelectMany(b => b.Properties).ToList();
+
+        private readonly IReadOnlyList<Property> _properties;
+
+        public FakePropertyRepository(IReadOnlyList<Property>? properties = null) => _properties = properties ?? Seeded;
+
+        public static Property Named(string name) => Seeded.Single(p => p.Name == name);
+
+        public Task<IReadOnlyList<Property>> ListAsync(CancellationToken cancellationToken) => Task.FromResult(_properties);
     }
 
     internal sealed class FakeUnitOfWork : IUnitOfWork

@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using System.Text.Json;
-using Meridian.Application.Abstractions;
 using Meridian.Domain.Jobs;
+using Meridian.Domain.Messages;
 
 namespace Meridian.Application.Triage;
 
@@ -14,56 +14,152 @@ public sealed class PrepareJobOptions
     public TimeSpan Timeout { get; init; } = DefaultTimeout;
 }
 
-/// <summary>What happened when a job was prepared.</summary>
-public sealed record PrepareJobOutcome(bool Prepared, int Attempts, string? FailureReason);
+/// <summary>
+/// The model step's result for one message (AD-2): the validated answer, or why there is none, with every attempt
+/// for the event log. <see cref="PrepareJob"/> records it on each job the message makes.
+/// </summary>
+public sealed class ModelPreparation
+{
+    internal ModelPreparation(
+        TriageResponse? response,
+        string? failureReason,
+        IReadOnlyList<object> attempts,
+        string modelId,
+        string promptVersion,
+        long totalLatencyMs)
+    {
+        Response = response;
+        FailureReason = failureReason;
+        AttemptRecords = attempts;
+        ModelId = modelId;
+        PromptVersion = promptVersion;
+        TotalLatencyMs = totalLatencyMs;
+    }
+
+    /// <summary>The validated answer; null when the model failed (RULE-11, R10).</summary>
+    public TriageResponse? Response { get; }
+
+    public bool Prepared => Response is not null;
+
+    public string? FailureReason { get; }
+
+    public int Attempts => AttemptRecords.Count;
+
+    public string ModelId { get; }
+
+    public string PromptVersion { get; }
+
+    public long TotalLatencyMs { get; }
+
+    internal IReadOnlyList<object> AttemptRecords { get; }
+
+    /// <summary>The model outcome event payload: model metadata, every attempt, and what was applied to the job.</summary>
+    public string Payload(object? applied) => JsonSerializer.Serialize(new
+    {
+        modelId = ModelId,
+        promptVersion = PromptVersion,
+        attemptCount = Attempts,
+        latencyMs = TotalLatencyMs,
+        reason = FailureReason,
+        applied,
+        attempts = AttemptRecords,
+    });
+}
 
 /// <summary>
-/// The model preparation step of the pipeline (AD-3): asks <see cref="ITriageModel"/> about a stored job's
-/// message, validates the answer against <c>triage.v1</c> with one retry for invalid output, and applies the
-/// first issue to the job, or records a failure and leaves it Unsure (RULE-11, R10). Never throws for a model
-/// problem; the job always ends with exactly one <c>ModelPrepared</c> or <c>ModelPreparationFailed</c> event.
+/// The model preparation step of the pipeline (AD-3): asks <see cref="ITriageModel"/> about a stored message and
+/// validates the answer against <c>triage.v1</c> with one retry for invalid output. Never throws for a model problem.
+/// Deterministic code then turns the answer into jobs (<see cref="Meridian.Application.Messages.SubmitMessage"/>); the <c>Record*</c>
+/// methods write the outcome on a job, so every job ends with exactly one <c>ModelPrepared</c> or
+/// <c>ModelPreparationFailed</c> event.
 /// </summary>
 public sealed class PrepareJob
 {
     public const int MaxAttempts = 2;
 
     private readonly ITriageModel _model;
-    private readonly IJobRepository _jobs;
-    private readonly IUnitOfWork _unitOfWork;
-    private readonly IClock _clock;
     private readonly TimeSpan _timeout;
 
-    public PrepareJob(ITriageModel model, IJobRepository jobs, IUnitOfWork unitOfWork, IClock clock, PrepareJobOptions? options = null)
+    public PrepareJob(ITriageModel model, PrepareJobOptions? options = null)
     {
         _model = model;
-        _jobs = jobs;
-        _unitOfWork = unitOfWork;
-        _clock = clock;
         _timeout = (options ?? new PrepareJobOptions()).Timeout;
     }
 
-    public async Task<PrepareJobOutcome> ExecuteAsync(Guid jobId, CancellationToken cancellationToken)
+    /// <summary>Asks the model about <paramref name="message"/>: its text and received time only (AD-10).</summary>
+    public async Task<ModelPreparation> AskAsync(Message message, CancellationToken cancellationToken)
     {
-        var job = await _jobs.GetAsync(jobId, cancellationToken)
-            ?? throw new InvalidOperationException($"Job {jobId} not found.");
-        var message = job.Messages.OrderBy(m => m.ReceivedAtUtc).FirstOrDefault()
-            ?? throw new InvalidOperationException($"Job {jobId} has no message.");
-
-        // AD-10: text and received time only.
-        var request = new TriageRequest(message.Text, message.ReceivedAtUtc);
-        var run = await AskModelAsync(request, cancellationToken);
-
-        // The outcome is saved even if the caller has gone away, so every job gets exactly one outcome event.
-        await _unitOfWork.ExecuteAsync(
-            _ =>
+        ArgumentNullException.ThrowIfNull(message);
+        var run = await AskModelAsync(new TriageRequest(message.Text, message.ReceivedAtUtc), cancellationToken);
+        var last = run.Attempts.LastOrDefault();
+        return new ModelPreparation(
+            run.Response,
+            run.FailureReason,
+            run.Attempts.Select(a => (object)new
             {
-                Apply(job, run);
-                return Task.FromResult(0);
-            },
-            CancellationToken.None);
-
-        return new PrepareJobOutcome(run.Response is not null, run.Attempts.Count, run.FailureReason);
+                attempt = a.Attempt,
+                modelId = a.ModelId ?? _model.ModelId,
+                promptVersion = a.PromptVersion ?? _model.PromptVersion,
+                latencyMs = a.LatencyMs,
+                inputTokens = a.InputTokens,
+                outputTokens = a.OutputTokens,
+                rawOutput = a.RawOutput,
+                failureReason = a.FailureReason,
+                exceptionType = a.ExceptionType,
+                validationErrors = a.ValidationErrors,
+            }).ToList(),
+            last?.ModelId ?? _model.ModelId,
+            last?.PromptVersion ?? _model.PromptVersion,
+            run.TotalLatencyMs);
     }
+
+    /// <summary>
+    /// The category a job gets for <paramref name="issue"/>: Unsure when the model is not confident or the
+    /// property is not resolved (AD-13), otherwise the proposed category.
+    /// </summary>
+    public static Category CategoryFor(TriageIssue issue, PropertyMatch property) =>
+        issue.Confidence == TriageConfidence.Low || !property.IsResolved ? Category.Unsure : issue.Category;
+
+    /// <summary>Applies one issue of a valid answer to a new job made for it.</summary>
+    public static void RecordIssue(Job job, ModelPreparation preparation, int issueIndex, PropertyMatch property, DateTime nowUtc)
+    {
+        var response = preparation.Response ?? throw new InvalidOperationException("The model gave no answer.");
+        var issue = response.Issues[issueIndex];
+        var category = CategoryFor(issue, property);
+        var applied = new
+        {
+            category = category.ToString(),
+            proposedCategory = issue.Category.ToString(),
+            proposedUrgency = issue.Urgency.ToString(),
+            confidence = issue.Confidence.ToString().ToLowerInvariant(),
+            issueCount = response.Issues.Count,
+            issueIndex,
+            propertyText = issue.PropertyText,
+            propertyResolution = property.Resolution.ToString(),
+            propertyId = property.Property?.Id,
+        };
+
+        job.ApplyModelPreparation(
+            category,
+            issue.Urgency,
+            issue.Explanation,
+            issue.SummaryEn,
+            response.Language,
+            preparation.Payload(applied),
+            nowUtc);
+    }
+
+    /// <summary>Records a valid answer with no issues: the job stays Unsure and is flagged for a person.</summary>
+    public static void RecordNotMaintenance(Job job, ModelPreparation preparation, DateTime nowUtc)
+    {
+        var response = preparation.Response ?? throw new InvalidOperationException("The model gave no answer.");
+        var applied = new { category = Category.Unsure.ToString(), issueCount = 0, notMaintenance = true };
+        job.ApplyNotMaintenance(response.Language, preparation.Payload(applied), nowUtc);
+    }
+
+    /// <summary>Records a model failure: the job stays Unsure with its urgency (RULE-11).</summary>
+    public static void RecordFailure(Job job, ModelPreparation preparation, DateTime nowUtc) =>
+        job.RecordModelFailure(preparation.Payload(applied: null), nowUtc);
 
     private async Task<ModelRun> AskModelAsync(TriageRequest request, CancellationToken cancellationToken)
     {
@@ -114,64 +210,6 @@ public sealed class PrepareJob
         }
 
         return ModelRun.Failed(attempts, TriageFailureReasons.InvalidOutput, total.ElapsedMilliseconds);
-    }
-
-    private void Apply(Job job, ModelRun run)
-    {
-        var now = _clock.UtcNow;
-        if (run.Response is null)
-        {
-            job.RecordModelFailure(Payload(run, applied: null), now);
-            return;
-        }
-
-        // Splitting into several jobs is a later story; the first issue prepares this job.
-        var issue = run.Response.Issues[0];
-        var category = issue.Confidence == TriageConfidence.Low ? Category.Unsure : issue.Category;
-        var applied = new
-        {
-            category = category.ToString(),
-            proposedCategory = issue.Category.ToString(),
-            proposedUrgency = issue.Urgency.ToString(),
-            confidence = issue.Confidence.ToString().ToLowerInvariant(),
-            issueCount = run.Response.Issues.Count,
-        };
-
-        job.ApplyModelPreparation(
-            category,
-            issue.Urgency,
-            issue.Explanation,
-            issue.SummaryEn,
-            run.Response.Language,
-            Payload(run, applied),
-            now);
-    }
-
-    private string Payload(ModelRun run, object? applied)
-    {
-        var last = run.Attempts.LastOrDefault();
-        return JsonSerializer.Serialize(new
-        {
-            modelId = last?.ModelId ?? _model.ModelId,
-            promptVersion = last?.PromptVersion ?? _model.PromptVersion,
-            attemptCount = run.Attempts.Count,
-            latencyMs = run.TotalLatencyMs,
-            reason = run.FailureReason,
-            applied,
-            attempts = run.Attempts.Select(a => new
-            {
-                attempt = a.Attempt,
-                modelId = a.ModelId ?? _model.ModelId,
-                promptVersion = a.PromptVersion ?? _model.PromptVersion,
-                latencyMs = a.LatencyMs,
-                inputTokens = a.InputTokens,
-                outputTokens = a.OutputTokens,
-                rawOutput = a.RawOutput,
-                failureReason = a.FailureReason,
-                exceptionType = a.ExceptionType,
-                validationErrors = a.ValidationErrors,
-            }),
-        });
     }
 
     private sealed record ModelRun(IReadOnlyList<AttemptRecord> Attempts, TriageResponse? Response, string? FailureReason, long TotalLatencyMs)

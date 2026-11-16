@@ -194,7 +194,7 @@ public class EmergencyRulesTests
         }
     }
 
-    private static string FindEvalCases()
+    internal static string FindEvalCases()
     {
         for (var dir = new DirectoryInfo(AppContext.BaseDirectory); dir is not null; dir = dir.Parent)
         {

@@ -25,11 +25,25 @@ export interface JobListItem {
   summaryEn: string | null;
   /** Ids of the emergency rules that fired on the job's messages, e.g. "gas"; empty when none fired. */
   ruleIds: string[];
+  /** The resolved property; null when the address was missing, unknown or ambiguous. */
+  propertyId: string | null;
+  /** How the resolved property is shown, e.g. "Flat 4, 22 Pemberton Road"; null when unresolved. */
+  propertyName: string | null;
+  /** Messages attached after the first one. */
+  followUpCount: number;
+}
+
+export interface SubmittedJob {
+  jobId: string;
+  reference: string;
+  /** "created" for a new job, "followUp" when the message was attached to an existing open job. */
+  outcome: 'created' | 'followUp';
 }
 
 export interface SubmitMessageResponse {
-  jobId: string;
-  reference: string;
+  messageId: string;
+  /** Every job the message made or was attached to. */
+  jobs: SubmittedJob[];
 }
 
 export interface ProblemDetails {

@@ -11,7 +11,8 @@ public sealed record TriageValidationResult(TriageResponse? Response, IReadOnlyL
 
 /// <summary>
 /// The single parser and validator for <c>triage.v1</c> (AD-2). The code trusts nothing from the model
-/// until it passes here: values outside the enums, empty <c>issues</c> and missing fields are rejected (AD-10).
+/// until it passes here: values outside the enums and missing fields are rejected (AD-10). An empty <c>issues</c>
+/// array is valid: it means the message reports no maintenance problem, and the pipeline still makes one Unsure job.
 /// Unknown extra fields are ignored. Enum values are matched exactly (case-sensitive).
 /// </summary>
 public static class TriageValidator
@@ -59,10 +60,6 @@ public static class TriageValidator
             else if (issuesElement.ValueKind != JsonValueKind.Array)
             {
                 errors.Add("issues: must be an array.");
-            }
-            else if (issuesElement.GetArrayLength() == 0)
-            {
-                errors.Add("issues: must contain at least one issue.");
             }
             else
             {

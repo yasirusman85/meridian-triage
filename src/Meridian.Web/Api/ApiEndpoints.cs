@@ -18,14 +18,19 @@ public static class ApiEndpoints
                 return Results.ValidationProblem(result.Errors.ToDictionary(e => e.Key, e => e.Value));
             }
 
-            return Results.Created((string?)null, new SubmitMessageResponse(result.JobId!.Value, result.Reference!));
+            return Results.Created(
+                (string?)null,
+                new SubmitMessageResponse(
+                    result.MessageId!.Value,
+                    result.Jobs.Select(j => new SubmittedJobDto(j.JobId, j.Reference, j.IsFollowUp ? "followUp" : "created")).ToList()));
         });
 
         api.MapGet("/jobs", async (ListQueue listQueue, CancellationToken ct) =>
         {
             var items = await listQueue.ExecuteAsync(ct);
             return Results.Ok(items.Select(i => new JobListItemDto(
-                i.Id, i.Reference, i.ReceivedAtUtc, i.Status, i.Urgency, i.Category, i.Sender, i.Preview, i.Explanation, i.SummaryEn, i.RuleIds)));
+                i.Id, i.Reference, i.ReceivedAtUtc, i.Status, i.Urgency, i.Category, i.Sender, i.Preview, i.Explanation, i.SummaryEn, i.RuleIds,
+                i.PropertyId, i.PropertyName, i.FollowUpCount)));
         });
 
         // Unknown API routes are 404 problem details, never the SPA page.

@@ -20,4 +20,7 @@ public enum EventType
 
     /// <summary>A person set the job's urgency, up or down, with a reason (AD-4). The only way urgency goes down.</summary>
     UrgencySetByPerson,
+
+    /// <summary>A later message was attached to this open job as a follow-up (R8, AD-13); it may raise urgency.</summary>
+    FollowUpAttached,
 }

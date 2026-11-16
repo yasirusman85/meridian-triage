@@ -112,3 +112,12 @@ td.summary {
   color: #cf222e;
   white-space: nowrap;
 }
+
+.follow-up-label {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.75em;
+  font-weight: 600;
+  color: #57606a;
+  white-space: nowrap;
+}

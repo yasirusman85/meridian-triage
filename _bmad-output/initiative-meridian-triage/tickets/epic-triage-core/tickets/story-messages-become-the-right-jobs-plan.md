@@ -3,14 +3,14 @@ title: 'Messages become the right jobs'
 type: feature
 ticket: '4'
 created: '2026-11-16'
-status: in-progress
+status: built
 baseline_revision: '730939f0345268feb258abc8916e075699534f7e'
 route: full
 route_source: auto
 risk: high
-review: ''
-review_source: ''
-lenses_ran: []
+review: quick
+review_source: pinned
+lenses_ran: [inline]
 review_loop_iteration: 0
 context:
   - '{project-root}/_bmad-output/initiative-meridian-triage/architecture-meridian-triage/architecture-meridian-triage.md'
@@ -67,17 +67,26 @@ Read the current `Job`, `Message`, `SubmitMessage`, `PrepareJob`, `ListQueue`, `
 ## Tasks & Acceptance
 
 **Execution:**
-- [ ] Domain: properties, job–property link, follow-ups, many-to-many messages -- R6, R8
-- [ ] Application: resolver, matcher, pipeline restructure -- AD-3, AD-13
-- [ ] Infrastructure: mappings, migration, seed, recorded answers -- persistence
-- [ ] Web and client: references list, property and follow-ups in queue -- R13 seed
-- [ ] Tests: matrix rows and Walsh API sequence -- I/O matrix
+- [x] Domain: properties, job–property link, follow-ups, many-to-many messages -- R6, R8
+- [x] Application: resolver, matcher, pipeline restructure -- AD-3, AD-13
+- [x] Infrastructure: mappings, migration, seed, recorded answers -- persistence
+- [x] Web and client: references list, property and follow-ups in queue -- R13 seed
+- [x] Tests: matrix rows and Walsh API sequence -- I/O matrix
 
 **Acceptance Criteria:**
 - Given a fresh database, when the six client messages are posted in order, then the queue shows five jobs: two for Joy, one Walsh job with two follow-ups, one for Nowak, one for Patel.
 - Given any job, when its history is read, then rule and model events exist for it and follow-ups appear as `FollowUpAttached`.
 
 ## Implementation Notes
+
+- **Pipeline order (AD-3).** `SubmitMessage` now: (1) stores the message alone in the first unit of work, (2) evaluates `EmergencyRules`, (3) asks the model (`PrepareJob.AskAsync`, unchanged retry/timeout logic, now returns a `ModelPreparation`), (4) in a second unit of work (saved with `CancellationToken.None`) resolves properties, matches follow-ups and creates one job per remaining issue. Jobs are created after preparation because their number is unknown before it; the placeholder job that stories 1–3 created before the model call is gone. Consequence: a rule emergency is committed with its job after the model step (at most the 20 s budget), not before it, and a crash during the model call leaves a stored message with no job. The story-1/3 tests that asserted "job exists when the model is called" now assert "message exists when the model is called".
+- **Jobs.** Every new job gets `MessageReceived`, `JobPrepared` (now with `propertyId`), `RulesApplied` (same rule result on every job of the message) and exactly one model outcome. A model failure makes one Unsure job with no property. A valid answer with empty `issues` makes one Unsure job via `Job.ApplyNotMaintenance` (`ModelPrepared` with `applied.notMaintenance = true`, explanation `Job.NotMaintenanceExplanation`). The validator now accepts empty `issues` and the prompt says to return it for non-maintenance (story 2 had rejected it). Note: `eval/README.md` still says a non-maintenance case is correct only when no job is created; this story's plan says one Unsure job, so story 8 must score that row accordingly.
+- **Follow-ups.** `FollowUpMatcher.Match(jobs, propertyId, category, nowUtc)`: resolved property only (null never matches), same category or either Unsure, `IsOpen` (not Attended/Rejected), `CreatedAtUtc` within 7 days inclusive of the message's received time; ties → same category, newest, lowest reference. Candidates are jobs that existed before the message (`IJobRepository.ListOpenAtPropertiesAsync`), so the model's split within one message stands. Several issues matching one job attach the message once with the highest proposed urgency. `Job.AttachFollowUp` links the message, appends `FollowUpAttached {messageId, reference, proposedUrgency}` and calls `RaiseUrgency(..., "follow-up")`; then `ApplyRules` runs on the job, so a follow-up mentioning gas escalates it.
+- **Category.** Applied category is Unsure when confidence is low or the property is not resolved; `applied` in `ModelPrepared` records `proposedCategory`, `issueIndex`, `propertyText`, `propertyResolution` (`Resolved|NoAddress|Unresolved|Ambiguous`) and `propertyId`.
+- **PropertyResolver.** Normalises (lower case, accents stripped, punctuation of any script to spaces, `st/rd/hse/ave/ln/ct/gr/pl/cl` expanded, unit words Flat/Apt/Mieszkanie/Apartamentul/فلیٹ dropped, `flat4` split). A building matches when its name words appear in order, plus its leading house number just before them when it has one. Left-over number tokens choose the flat. Ambiguous: a block named without a flat, two flats, or two buildings in one text. Unresolved: no building, an unknown flat, or a flat number on a house. All 53 non-null eval-case addresses resolve.
+- **Persistence.** `Messages.JobId` replaced by join table `JobMessages (JobId, MessageId)`; `Jobs.PropertyId` nullable FK; tables `Buildings`, `Properties`. Migration `PropertiesAndFollowUps` (dotnet-ef 8.0.34) was hand-ordered to copy existing links into `JobMessages` before dropping the column, and its Down restores one job per message; checked up and down on a database holding a row. `SeedData` (44 buildings, flats or whole houses, ids derived from names) is loaded by `MigrateMeridianDatabaseAsync` when `Buildings` is empty. Alder Court has flats 14a, 14b, 15a, 15b, 16.
+- **API and client.** `POST /api/messages` returns `{messageId, jobs: [{jobId, reference, outcome: created|followUp}]}`. `GET /api/jobs` adds `propertyId`, `propertyName` and `followUpCount`. The queue shows a Property column ("unresolved" when null) with an "N follow-ups" label, and the paste form reports created and attached references.
+- **Not done here.** No `Reject` or `Attend` domain method exists yet, so tests set `Status` by reflection (`TestJobs.SetStatus`). The acknowledgement story (2.1) plans to write its acknowledgement in the first transaction "with the job"; with this restructure there is no job until after the model, so that story must send in the second unit of work (or per job/follow-up there).
 
 ## Plan Change Log
 

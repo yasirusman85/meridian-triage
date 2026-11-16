@@ -21,7 +21,8 @@ public class JobTests
         Assert.Equal("MER-000001", job.Reference);
         Assert.Equal(Now, job.ReceivedAtUtc);
         Assert.Same(message, Assert.Single(job.Messages));
-        Assert.Equal(job.Id, message.JobId);
+        Assert.Null(job.PropertyId);
+        Assert.Equal(0, job.FollowUpCount);
     }
 
     [Fact]
@@ -60,12 +61,15 @@ public class JobTests
     }
 
     [Fact]
-    public void CreateFromMessage_rejects_a_message_already_on_a_job()
+    public void One_message_can_start_several_jobs()
     {
-        var message = Message.Receive("tenant@example.com", "Tap dripping", Now);
-        Job.CreateFromMessage(message, "MER-000004", Now);
+        var message = Message.Receive("joy@example.com", "Tap and bulb", Now);
 
-        Assert.Throws<InvalidOperationException>(() => Job.CreateFromMessage(message, "MER-000005", Now));
+        var first = Job.CreateFromMessage(message, "MER-000004", Now);
+        var second = Job.CreateFromMessage(message, "MER-000005", Now);
+
+        Assert.Same(message, Assert.Single(first.Messages));
+        Assert.Same(message, Assert.Single(second.Messages));
     }
 
     [Fact]
