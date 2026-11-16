@@ -20,4 +20,7 @@ public enum EventType
 
     /// <summary>A person set the job's urgency, up or down, with a reason (AD-4). The only way urgency goes down.</summary>
     UrgencySetByPerson,
+
+    /// <summary>A fixed acknowledgement (or the gas safety message) was written to the outbox for the tenant (R16).</summary>
+    AcknowledgementSent,
 }

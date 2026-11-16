@@ -1,5 +1,6 @@
 using Meridian.Application.Abstractions;
 using Meridian.Application.Messages;
+using Meridian.Application.Outbox;
 using Meridian.Application.Triage;
 using Meridian.Domain.Jobs;
 
@@ -75,7 +76,7 @@ public class SubmitMessageTests
             executionsWhenCalled = uow.Executions;
             jobsWhenCalled = jobs.Added.Count;
         };
-        var submit = new SubmitMessage(jobs, uow, clock, new PrepareJob(model, jobs, uow, clock));
+        var submit = new SubmitMessage(jobs, uow, clock, new PrepareJob(model, jobs, uow, clock), new AcknowledgeTenant(new FakeOutbox()));
 
         var result = await submit.ExecuteAsync(new SubmitMessageCommand("tenant@example.com", "Boiler broken"), default);
 
@@ -92,7 +93,7 @@ public class SubmitMessageTests
         var uow = new FakeUnitOfWork();
         var clock = new FakeClock(Now);
         var prepare = new PrepareJob(new FakeTriageModel(), jobs, uow, clock);
-        return (new SubmitMessage(jobs, uow, clock, prepare), jobs, uow);
+        return (new SubmitMessage(jobs, uow, clock, prepare, new AcknowledgeTenant(new FakeOutbox())), jobs, uow);
     }
 
     internal sealed class FakeJobRepository : IJobRepository

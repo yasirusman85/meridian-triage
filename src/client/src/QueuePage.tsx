@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { ApiError, listJobs, submitMessage, type JobListItem } from './api';
+import { SentToTenant } from './SentToTenant';
 
 // Stored times are UTC; the UI shows Europe/London (AD-9).
 const londonTime = new Intl.DateTimeFormat('en-GB', {
@@ -149,7 +150,10 @@ export function QueuePage() {
                       <span className="muted">Not prepared</span>
                     )}
                   </td>
-                  <td className="preview">{job.preview}</td>
+                  <td className="preview">
+                    {job.preview}
+                    <SentToTenant jobId={job.id} />
+                  </td>
                 </tr>
               ))}
             </tbody>

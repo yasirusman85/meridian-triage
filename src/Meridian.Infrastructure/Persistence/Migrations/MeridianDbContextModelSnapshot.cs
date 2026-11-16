@@ -132,6 +132,47 @@ namespace Meridian.Infrastructure.Persistence.Migrations
                     b.ToTable("Messages", (string)null);
                 });
 
+            modelBuilder.Entity("Meridian.Domain.Outbox.OutboundMessage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Channel")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("JobId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Recipient")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("TemplateId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("JobId", "CreatedAtUtc");
+
+                    b.ToTable("OutboundMessages", (string)null);
+                });
+
             modelBuilder.Entity("Meridian.Infrastructure.Persistence.JobNumberSequence", b =>
                 {
                     b.Property<int>("Id")
@@ -167,6 +208,15 @@ namespace Meridian.Infrastructure.Persistence.Migrations
                         .WithMany("Messages")
                         .HasForeignKey("JobId")
                         .OnDelete(DeleteBehavior.Restrict);
+                });
+
+            modelBuilder.Entity("Meridian.Domain.Outbox.OutboundMessage", b =>
+                {
+                    b.HasOne("Meridian.Domain.Jobs.Job", null)
+                        .WithMany()
+                        .HasForeignKey("JobId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Meridian.Domain.Jobs.Job", b =>

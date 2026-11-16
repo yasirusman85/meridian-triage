@@ -1,4 +1,5 @@
 using Meridian.Application.Abstractions;
+using Meridian.Application.Outbox;
 using Meridian.Application.Triage;
 using Meridian.Domain.Jobs;
 using Meridian.Domain.Messages;
@@ -25,6 +26,7 @@ public sealed record SubmitMessageResult(
 /// Stores a pasted message unchanged, creates its placeholder job and runs the emergency rules on it, in one
 /// transaction, then runs model preparation (<see cref="PrepareJob"/>). The message, job and rule result are saved
 /// before the model is called, so a model failure never loses a message or a rule emergency (AD-3, RULE-11).
+/// The tenant's acknowledgement is written to the outbox in that same transaction (R16).
 /// Splitting arrives in a later story.
 /// </summary>
 public sealed class SubmitMessage
@@ -33,13 +35,15 @@ public sealed class SubmitMessage
     private readonly IUnitOfWork _unitOfWork;
     private readonly IClock _clock;
     private readonly PrepareJob _prepareJob;
+    private readonly AcknowledgeTenant _acknowledge;
 
-    public SubmitMessage(IJobRepository jobs, IUnitOfWork unitOfWork, IClock clock, PrepareJob prepareJob)
+    public SubmitMessage(IJobRepository jobs, IUnitOfWork unitOfWork, IClock clock, PrepareJob prepareJob, AcknowledgeTenant acknowledge)
     {
         _jobs = jobs;
         _unitOfWork = unitOfWork;
         _clock = clock;
         _prepareJob = prepareJob;
+        _acknowledge = acknowledge;
     }
 
     public static IReadOnlyDictionary<string, string[]> Validate(SubmitMessageCommand command)
@@ -78,6 +82,9 @@ public sealed class SubmitMessage
                 // AD-3: emergency rules before the model; they can only raise urgency (AD-4).
                 created.ApplyRules(EmergencyRules.Evaluate(message.Text, message.ReceivedAtUtc), now);
                 _jobs.Add(created);
+
+                // AD-3, R16: the fixed acknowledgement (or gas safety message) in the same transaction, before the model.
+                _acknowledge.Send(created, message, now);
                 return created;
             },
             cancellationToken);

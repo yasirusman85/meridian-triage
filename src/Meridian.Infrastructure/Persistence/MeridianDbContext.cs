@@ -1,5 +1,6 @@
 using Meridian.Domain.Jobs;
 using Meridian.Domain.Messages;
+using Meridian.Domain.Outbox;
 using Microsoft.EntityFrameworkCore;
 
 namespace Meridian.Infrastructure.Persistence;
@@ -16,6 +17,8 @@ public sealed class MeridianDbContext : DbContext
     public DbSet<Message> Messages => Set<Message>();
 
     public DbSet<JobEvent> JobEvents => Set<JobEvent>();
+
+    public DbSet<OutboundMessage> OutboundMessages => Set<OutboundMessage>();
 
     public DbSet<JobNumberSequence> JobNumberSequences => Set<JobNumberSequence>();
 

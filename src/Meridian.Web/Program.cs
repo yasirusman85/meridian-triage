@@ -1,5 +1,6 @@
 using System.Text.Json.Serialization;
 using Meridian.Application.Messages;
+using Meridian.Application.Outbox;
 using Meridian.Application.Queue;
 using Meridian.Application.Triage;
 using Meridian.Infrastructure;
@@ -18,6 +19,8 @@ builder.Services.AddMeridianInfrastructure();
 builder.Services.AddScoped<PrepareJob>();
 builder.Services.AddScoped<SubmitMessage>();
 builder.Services.AddScoped<ListQueue>();
+builder.Services.AddScoped<AcknowledgeTenant>();
+builder.Services.AddScoped<ListOutbound>();
 
 var app = builder.Build();
 

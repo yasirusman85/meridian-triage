@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Meridian.Application.Messages;
+using Meridian.Application.Outbox;
 using Meridian.Application.Triage;
 using Meridian.Domain.Jobs;
 using Meridian.Domain.Rules;
@@ -74,12 +75,12 @@ public class SubmitMessageRulesTests
         var model = new FakeTriageModel();
         IReadOnlyList<EventType>? eventsWhenCalled = null;
         model.OnCall = () => eventsWhenCalled = jobs.Added.Single().Events.Select(e => e.Type).ToList();
-        var submit = new SubmitMessage(jobs, uow, clock, new PrepareJob(model, jobs, uow, clock));
+        var submit = new SubmitMessage(jobs, uow, clock, new PrepareJob(model, jobs, uow, clock), new AcknowledgeTenant(new FakeOutbox()));
 
         await submit.ExecuteAsync(new SubmitMessageCommand("tenant@example.com", "water coming through the ceiling"), default);
 
         Assert.Equal(
-            new[] { EventType.MessageReceived, EventType.JobPrepared, EventType.RulesApplied, EventType.UrgencyRaised },
+            new[] { EventType.MessageReceived, EventType.JobPrepared, EventType.RulesApplied, EventType.UrgencyRaised, EventType.AcknowledgementSent },
             eventsWhenCalled);
         Assert.Equal(2, uow.Executions);
     }
@@ -118,6 +119,6 @@ public class SubmitMessageRulesTests
         var uow = new FakeUnitOfWork();
         var clock = new FakeClock(now);
         var prepare = new PrepareJob(model, jobs, uow, clock, new PrepareJobOptions { Timeout = TimeSpan.FromMilliseconds(100) });
-        return (new SubmitMessage(jobs, uow, clock, prepare), jobs);
+        return (new SubmitMessage(jobs, uow, clock, prepare, new AcknowledgeTenant(new FakeOutbox())), jobs);
     }
 }
