@@ -56,17 +56,23 @@ Read `SubmitMessage`, the DI setup in `Meridian.Infrastructure/DependencyInjecti
 ## Tasks & Acceptance
 
 **Execution:**
-- [ ] Runner over the real pipeline -- AD-12
-- [ ] Scorer and harm classes -- eval README
-- [ ] JSON and Markdown reports, exit codes -- results
-- [ ] README update -- docs
-- [ ] Tests -- I/O matrix
-- [ ] Run it once with the stub and commit the results files
+- [x] Runner over the real pipeline -- AD-12
+- [x] Scorer and harm classes -- eval README
+- [x] JSON and Markdown reports, exit codes -- results
+- [x] README update -- docs
+- [x] Tests -- I/O matrix
+- [x] Run it once with the stub and commit the results files
 
 **Acceptance Criteria:**
 - Given the repo, when `dotnet run --project src/Meridian.Eval` runs, then `eval/results/<date>-stub.md` shows emergency recall, category accuracy, and every failure with its harm class.
 
 ## Implementation Notes
+
+- No product code changed. The runner composes `AddMeridianInfrastructure` plus the same use cases `Meridian.Web/Program.cs` registers, replaces only `IClock` (set to each case's `received_at`) and wraps the configured `ITriageModel` in a pass-through recorder (latency, tokens, the validated answer for `vulnerability_mentioned` and `property_text`, which jobs do not store).
+- Follow-up issues have no job of their own; they are scored as the message read alone (README rule): `PrepareJob.CategoryFor` on the issue and max(rules, model urgency). When several issues attach to one job the result collapses them, so they are assigned to follow-up jobs in order.
+- Property scoring reuses `PropertyResolver.Tokenize` (unit words dropped, abbreviations expanded); documented in the README.
+- Harm for fields AD-12 does not name: lower non-emergency urgency, vulnerability, property, issue count and follow-up are minor; a non-maintenance message at Emergency is tolerable. Injection failures are not reported separately (README says so).
+- All cases share one database, so unrelated cases at the same property within 7 days can group, as in the product.
 
 ## Plan Change Log
 
@@ -78,3 +84,5 @@ Read `SubmitMessage`, the DI setup in `Meridian.Infrastructure/DependencyInjecti
 - `cd src && dotnet build -warnaserror` -- expected: build succeeds
 - `cd src && dotnet test` -- expected: all tests pass
 - `dotnet run --project src/Meridian.Eval` -- expected: results written (exit code may be 1 with the stub; record it)
+
+**Results (2026-11-16):** build -warnaserror clean; `dotnet test` 420 passed, 1 skipped (live OpenRouter); stub eval exit code 1: emergency recall 77.3% (17/22), category accuracy 18.5% (10/54), 109 failures (5 critical, 1 tolerable, 103 minor), 46 of 52 cases without a recorded answer.
