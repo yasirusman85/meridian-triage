@@ -1,0 +1,21 @@
+{
+  "id": "var-27",
+  "source": "written",
+  "received_at": "2026-05-20T10:15:00Z",
+  "sender": "p.grant@example.com",
+  "text": "Something's not right in the flat, can someone come and have a look. 5 Moss Lane.",
+  "expected": {
+    "is_maintenance": true,
+    "issues": [
+      {
+        "category": "Unsure",
+        "urgency": "Routine",
+        "vulnerability_mentioned": false,
+        "property_text": "5 Moss Lane"
+      }
+    ],
+    "follow_up_of": null
+  },
+  "harm_if_wrong": "minor",
+  "notes": "Vague, no fault named. Unsure (RULE-3); the AI must not guess a category."
+}

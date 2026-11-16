@@ -1,0 +1,21 @@
+{
+  "id": "var-32",
+  "source": "written",
+  "received_at": "2026-06-23T12:00:00Z",
+  "sender": "i.dumitru@example.com",
+  "text": "Bună ziua, mânerul de la ușa băii s-a rupt și ușa nu se mai închide. Apartamentul 5, 30 Clarendon Road. Mulțumesc.",
+  "expected": {
+    "is_maintenance": true,
+    "issues": [
+      {
+        "category": "LocksAndDoors",
+        "urgency": "Routine",
+        "vulnerability_mentioned": false,
+        "property_text": "Apartamentul 5, 30 Clarendon Road"
+      }
+    ],
+    "follow_up_of": null
+  },
+  "harm_if_wrong": "minor",
+  "notes": "Romanian: 'the bathroom door handle broke and the door no longer closes'. Internal door: Routine."
+}

@@ -1,0 +1,21 @@
+{
+  "id": "var-20",
+  "source": "written",
+  "received_at": "2026-05-02T10:00:00Z",
+  "sender": "o.fitzgerald@example.com",
+  "text": "Heating has packed in again, no hot water either. 9 Rusholme Place.",
+  "expected": {
+    "is_maintenance": true,
+    "issues": [
+      {
+        "category": "Heating",
+        "urgency": "Urgent",
+        "vulnerability_mentioned": false,
+        "property_text": "9 Rusholme Place"
+      }
+    ],
+    "follow_up_of": null
+  },
+  "harm_if_wrong": "tolerable",
+  "notes": "Boundary: 2 May is outside the winter window, so no rule emergency. No hot water raises it to Urgent. Not a follow-up: the October job is long closed and more than 7 days old."
+}

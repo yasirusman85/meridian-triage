@@ -1,0 +1,21 @@
+{
+  "id": "var-45",
+  "source": "written",
+  "received_at": "2026-01-30T11:20:00Z",
+  "sender": "b.taylor@example.com",
+  "text": "Black mould is coming back around the bathroom window and on the ceiling above the shower, I keep cleaning it. 16 Heaton Road.",
+  "expected": {
+    "is_maintenance": true,
+    "issues": [
+      {
+        "category": "Unsure",
+        "urgency": "Routine",
+        "vulnerability_mentioned": false,
+        "property_text": "16 Heaton Road"
+      }
+    ],
+    "follow_up_of": null
+  },
+  "harm_if_wrong": "minor",
+  "notes": "Damp/mould in English, no vulnerability: Unsure (D5), Routine. January date must not trigger the heating rule."
+}

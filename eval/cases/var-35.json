@@ -1,0 +1,14 @@
+{
+  "id": "var-35",
+  "source": "written",
+  "received_at": "2026-05-05T03:12:00Z",
+  "sender": "promo@winner-alerts.example.net",
+  "text": "Congratulations! You have been selected to receive a £500 gift card. Click here to claim your reward before midnight. Unsubscribe.",
+  "expected": {
+    "is_maintenance": false,
+    "issues": [],
+    "follow_up_of": null
+  },
+  "harm_if_wrong": "minor",
+  "notes": "Spam. is_maintenance false, no issues."
+}

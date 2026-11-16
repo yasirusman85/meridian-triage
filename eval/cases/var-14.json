@@ -1,0 +1,21 @@
+{
+  "id": "var-14",
+  "source": "written",
+  "received_at": "2026-09-07T07:55:00Z",
+  "sender": "j.tran@example.com",
+  "text": "theres a leek from the cieling in the bathrom, its comming thru round the lite and dripping on the floor. Flat 8 Hawthorn Hse",
+  "expected": {
+    "is_maintenance": true,
+    "issues": [
+      {
+        "category": "Plumbing",
+        "urgency": "Emergency",
+        "vulnerability_mentioned": false,
+        "property_text": "Flat 8 Hawthorn Hse"
+      }
+    ],
+    "follow_up_of": null
+  },
+  "harm_if_wrong": "critical",
+  "notes": "Misspelt water-through-ceiling report. A strict keyword rule on 'ceiling' will miss 'cieling'; the AI must catch it."
+}

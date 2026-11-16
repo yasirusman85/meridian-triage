@@ -1,0 +1,21 @@
+{
+  "id": "var-17",
+  "source": "written",
+  "received_at": "2026-07-15T12:10:00Z",
+  "sender": "h.quinn@example.com",
+  "text": "Heating won't come on when I tested it, hot water is fine though. Not a big deal as it's summer, just want it sorted before the autumn. Flat 3, 2 Egerton Street.",
+  "expected": {
+    "is_maintenance": true,
+    "issues": [
+      {
+        "category": "Heating",
+        "urgency": "Routine",
+        "vulnerability_mentioned": false,
+        "property_text": "Flat 3, 2 Egerton Street"
+      }
+    ],
+    "follow_up_of": null
+  },
+  "harm_if_wrong": "tolerable",
+  "notes": "No heating in July: outside the October-April window, so no rule emergency (D6). Hot water works, tenant says not a big deal: Routine. Emergency here is over-escalation."
+}

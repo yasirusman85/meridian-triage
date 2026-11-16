@@ -1,0 +1,21 @@
+{
+  "id": "var-46",
+  "source": "written",
+  "received_at": "2026-03-05T16:45:00Z",
+  "sender": "h.wood@example.com",
+  "text": "A fence panel in the back garden has blown down in the wind. 33 Moorside Road.",
+  "expected": {
+    "is_maintenance": true,
+    "issues": [
+      {
+        "category": "General",
+        "urgency": "Routine",
+        "vulnerability_mentioned": false,
+        "property_text": "33 Moorside Road"
+      }
+    ],
+    "follow_up_of": null
+  },
+  "harm_if_wrong": "minor",
+  "notes": "Outdoor repair: General, Routine."
+}

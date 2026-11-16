@@ -1,0 +1,21 @@
+{
+  "id": "var-13",
+  "source": "written",
+  "received_at": "2026-07-18T23:05:00Z",
+  "sender": "r.nolan@example.com",
+  "text": "Water is pouring through the bathroom ceiling from the flat above, the light fitting is dripping. I've turned the light off at the switch. Flat 5, 60 Wilmslow Road.",
+  "expected": {
+    "is_maintenance": true,
+    "issues": [
+      {
+        "category": "Plumbing",
+        "urgency": "Emergency",
+        "vulnerability_mentioned": false,
+        "property_text": "Flat 5, 60 Wilmslow Road"
+      }
+    ],
+    "follow_up_of": null
+  },
+  "harm_if_wrong": "critical",
+  "notes": "Water through ceiling: rule emergency at any time of year. Water in a light fitting is part of the same incident, one issue (Plumbing); an extra Electrical issue at Emergency would be acceptable over-reporting."
+}

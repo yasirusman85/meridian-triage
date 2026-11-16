@@ -1,0 +1,21 @@
+{
+  "id": "var-11",
+  "source": "written",
+  "received_at": "2026-06-12T19:45:00Z",
+  "sender": "s.ahmed@example.com",
+  "text": "Any update on the leak under the sink? Still nothing and no one has called. Flat 2, 7 Kingsway Court.",
+  "expected": {
+    "is_maintenance": true,
+    "issues": [
+      {
+        "category": "Plumbing",
+        "urgency": "Routine",
+        "vulnerability_mentioned": false,
+        "property_text": "Flat 2, 7 Kingsway Court"
+      }
+    ],
+    "follow_up_of": "var-10"
+  },
+  "harm_if_wrong": "minor",
+  "notes": "Follow-up of var-10: same property, same category, job open, within 7 days. Must attach, not create a new job (D10). Nothing new, so urgency stays Routine."
+}

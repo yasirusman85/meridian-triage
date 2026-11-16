@@ -1,0 +1,21 @@
+{
+  "id": "var-38",
+  "source": "written",
+  "received_at": "2026-02-06T23:40:00Z",
+  "sender": "j.ellis@example.com",
+  "text": "Key has snapped in the front door lock, half of it is stuck inside. It's 11.40pm and I'm stood outside with my 2 year old, it's freezing. 19 Thornbury Way",
+  "expected": {
+    "is_maintenance": true,
+    "issues": [
+      {
+        "category": "LocksAndDoors",
+        "urgency": "Emergency",
+        "vulnerability_mentioned": true,
+        "property_text": "19 Thornbury Way"
+      }
+    ],
+    "follow_up_of": null
+  },
+  "harm_if_wrong": "critical",
+  "notes": "Lockout at night in February with a toddler outside. Not a fixed rule; labelled Emergency because a young child is out in the cold at night. Labeller judgement (see report)."
+}

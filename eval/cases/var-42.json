@@ -1,0 +1,21 @@
+{
+  "id": "var-42",
+  "source": "written",
+  "received_at": "2026-08-25T19:00:00Z",
+  "sender": "q.lambert@example.com",
+  "text": "the fridge freezr is'nt geting cold anymore, everything in the freezr has defrosted. flat 5 31 Dover st",
+  "expected": {
+    "is_maintenance": true,
+    "issues": [
+      {
+        "category": "Appliances",
+        "urgency": "Routine",
+        "vulnerability_mentioned": false,
+        "property_text": "flat 5 31 Dover st"
+      }
+    ],
+    "follow_up_of": null
+  },
+  "harm_if_wrong": "minor",
+  "notes": "Misspelt appliance fault. Routine (an inconvenience, not a safety risk)."
+}

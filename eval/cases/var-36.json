@@ -1,0 +1,14 @@
+{
+  "id": "var-36",
+  "source": "written",
+  "received_at": "2026-09-14T13:30:00Z",
+  "sender": "f.owens@example.com",
+  "text": "Just to say thanks to the plumber who came on Tuesday, he was great and the shower is perfect now. 22 Beech Road.",
+  "expected": {
+    "is_maintenance": false,
+    "issues": [],
+    "follow_up_of": null
+  },
+  "harm_if_wrong": "minor",
+  "notes": "Thank-you note about finished work. Not a new fault, so not maintenance. If the shower job is still open, code may attach it as a note; no issue expected from the AI."
+}

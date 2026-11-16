@@ -1,0 +1,21 @@
+{
+  "id": "var-04",
+  "source": "written",
+  "received_at": "2025-12-01T09:15:00Z",
+  "sender": "k.zielinska@example.com",
+  "text": "Dzień dobry, od rana czuć gaz w kuchni, zapach jest coraz silniejszy. Mieszkanie 3, 41 Hollins Street. Proszę o pilny kontakt.",
+  "expected": {
+    "is_maintenance": true,
+    "issues": [
+      {
+        "category": "Heating",
+        "urgency": "Emergency",
+        "vulnerability_mentioned": false,
+        "property_text": "Mieszkanie 3, 41 Hollins Street"
+      }
+    ],
+    "follow_up_of": null
+  },
+  "harm_if_wrong": "critical",
+  "notes": "Polish: 'since this morning there is a smell of gas in the kitchen, getting stronger'. 'gaz' is not the English keyword; the rule may miss it, the AI must catch it."
+}

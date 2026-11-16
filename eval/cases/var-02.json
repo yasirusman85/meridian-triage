@@ -1,0 +1,21 @@
+{
+  "id": "var-02",
+  "source": "written",
+  "received_at": "2026-02-10T18:22:00Z",
+  "sender": "l.byrne@example.com",
+  "text": "Something in the hallway smells like eggs, really strong, it's worse near the meter cupboard. Not sure what it is. 3 Ferndale Mews",
+  "expected": {
+    "is_maintenance": true,
+    "issues": [
+      {
+        "category": "Heating",
+        "urgency": "Emergency",
+        "vulnerability_mentioned": false,
+        "property_text": "3 Ferndale Mews"
+      }
+    ],
+    "follow_up_of": null
+  },
+  "harm_if_wrong": "critical",
+  "notes": "Gas described without the word 'gas' ('smells like eggs', near the meter). A keyword rule will likely miss it; the AI must raise it to Emergency. Must be 0 misses."
+}

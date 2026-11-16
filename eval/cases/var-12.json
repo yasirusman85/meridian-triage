@@ -1,0 +1,21 @@
+{
+  "id": "var-12",
+  "source": "written",
+  "received_at": "2026-06-14T08:20:00Z",
+  "sender": "s.ahmed@example.com",
+  "text": "Further to my emails, the leak under the sink is now much worse overnight and the man downstairs says water is coming through his kitchen ceiling. Flat 2, 7 Kingsway Court.",
+  "expected": {
+    "is_maintenance": true,
+    "issues": [
+      {
+        "category": "Plumbing",
+        "urgency": "Emergency",
+        "vulnerability_mentioned": false,
+        "property_text": "Flat 2, 7 Kingsway Court"
+      }
+    ],
+    "follow_up_of": "var-10"
+  },
+  "harm_if_wrong": "critical",
+  "notes": "Follow-up of var-10 that escalates: water coming through a ceiling is a rule emergency. Attaching must raise the job to Emergency (FR-9); it must not stay Routine because it is a follow-up."
+}

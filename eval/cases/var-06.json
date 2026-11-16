@@ -1,0 +1,21 @@
+{
+  "id": "var-06",
+  "source": "written",
+  "received_at": "2026-03-28T11:05:00Z",
+  "sender": "a.popescu@example.com",
+  "text": "Bună ziua, miroase puternic a gaz în bucătărie de azi dimineață. Apartamentul 12, Orchard Mill. Vă rog să mă sunați.",
+  "expected": {
+    "is_maintenance": true,
+    "issues": [
+      {
+        "category": "Heating",
+        "urgency": "Emergency",
+        "vulnerability_mentioned": false,
+        "property_text": "Apartamentul 12, Orchard Mill"
+      }
+    ],
+    "follow_up_of": null
+  },
+  "harm_if_wrong": "critical",
+  "notes": "Romanian: 'it smells strongly of gas in the kitchen since this morning'."
+}

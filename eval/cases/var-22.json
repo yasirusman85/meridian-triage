@@ -1,0 +1,21 @@
+{
+  "id": "var-22",
+  "source": "written",
+  "received_at": "2026-02-03T08:40:00Z",
+  "sender": "n.clarke@example.com",
+  "text": "Boiler is making a whistling and knocking noise every time the heating kicks in. Everything still works. Flat 7, 31 Albert Road.",
+  "expected": {
+    "is_maintenance": true,
+    "issues": [
+      {
+        "category": "Heating",
+        "urgency": "Urgent",
+        "vulnerability_mentioned": false,
+        "property_text": "Flat 7, 31 Albert Road"
+      }
+    ],
+    "follow_up_of": null
+  },
+  "harm_if_wrong": "tolerable",
+  "notes": "Same pattern as real-06: new noise, still working, no gas mentioned. Urgent (D4)."
+}

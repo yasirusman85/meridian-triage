@@ -1,0 +1,21 @@
+{
+  "id": "var-09",
+  "source": "written",
+  "received_at": "2026-08-05T13:12:00Z",
+  "sender": "p.kowalczyk@example.com",
+  "text": "the meter cupboard door for the gas meter has come off its hinge, just hanging there. 44 Mill Brow",
+  "expected": {
+    "is_maintenance": true,
+    "issues": [
+      {
+        "category": "LocksAndDoors",
+        "urgency": "Emergency",
+        "vulnerability_mentioned": false,
+        "property_text": "44 Mill Brow"
+      }
+    ],
+    "follow_up_of": null
+  },
+  "harm_if_wrong": "tolerable",
+  "notes": "The word 'gas' appears but there is no leak. The rule 'any mention of gas' is deliberately broad, so the expected system output is Emergency; a person lowers it. Scored as correct at Emergency; Routine from the system would be a rule failure. Harm tolerable: the real risk is over-escalation."
+}

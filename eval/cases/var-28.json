@@ -1,0 +1,21 @@
+{
+  "id": "var-28",
+  "source": "written",
+  "received_at": "2026-11-04T21:40:00Z",
+  "sender": "l.dunn@example.com",
+  "text": "There's a funny scratching noise coming from inside the wall behind the bed at night. Flat 6, Victoria Mill.",
+  "expected": {
+    "is_maintenance": true,
+    "issues": [
+      {
+        "category": "Unsure",
+        "urgency": "Routine",
+        "vulnerability_mentioned": false,
+        "property_text": "Flat 6, Victoria Mill"
+      }
+    ],
+    "follow_up_of": null
+  },
+  "harm_if_wrong": "minor",
+  "notes": "Ambiguous: could be rodents (Pest) or pipes (Plumbing). Unsure is the expected label; Pest is a defensible alternative and is counted as a minor category error."
+}

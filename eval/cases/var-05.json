@@ -1,0 +1,21 @@
+{
+  "id": "var-05",
+  "source": "written",
+  "received_at": "2026-02-21T16:40:00Z",
+  "sender": "f.rahman@example.com",
+  "text": "السلام علیکم، ہمارے گھر میں گیس کی بو آ رہی ہے۔ میری والدہ بزرگ ہیں اور گھر پر ہیں۔ 17 Reed Lane, Levenshulme",
+  "expected": {
+    "is_maintenance": true,
+    "issues": [
+      {
+        "category": "Heating",
+        "urgency": "Emergency",
+        "vulnerability_mentioned": true,
+        "property_text": "17 Reed Lane, Levenshulme"
+      }
+    ],
+    "follow_up_of": null
+  },
+  "harm_if_wrong": "critical",
+  "notes": "Urdu: 'there is a smell of gas in our house. My mother is elderly and is at home.' Gas in non-Latin script; elderly mother = vulnerability."
+}

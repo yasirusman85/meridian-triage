@@ -1,0 +1,27 @@
+{
+  "id": "var-23",
+  "source": "written",
+  "received_at": "2026-03-10T09:05:00Z",
+  "sender": "y.ibrahim@example.com",
+  "text": "Two things: the kitchen tap is dripping a bit, and also I think I can smell gas near the boiler since last night, faint but there. 21 Granby Row.",
+  "expected": {
+    "is_maintenance": true,
+    "issues": [
+      {
+        "category": "Plumbing",
+        "urgency": "Routine",
+        "vulnerability_mentioned": false,
+        "property_text": "21 Granby Row"
+      },
+      {
+        "category": "Heating",
+        "urgency": "Emergency",
+        "vulnerability_mentioned": false,
+        "property_text": "21 Granby Row"
+      }
+    ],
+    "follow_up_of": null
+  },
+  "harm_if_wrong": "critical",
+  "notes": "Emergency buried as the second issue behind a routine one. Two issues; the gas issue must be Emergency and must not be merged into the tap job at Routine."
+}

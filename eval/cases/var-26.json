@@ -1,0 +1,21 @@
+{
+  "id": "var-26",
+  "source": "written",
+  "received_at": "2026-09-02T14:00:00Z",
+  "sender": "a.hughes@example.com",
+  "text": "Hello, when does my tenancy renewal come through? I haven't had anything yet. Also the bathroom extractor fan has stopped, not urgent. Flat 2, 11 Station Approach.",
+  "expected": {
+    "is_maintenance": true,
+    "issues": [
+      {
+        "category": "Electrical",
+        "urgency": "Routine",
+        "vulnerability_mentioned": false,
+        "property_text": "Flat 2, 11 Station Approach"
+      }
+    ],
+    "follow_up_of": null
+  },
+  "harm_if_wrong": "minor",
+  "notes": "Mixed admin and maintenance. The tenancy question is not an issue; the fan is one Electrical Routine issue. is_maintenance is true because one issue exists."
+}

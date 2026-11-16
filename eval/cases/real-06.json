@@ -1,0 +1,21 @@
+{
+  "id": "real-06",
+  "source": "client",
+  "received_at": "2026-01-12T14:20:00Z",
+  "sender": "r.patel@...",
+  "text": "The boiler is making a loud banging noise when it comes on. It's still working and we've got hot water. Didn't do this before. 8 Carlton Street.",
+  "expected": {
+    "is_maintenance": true,
+    "issues": [
+      {
+        "category": "Heating",
+        "urgency": "Urgent",
+        "vulnerability_mentioned": false,
+        "property_text": "8 Carlton Street"
+      }
+    ],
+    "follow_up_of": null
+  },
+  "harm_if_wrong": "tolerable",
+  "notes": "Client message 6. Banging but working boiler is Urgent (D4). The word 'gas' does not appear, so the gas rule must not fire; an AI that reads 'boiler' as gas and raises to Emergency is an over-escalation (tolerable)."
+}

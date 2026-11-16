@@ -1,0 +1,21 @@
+{
+  "id": "var-33",
+  "source": "written",
+  "received_at": "2026-08-11T16:20:00Z",
+  "sender": "z.hussain@example.com",
+  "text": "السلام علیکم، کچن کا اوون کام نہیں کر رہا، چولہا ٹھیک ہے۔ فلیٹ 2، 9 Wellington Grove۔ شکریہ",
+  "expected": {
+    "is_maintenance": true,
+    "issues": [
+      {
+        "category": "Appliances",
+        "urgency": "Routine",
+        "vulnerability_mentioned": false,
+        "property_text": "فلیٹ 2، 9 Wellington Grove"
+      }
+    ],
+    "follow_up_of": null
+  },
+  "harm_if_wrong": "minor",
+  "notes": "Urdu: 'the kitchen oven is not working, the hob is fine'. Routine. Property scoring compares the number tokens and 'Wellington Grove', so an English 'Flat 2' is also accepted."
+}

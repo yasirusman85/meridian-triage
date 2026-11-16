@@ -1,0 +1,21 @@
+{
+  "id": "var-21",
+  "source": "written",
+  "received_at": "2026-01-27T20:15:00Z",
+  "sender": "unknown.tenant42@example.com",
+  "text": "My boilers stopped working, no heating or hot water and its freezing. Can someone come tomorrow please",
+  "expected": {
+    "is_maintenance": true,
+    "issues": [
+      {
+        "category": "Heating",
+        "urgency": "Emergency",
+        "vulnerability_mentioned": false,
+        "property_text": null
+      }
+    ],
+    "follow_up_of": null
+  },
+  "harm_if_wrong": "critical",
+  "notes": "No address. Still a rule emergency (January, no heating). property_text must be null: the AI must not invent a property. Property matching falls to the sender lookup or a person."
+}

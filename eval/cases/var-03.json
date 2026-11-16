@@ -1,0 +1,21 @@
+{
+  "id": "var-03",
+  "source": "written",
+  "received_at": "2026-11-02T22:10:00Z",
+  "sender": "d.mensah@example.com",
+  "text": "The CO alarm in the boiler cupboard keeps going off, long beeps, I've pressed the button and it starts again. Flat 11, Kingfisher House.",
+  "expected": {
+    "is_maintenance": true,
+    "issues": [
+      {
+        "category": "Heating",
+        "urgency": "Emergency",
+        "vulnerability_mentioned": false,
+        "property_text": "Flat 11, Kingfisher House"
+      }
+    ],
+    "follow_up_of": null
+  },
+  "harm_if_wrong": "critical",
+  "notes": "Carbon monoxide alarm. Not the word 'gas' but treated as anything gas; AI must raise. Heating because the alarm is in the boiler cupboard."
+}

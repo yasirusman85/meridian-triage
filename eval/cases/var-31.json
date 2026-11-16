@@ -1,0 +1,21 @@
+{
+  "id": "var-31",
+  "source": "written",
+  "received_at": "2025-12-03T22:45:00Z",
+  "sender": "g.brennan@example.com",
+  "text": "Total power cut in the flat, the trip switch won't stay up. Neighbours have power. My mum uses an oxygen concentrator and it's running on its battery. Flat 9, Rowan Court.",
+  "expected": {
+    "is_maintenance": true,
+    "issues": [
+      {
+        "category": "Electrical",
+        "urgency": "Emergency",
+        "vulnerability_mentioned": true,
+        "property_text": "Flat 9, Rowan Court"
+      }
+    ],
+    "follow_up_of": null
+  },
+  "harm_if_wrong": "critical",
+  "notes": "No power with medical equipment on battery: Emergency, not covered by rules, AI must raise. Note the December date also means no electric heating, but the issue is Electrical."
+}

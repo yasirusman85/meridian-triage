@@ -1,0 +1,21 @@
+{
+  "id": "var-01",
+  "source": "written",
+  "received_at": "2026-03-03T07:48:00Z",
+  "sender": "t.harding@example.com",
+  "text": "Hi, I can smell gas in the kitchen this morning, quite strong near the cooker. I've opened the windows. Flat 6, 18 Clarendon Road.",
+  "expected": {
+    "is_maintenance": true,
+    "issues": [
+      {
+        "category": "Heating",
+        "urgency": "Emergency",
+        "vulnerability_mentioned": false,
+        "property_text": "Flat 6, 18 Clarendon Road"
+      }
+    ],
+    "follow_up_of": null
+  },
+  "harm_if_wrong": "critical",
+  "notes": "Plain gas smell: rule emergency (FR-4), gas safety message. Category for a gas smell with no clear source is Heating (gas engineer); category is secondary here, urgency is what is scored for harm."
+}

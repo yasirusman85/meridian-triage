@@ -1,0 +1,21 @@
+{
+  "id": "var-44",
+  "source": "written",
+  "received_at": "2026-11-10T10:10:00Z",
+  "sender": "e.morgan@example.com",
+  "text": "The handrail on the communal stairs between the 1st and 2nd floor is loose and wobbles when you lean on it. Pennine House, flat 4.",
+  "expected": {
+    "is_maintenance": true,
+    "issues": [
+      {
+        "category": "General",
+        "urgency": "Routine",
+        "vulnerability_mentioned": false,
+        "property_text": "Pennine House, flat 4"
+      }
+    ],
+    "follow_up_of": null
+  },
+  "harm_if_wrong": "minor",
+  "notes": "Communal area repair: General. Routine (a wobble, not detached)."
+}

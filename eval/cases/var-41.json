@@ -1,0 +1,21 @@
+{
+  "id": "var-41",
+  "source": "written",
+  "received_at": "2026-07-08T15:25:00Z",
+  "sender": "n.patterson@example.com",
+  "text": "There's a big wasps nest right above the front door, they're coming in the house. My son is allergic to stings and carries an EpiPen. 2 Laurel Close.",
+  "expected": {
+    "is_maintenance": true,
+    "issues": [
+      {
+        "category": "Pest",
+        "urgency": "Urgent",
+        "vulnerability_mentioned": true,
+        "property_text": "2 Laurel Close"
+      }
+    ],
+    "follow_up_of": null
+  },
+  "harm_if_wrong": "tolerable",
+  "notes": "Wasps at the entrance with an allergic child: Urgent, vulnerability true. Emergency would be over-escalation."
+}

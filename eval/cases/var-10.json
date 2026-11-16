@@ -1,0 +1,21 @@
+{
+  "id": "var-10",
+  "source": "written",
+  "received_at": "2026-06-09T10:30:00Z",
+  "sender": "s.ahmed@example.com",
+  "text": "Hi, there's a small drip under the kitchen sink, I've put a bowl under it. Only fills up a bit each day. Flat 2, 7 Kingsway Court.",
+  "expected": {
+    "is_maintenance": true,
+    "issues": [
+      {
+        "category": "Plumbing",
+        "urgency": "Routine",
+        "vulnerability_mentioned": false,
+        "property_text": "Flat 2, 7 Kingsway Court"
+      }
+    ],
+    "follow_up_of": null
+  },
+  "harm_if_wrong": "minor",
+  "notes": "Contained drip under a sink: Routine. Must not be confused with water through a ceiling."
+}

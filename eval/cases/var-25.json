@@ -1,0 +1,33 @@
+{
+  "id": "var-25",
+  "source": "written",
+  "received_at": "2026-05-12T11:45:00Z",
+  "sender": "v.santos@example.com",
+  "text": "A few bits: washing machine isn't draining, leaves water in the drum. The bathroom extractor fan has stopped working. And the handle on the bedroom window is loose. Flat 4, 50 Upper Chorlton Road.",
+  "expected": {
+    "is_maintenance": true,
+    "issues": [
+      {
+        "category": "Appliances",
+        "urgency": "Routine",
+        "vulnerability_mentioned": false,
+        "property_text": "Flat 4, 50 Upper Chorlton Road"
+      },
+      {
+        "category": "Electrical",
+        "urgency": "Routine",
+        "vulnerability_mentioned": false,
+        "property_text": "Flat 4, 50 Upper Chorlton Road"
+      },
+      {
+        "category": "General",
+        "urgency": "Routine",
+        "vulnerability_mentioned": false,
+        "property_text": "Flat 4, 50 Upper Chorlton Road"
+      }
+    ],
+    "follow_up_of": null
+  },
+  "harm_if_wrong": "minor",
+  "notes": "Three issues, three categories, all Routine. Window handle is General (no window contractor among Dawn's categories)."
+}

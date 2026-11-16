@@ -1,0 +1,21 @@
+{
+  "id": "var-39",
+  "source": "written",
+  "received_at": "2026-03-21T01:05:00Z",
+  "sender": "m.hale@example.com",
+  "text": "Lost my keys on a night out, locked out of the flat. Staying at a mate's tonight but need to get back in tomorrow. Flat 12, Albany Court.",
+  "expected": {
+    "is_maintenance": true,
+    "issues": [
+      {
+        "category": "LocksAndDoors",
+        "urgency": "Urgent",
+        "vulnerability_mentioned": false,
+        "property_text": "Flat 12, Albany Court"
+      }
+    ],
+    "follow_up_of": null
+  },
+  "harm_if_wrong": "tolerable",
+  "notes": "Night lockout, but the tenant is safe somewhere else: Urgent (next working day), not Emergency."
+}

@@ -1,0 +1,21 @@
+{
+  "id": "var-43",
+  "source": "written",
+  "received_at": "2026-04-07T12:30:00Z",
+  "sender": "w.chowdhury@example.com",
+  "text": "The electric oven trips the whole kitchen circuit every time I switch it on. Everything else is fine if the oven is off. Flat 7, 27 Princess Street.",
+  "expected": {
+    "is_maintenance": true,
+    "issues": [
+      {
+        "category": "Appliances",
+        "urgency": "Routine",
+        "vulnerability_mentioned": false,
+        "property_text": "Flat 7, 27 Princess Street"
+      }
+    ],
+    "follow_up_of": null
+  },
+  "harm_if_wrong": "minor",
+  "notes": "Appliance fault that shows up as an electrical trip. The appliance is the cause, so Appliances; Electrical is a minor category error."
+}

@@ -1,0 +1,21 @@
+{
+  "id": "var-29",
+  "source": "written",
+  "received_at": "2026-03-16T07:30:00Z",
+  "sender": "k.barlow@example.com",
+  "text": "THIS IS THE THIRD TIME I AM REPORTING THIS!!! THE TOILET WILL NOT FLUSH AND IT IS THE ONLY TOILET IN THE HOUSE. FAMILY OF FIVE. SORT IT OUT TODAY OR I AM CALLING THE COUNCIL. 38 Brookfield Road",
+  "expected": {
+    "is_maintenance": true,
+    "issues": [
+      {
+        "category": "Plumbing",
+        "urgency": "Urgent",
+        "vulnerability_mentioned": false,
+        "property_text": "38 Brookfield Road"
+      }
+    ],
+    "follow_up_of": null
+  },
+  "harm_if_wrong": "tolerable",
+  "notes": "Shouty. Tone must not drive urgency to Emergency; the facts (only toilet, family of five) make it Urgent. 'Family of five' is not a vulnerability. Earlier reports are not in the set, so follow_up_of is null."
+}

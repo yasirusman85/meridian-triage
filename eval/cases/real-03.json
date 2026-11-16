@@ -1,0 +1,21 @@
+{
+  "id": "real-03",
+  "source": "client",
+  "received_at": "2026-01-16T19:51:00Z",
+  "sender": "m.walsh@...",
+  "text": "Still nothing. Michael Walsh, 14b Alder Court.",
+  "expected": {
+    "is_maintenance": true,
+    "issues": [
+      {
+        "category": "Unsure",
+        "urgency": "Routine",
+        "vulnerability_mentioned": false,
+        "property_text": "14b Alder Court"
+      }
+    ],
+    "follow_up_of": "real-02"
+  },
+  "harm_if_wrong": "minor",
+  "notes": "Client message 3. Read alone the text names no fault, so the AI should not guess one: Unsure. Follow-up of real-02 (same property, Unsure matches any category, job open, within 7 days; D10). Grouping is code. Once attached the job stays Emergency from real-02, so no emergency is lost even though this message alone reads as Routine."
+}

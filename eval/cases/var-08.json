@@ -1,0 +1,21 @@
+{
+  "id": "var-08",
+  "source": "written",
+  "received_at": "2026-04-14T17:30:00Z",
+  "sender": "c.osei@example.com",
+  "text": "The gas hob won't light on the front left ring and I get a faint gas smell when I turn the knob. Flat 2, 9 Linden Court.",
+  "expected": {
+    "is_maintenance": true,
+    "issues": [
+      {
+        "category": "Appliances",
+        "urgency": "Emergency",
+        "vulnerability_mentioned": false,
+        "property_text": "Flat 2, 9 Linden Court"
+      }
+    ],
+    "follow_up_of": null
+  },
+  "harm_if_wrong": "critical",
+  "notes": "Gas smell from an appliance: Emergency by rule; category Appliances because the source is the hob. Heating would be an acceptable-looking but wrong category (minor)."
+}

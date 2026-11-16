@@ -1,0 +1,21 @@
+{
+  "id": "var-18",
+  "source": "written",
+  "received_at": "2026-07-21T09:30:00Z",
+  "sender": "b.adeyemi@example.com",
+  "text": "No heating and no hot water since Saturday. I have a newborn and can't bath her properly. Flat 1, 15 Cromwell Avenue.",
+  "expected": {
+    "is_maintenance": true,
+    "issues": [
+      {
+        "category": "Heating",
+        "urgency": "Urgent",
+        "vulnerability_mentioned": true,
+        "property_text": "Flat 1, 15 Cromwell Avenue"
+      }
+    ],
+    "follow_up_of": null
+  },
+  "harm_if_wrong": "tolerable",
+  "notes": "July, so no rule emergency (D6), but no hot water with a newborn: the AI should raise to Urgent and name the vulnerability. Emergency would be over-escalation (tolerable); Routine would be a real error."
+}

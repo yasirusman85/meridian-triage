@@ -1,0 +1,21 @@
+{
+  "id": "var-30",
+  "source": "written",
+  "received_at": "2026-02-14T19:10:00Z",
+  "sender": "s.okoro@example.com",
+  "text": "SPARKS CAME OUT OF THE SOCKET IN THE LIVING ROOM WHEN I PLUGGED THE LAMP IN AND NOW THERE'S A BURNING SMELL!!! I've switched it off at the fuse box. 4 Delamere Street",
+  "expected": {
+    "is_maintenance": true,
+    "issues": [
+      {
+        "category": "Electrical",
+        "urgency": "Emergency",
+        "vulnerability_mentioned": false,
+        "property_text": "4 Delamere Street"
+      }
+    ],
+    "follow_up_of": null
+  },
+  "harm_if_wrong": "critical",
+  "notes": "Sparking socket and burning smell: a fire risk. No fixed rule covers it; the AI must raise to Emergency. Labeller judgement: Dawn's emergency list was given as examples ('anything gas'), not as the complete list."
+}

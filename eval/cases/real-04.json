@@ -1,0 +1,21 @@
+{
+  "id": "real-04",
+  "source": "client",
+  "received_at": "2026-01-16T20:30:00Z",
+  "sender": "s.walsh@...",
+  "text": "My husband has emailed twice about the heating at 14b Alder Court, no one has responded. We have a 7 month old baby. What is going on.",
+  "expected": {
+    "is_maintenance": true,
+    "issues": [
+      {
+        "category": "Heating",
+        "urgency": "Emergency",
+        "vulnerability_mentioned": true,
+        "property_text": "14b Alder Court"
+      }
+    ],
+    "follow_up_of": "real-02"
+  },
+  "harm_if_wrong": "critical",
+  "notes": "Client message 4. Different sender address, same property and same fault: follow-up of real-02, grouped by code. The text does not literally say 'no heating', so a keyword rule may not fire; read in context (January, a heating complaint unanswered, a baby) it is the no-heating emergency and the AI should raise it. Labelled Emergency so that the case still counts if grouping fails."
+}

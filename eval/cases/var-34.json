@@ -1,0 +1,14 @@
+{
+  "id": "var-34",
+  "source": "written",
+  "received_at": "2026-04-01T09:00:00Z",
+  "sender": "r.mcallister@example.com",
+  "text": "Hi, I paid my rent on the 28th but my statement still shows arrears. Can you check please? Flat 3, 14 Oxford Place.",
+  "expected": {
+    "is_maintenance": false,
+    "issues": [],
+    "follow_up_of": null
+  },
+  "harm_if_wrong": "minor",
+  "notes": "Rent query, not maintenance. is_maintenance false, no issues, no job."
+}

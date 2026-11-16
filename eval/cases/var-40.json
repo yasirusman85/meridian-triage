@@ -1,0 +1,21 @@
+{
+  "id": "var-40",
+  "source": "written",
+  "received_at": "2026-10-19T17:00:00Z",
+  "sender": "d.fraser@example.com",
+  "text": "We've seen a couple of mice in the kitchen this week and droppings behind the fridge. Flat 3, 8 Wycliffe Street.",
+  "expected": {
+    "is_maintenance": true,
+    "issues": [
+      {
+        "category": "Pest",
+        "urgency": "Routine",
+        "vulnerability_mentioned": false,
+        "property_text": "Flat 3, 8 Wycliffe Street"
+      }
+    ],
+    "follow_up_of": null
+  },
+  "harm_if_wrong": "minor",
+  "notes": "Mice: Pest, Routine. October date checks that 'winter' only affects heating, not other categories."
+}

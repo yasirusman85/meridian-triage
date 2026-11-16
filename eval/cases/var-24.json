@@ -1,0 +1,27 @@
+{
+  "id": "var-24",
+  "source": "written",
+  "received_at": "2026-04-20T18:30:00Z",
+  "sender": "c.murphy@example.com",
+  "text": "Hi, the front door lock has gone stiff and today the key wouldn't turn so I can't lock it from outside. Also I've seen mouse droppings in the kitchen cupboards. Flat 10, Elm Bank.",
+  "expected": {
+    "is_maintenance": true,
+    "issues": [
+      {
+        "category": "LocksAndDoors",
+        "urgency": "Urgent",
+        "vulnerability_mentioned": false,
+        "property_text": "Flat 10, Elm Bank"
+      },
+      {
+        "category": "Pest",
+        "urgency": "Routine",
+        "vulnerability_mentioned": false,
+        "property_text": "Flat 10, Elm Bank"
+      }
+    ],
+    "follow_up_of": null
+  },
+  "harm_if_wrong": "minor",
+  "notes": "Two issues, two contractors. A front door that cannot be locked is a security problem: Urgent, not an emergency (the tenant is inside and can get in). Mice: Routine."
+}

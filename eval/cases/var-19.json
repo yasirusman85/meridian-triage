@@ -1,0 +1,21 @@
+{
+  "id": "var-19",
+  "source": "written",
+  "received_at": "2026-10-01T07:10:00Z",
+  "sender": "o.fitzgerald@example.com",
+  "text": "Hi, heating isn't working at all, put it on for the first time this year and nothing. 9 Rusholme Place.",
+  "expected": {
+    "is_maintenance": true,
+    "issues": [
+      {
+        "category": "Heating",
+        "urgency": "Emergency",
+        "vulnerability_mentioned": false,
+        "property_text": "9 Rusholme Place"
+      }
+    ],
+    "follow_up_of": null
+  },
+  "harm_if_wrong": "critical",
+  "notes": "Boundary: 1 October is inside the winter window. Month is taken from received_at in UK local time (08:10 BST here). Rule emergency."
+}

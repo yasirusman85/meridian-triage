@@ -1,0 +1,21 @@
+{
+  "id": "var-16",
+  "source": "written",
+  "received_at": "2026-01-08T06:50:00Z",
+  "sender": "e.whitworth@example.com",
+  "text": "Boiler's stopped completely, no heating since last night, radiators stone cold. My dad lives with me, he's 84. 5 Ladybarn Lane",
+  "expected": {
+    "is_maintenance": true,
+    "issues": [
+      {
+        "category": "Heating",
+        "urgency": "Emergency",
+        "vulnerability_mentioned": true,
+        "property_text": "5 Ladybarn Lane"
+      }
+    ],
+    "follow_up_of": null
+  },
+  "harm_if_wrong": "critical",
+  "notes": "No heating in January: rule emergency. 84-year-old = vulnerability."
+}

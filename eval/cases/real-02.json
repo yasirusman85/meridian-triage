@@ -1,0 +1,21 @@
+{
+  "id": "real-02",
+  "source": "client",
+  "received_at": "2026-01-16T19:15:00Z",
+  "sender": "m.walsh@...",
+  "text": "URGENT URGENT no hot water and no heating at all since this morning, I have a baby in the house, this is unacceptable, I have called three times. 14b Alder Court. Please someone call me TONIGHT.",
+  "expected": {
+    "is_maintenance": true,
+    "issues": [
+      {
+        "category": "Heating",
+        "urgency": "Emergency",
+        "vulnerability_mentioned": true,
+        "property_text": "14b Alder Court"
+      }
+    ],
+    "follow_up_of": null
+  },
+  "harm_if_wrong": "critical",
+  "notes": "Client message 2. No heating in the October-April window is a rule emergency (D6). No hot water and no heating are one boiler fault, so one issue. Baby = vulnerability. Client gave only 'Fri 19:15'; a January Friday was chosen because Dawn says boilers go in winter. If this arrived in June-September it would not be a rule emergency and the label would be Urgent."
+}
