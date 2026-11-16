@@ -3,8 +3,8 @@ title: 'A pasted message reaches the queue'
 type: feature
 ticket: '1'
 created: '2026-11-11'
-status: draft
-baseline_revision: ''
+status: in-progress
+baseline_revision: 'c967069c7d01dee52a833b4f6bd63a40ffe4ca3d'
 route: full
 route_source: auto
 risk: medium
