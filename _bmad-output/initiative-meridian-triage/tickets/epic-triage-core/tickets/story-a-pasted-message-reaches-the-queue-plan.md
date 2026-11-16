@@ -3,14 +3,14 @@ title: 'A pasted message reaches the queue'
 type: feature
 ticket: '1'
 created: '2026-11-11'
-status: in-progress
+status: in-review
 baseline_revision: 'c967069c7d01dee52a833b4f6bd63a40ffe4ca3d'
 route: full
 route_source: auto
 risk: medium
-review: ''
-review_source: ''
-lenses_ran: []
+review: quick
+review_source: pinned
+lenses_ran: [quick]
 review_loop_iteration: 0
 context:
   - '{project-root}/_bmad-output/initiative-meridian-triage/architecture-meridian-triage/architecture-meridian-triage.md'
@@ -60,20 +60,31 @@ Greenfield: the repo holds only `docs/`, `_bmad*/`, `.claude/`, `scripts/`, `con
 ## Tasks & Acceptance
 
 **Execution:**
-- [ ] `src/` -- create solution and six projects targeting `net8.0` with project references per the paradigm; add EF Core Sqlite 8.0.34, EF Design 8.0.34, Mvc.Testing 8.0.34, xunit 2.9.3 -- skeleton every story builds on
-- [ ] `src/Meridian.Domain/` -- entities and enums; `Job.CreateFromMessage(message, reference, clock)` appends `MessageReceived` and `JobPrepared` events -- AD-5 write path from day one
-- [ ] `src/Meridian.Application/` -- `SubmitMessage` validates, creates message and job, saves in one transaction; `ListQueue` returns jobs ordered by urgency desc then received asc -- R1, R13 ordering seed
-- [ ] `src/Meridian.Infrastructure/` -- DbContext (enums stored as strings, UTC conversion), initial migration, repository, reference sequence -- persistence
-- [ ] `src/Meridian.Web/` -- endpoints, problem details, migrate on startup, serve SPA -- one process
-- [ ] `src/client/` -- queue page: paste form (sender, text) and job list (reference, received, status, urgency, category, first 120 chars) -- R13 tracer
-- [ ] `run.sh`, `run.ps1` -- `npm ci` (or install) and build client, `dotnet run --project src/Meridian.Web --urls http://localhost:5080` -- RULE-12
-- [ ] `src/Meridian.Tests/` -- unit tests for `Job.CreateFromMessage` events and validation; one `WebApplicationFactory` test posting a Polish message and reading it back unchanged with its event -- I/O matrix
+- [x] `src/` -- create solution and six projects targeting `net8.0` with project references per the paradigm; add EF Core Sqlite 8.0.34, EF Design 8.0.34, Mvc.Testing 8.0.34, xunit 2.9.3 -- skeleton every story builds on
+- [x] `src/Meridian.Domain/` -- entities and enums; `Job.CreateFromMessage(message, reference, clock)` appends `MessageReceived` and `JobPrepared` events -- AD-5 write path from day one
+- [x] `src/Meridian.Application/` -- `SubmitMessage` validates, creates message and job, saves in one transaction; `ListQueue` returns jobs ordered by urgency desc then received asc -- R1, R13 ordering seed
+- [x] `src/Meridian.Infrastructure/` -- DbContext (enums stored as strings, UTC conversion), initial migration, repository, reference sequence -- persistence
+- [x] `src/Meridian.Web/` -- endpoints, problem details, migrate on startup, serve SPA -- one process
+- [x] `src/client/` -- queue page: paste form (sender, text) and job list (reference, received, status, urgency, category, first 120 chars) -- R13 tracer
+- [x] `run.sh`, `run.ps1` -- `npm ci` (or install) and build client, `dotnet run --project src/Meridian.Web --urls http://localhost:5080` -- RULE-12
+- [x] `src/Meridian.Tests/` -- unit tests for `Job.CreateFromMessage` events and validation; one `WebApplicationFactory` test posting a Polish message and reading it back unchanged with its event -- I/O matrix
 
 **Acceptance Criteria:**
 - Given a fresh clone with .NET 8 and Node 22, when `./run.sh` runs, then the app serves the queue page at http://localhost:5080 within the first run.
 - Given a stored job, when its history is read from the database, then it has a `MessageReceived` event with the actor `system` and a UTC timestamp.
 
 ## Implementation Notes
+
+- `IClock` lives in Application (Code Map) and Domain may not reference it, so `Job.CreateFromMessage(message, reference, nowUtc)` takes the clock's value; `SubmitMessage` passes `IClock.UtcNow`. Domain rejects non-UTC times.
+- Job reference comes from a one-row `JobNumberSequence` table, incremented with a single `UPDATE ... RETURNING` inside the submit transaction.
+- Application use cases are registered in `Meridian.Web/Program.cs` (Application has no DI package, by the Stack rule).
+- Queue order (urgency desc, received asc, reference) is applied in `ListQueue` in memory, because enums are stored as strings.
+- `preview` (first 120 UTF-16 chars, never splitting a surrogate pair) is computed server-side.
+- Client adds `@types/react` and `@types/react-dom` 19.3.0 (pinned) so TypeScript 7 can type-check; not in the Stack table.
+- Test-only packages: `Microsoft.NET.Test.Sdk` 17.12.0, `xunit.runner.visualstudio` 2.8.2.
+- Malformed JSON bodies return 400 problem details via `BadRequestExceptionHandler` (the default in Development is 500).
+- `dotnet run --project` runs with the project folder as working directory, so the database is `src/Meridian.Web/meridian.db` (ignored by `*.db`).
+- Migrations were generated with `dotnet-ef` 8.0.34 (not added to the repo as a tool manifest).
 
 ## Plan Change Log
 

@@ -1,0 +1,52 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Meridian.Domain", "Meridian.Domain\Meridian.Domain.csproj", "{04F19543-DB80-4B5B-9F67-68C2A9D3C9E4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Meridian.Application", "Meridian.Application\Meridian.Application.csproj", "{A1B570C0-8B5A-4BEC-A0ED-62110563EE25}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Meridian.Infrastructure", "Meridian.Infrastructure\Meridian.Infrastructure.csproj", "{EB607B6F-C291-4F06-A1A3-8B6F5A236153}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Meridian.Web", "Meridian.Web\Meridian.Web.csproj", "{5ABF90DA-DB39-4A00-B594-1C2CA71E8B25}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Meridian.Eval", "Meridian.Eval\Meridian.Eval.csproj", "{DC3BAC97-B92A-435B-84F5-0D8763CBAAFF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Meridian.Tests", "Meridian.Tests\Meridian.Tests.csproj", "{7702B370-4A04-43F9-90B4-255DDC3A9359}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{04F19543-DB80-4B5B-9F67-68C2A9D3C9E4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{04F19543-DB80-4B5B-9F67-68C2A9D3C9E4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{04F19543-DB80-4B5B-9F67-68C2A9D3C9E4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{04F19543-DB80-4B5B-9F67-68C2A9D3C9E4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A1B570C0-8B5A-4BEC-A0ED-62110563EE25}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A1B570C0-8B5A-4BEC-A0ED-62110563EE25}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A1B570C0-8B5A-4BEC-A0ED-62110563EE25}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A1B570C0-8B5A-4BEC-A0ED-62110563EE25}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EB607B6F-C291-4F06-A1A3-8B6F5A236153}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EB607B6F-C291-4F06-A1A3-8B6F5A236153}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EB607B6F-C291-4F06-A1A3-8B6F5A236153}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EB607B6F-C291-4F06-A1A3-8B6F5A236153}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5ABF90DA-DB39-4A00-B594-1C2CA71E8B25}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5ABF90DA-DB39-4A00-B594-1C2CA71E8B25}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5ABF90DA-DB39-4A00-B594-1C2CA71E8B25}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5ABF90DA-DB39-4A00-B594-1C2CA71E8B25}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DC3BAC97-B92A-435B-84F5-0D8763CBAAFF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DC3BAC97-B92A-435B-84F5-0D8763CBAAFF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DC3BAC97-B92A-435B-84F5-0D8763CBAAFF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DC3BAC97-B92A-435B-84F5-0D8763CBAAFF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7702B370-4A04-43F9-90B4-255DDC3A9359}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7702B370-4A04-43F9-90B4-255DDC3A9359}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7702B370-4A04-43F9-90B4-255DDC3A9359}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7702B370-4A04-43F9-90B4-255DDC3A9359}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
