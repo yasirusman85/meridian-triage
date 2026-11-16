@@ -2,6 +2,7 @@ using Meridian.Application.Abstractions;
 using Meridian.Application.Messages;
 using Meridian.Application.Outbox;
 using Meridian.Application.Triage;
+using Meridian.Domain.Contractors;
 using Meridian.Domain.Jobs;
 using Meridian.Domain.Messages;
 using Meridian.Domain.Properties;
@@ -83,7 +84,7 @@ public class SubmitMessageTests
             executionsWhenCalled = uow.Executions;
             messagesWhenCalled = jobs.Messages.Count;
         };
-        var submit = new SubmitMessage(jobs, new FakePropertyRepository(), uow, clock, new PrepareJob(model), new AcknowledgeTenant(new FakeOutbox()));
+        var submit = new SubmitMessage(jobs, new FakePropertyRepository(), new FakeContractorRepository(), uow, clock, new PrepareJob(model), new AcknowledgeTenant(new FakeOutbox()));
 
         var result = await submit.ExecuteAsync(new SubmitMessageCommand("tenant@example.com", "Boiler broken"), default);
 
@@ -104,7 +105,7 @@ public class SubmitMessageTests
         var uow = new FakeUnitOfWork();
         var clock = new FakeClock(Now);
         var prepare = new PrepareJob(new FakeTriageModel());
-        return (new SubmitMessage(jobs, new FakePropertyRepository(), uow, clock, prepare, new AcknowledgeTenant(new FakeOutbox())), jobs, uow);
+        return (new SubmitMessage(jobs, new FakePropertyRepository(), new FakeContractorRepository(), uow, clock, prepare, new AcknowledgeTenant(new FakeOutbox())), jobs, uow);
     }
 
     internal sealed class FakeJobRepository : IJobRepository
@@ -158,6 +159,24 @@ public class SubmitMessageTests
         public static Property Named(string name) => Seeded.Single(p => p.Name == name);
 
         public Task<IReadOnlyList<Property>> ListAsync(CancellationToken cancellationToken) => Task.FromResult(_properties);
+    }
+
+    /// <summary>The seeded contractors and assignments (<see cref="SeedData"/>), in memory.</summary>
+    internal sealed class FakeContractorRepository : IContractorRepository
+    {
+        public static readonly IReadOnlyList<Contractor> Seeded = SeedData.CreateContractors();
+
+        private readonly IReadOnlyList<ContractorAssignment> _assignments;
+
+        public FakeContractorRepository(IReadOnlyList<ContractorAssignment>? assignments = null) =>
+            _assignments = assignments ?? SeedData.CreateContractorAssignments();
+
+        public static Contractor Named(string name) => Seeded.Single(c => c.Name == name);
+
+        public Task<IReadOnlyList<Contractor>> ListAsync(CancellationToken cancellationToken) => Task.FromResult(Seeded);
+
+        public Task<IReadOnlyList<ContractorAssignment>> ListAssignmentsAsync(CancellationToken cancellationToken) =>
+            Task.FromResult(_assignments);
     }
 
     internal sealed class FakeUnitOfWork : IUnitOfWork

@@ -1,3 +1,4 @@
+using Meridian.Domain.Contractors;
 using Meridian.Domain.Jobs;
 using Meridian.Domain.Messages;
 using Meridian.Domain.Outbox;
@@ -22,6 +23,10 @@ public sealed class MeridianDbContext : DbContext
     public DbSet<Building> Buildings => Set<Building>();
 
     public DbSet<Property> Properties => Set<Property>();
+
+    public DbSet<Contractor> Contractors => Set<Contractor>();
+
+    public DbSet<ContractorAssignment> ContractorAssignments => Set<ContractorAssignment>();
 
     public DbSet<OutboundMessage> OutboundMessages => Set<OutboundMessage>();
 

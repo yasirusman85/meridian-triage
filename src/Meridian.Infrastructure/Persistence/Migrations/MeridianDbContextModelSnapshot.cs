@@ -32,6 +32,65 @@ namespace Meridian.Infrastructure.Persistence.Migrations
                     b.ToTable("JobMessages", (string)null);
                 });
 
+            modelBuilder.Entity("Meridian.Domain.Contractors.Contractor", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Phone")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Trade")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("Contractors", (string)null);
+                });
+
+            modelBuilder.Entity("Meridian.Domain.Contractors.ContractorAssignment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("BuildingId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("ContractorId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Category")
+                        .IsUnique()
+                        .HasDatabaseName("IX_ContractorAssignments_DefaultCategory")
+                        .HasFilter("\"BuildingId\" IS NULL");
+
+                    b.HasIndex("ContractorId");
+
+                    b.HasIndex("BuildingId", "Category")
+                        .IsUnique();
+
+                    b.ToTable("ContractorAssignments", (string)null);
+                });
+
             modelBuilder.Entity("Meridian.Domain.Jobs.Job", b =>
                 {
                     b.Property<Guid>("Id")
@@ -68,6 +127,13 @@ namespace Meridian.Infrastructure.Persistence.Migrations
                         .HasMaxLength(32)
                         .HasColumnType("TEXT");
 
+                    b.Property<Guid?>("SuggestedContractorId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SuggestedContractorRule")
+                        .HasMaxLength(16)
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("SummaryEn")
                         .HasColumnType("TEXT");
 
@@ -90,6 +156,8 @@ namespace Meridian.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("Reference")
                         .IsUnique();
+
+                    b.HasIndex("SuggestedContractorId");
 
                     b.ToTable("Jobs", (string)null);
                 });
@@ -271,11 +339,30 @@ namespace Meridian.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Meridian.Domain.Contractors.ContractorAssignment", b =>
+                {
+                    b.HasOne("Meridian.Domain.Properties.Building", null)
+                        .WithMany()
+                        .HasForeignKey("BuildingId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Meridian.Domain.Contractors.Contractor", null)
+                        .WithMany()
+                        .HasForeignKey("ContractorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Meridian.Domain.Jobs.Job", b =>
                 {
                     b.HasOne("Meridian.Domain.Properties.Property", null)
                         .WithMany()
                         .HasForeignKey("PropertyId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Meridian.Domain.Contractors.Contractor", null)
+                        .WithMany()
+                        .HasForeignKey("SuggestedContractorId")
                         .OnDelete(DeleteBehavior.Restrict);
                 });
 

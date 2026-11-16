@@ -229,7 +229,7 @@ public class PrepareJobTests
         var jobs = new FakeJobRepository();
         var clock = new FakeClock(Received);
         var options = timeout is null ? null : new PrepareJobOptions { Timeout = timeout.Value };
-        var submit = new SubmitMessage(jobs, new FakePropertyRepository(), new FakeUnitOfWork(), clock, new PrepareJob(model, options), new AcknowledgeTenant(new FakeOutbox()));
+        var submit = new SubmitMessage(jobs, new FakePropertyRepository(), new FakeContractorRepository(), new FakeUnitOfWork(), clock, new PrepareJob(model, options), new AcknowledgeTenant(new FakeOutbox()));
 
         var result = await submit.ExecuteAsync(new SubmitMessageCommand("tenant@example.com", text), cancellationToken);
 

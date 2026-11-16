@@ -146,3 +146,14 @@ td.summary {
   color: #57606a;
   white-space: nowrap;
 }
+
+.contractor-rule {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.75em;
+}
+
+.needs-person {
+  font-weight: 600;
+  color: #9a6700;
+}

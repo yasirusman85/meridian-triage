@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Meridian.Domain.Contractors;
 using Meridian.Domain.Messages;
 using Meridian.Domain.Rules;
 
@@ -33,6 +34,12 @@ public sealed class Job
 
     /// <summary>The property the job is at, once <c>PropertyResolver</c> matched one (AD-13); null when unresolved.</summary>
     public Guid? PropertyId { get; private set; }
+
+    /// <summary>The contractor <c>ContractorLookup</c> suggested for the job's category and building; null means "needs a person".</summary>
+    public Guid? SuggestedContractorId { get; private set; }
+
+    /// <summary>Whether <see cref="SuggestedContractorId"/> is the building's usual contractor or the company default; null without a suggestion.</summary>
+    public ContractorRule? SuggestedContractorRule { get; private set; }
 
     /// <summary>When the job's first message was received (UTC).</summary>
     public DateTime ReceivedAtUtc { get; private set; }
@@ -297,6 +304,47 @@ public sealed class Job
             nowUtc,
             JobEvent.SystemActor,
             new { templateId, outboundId });
+    }
+
+    /// <summary>
+    /// Records the contractor fixed code suggests for the job (R12, AD-3), when the job is created or its category
+    /// changes: sets <see cref="SuggestedContractorId"/> and <see cref="SuggestedContractorRule"/> and appends
+    /// <see cref="EventType.ContractorSuggested"/> with the contractor id and rule (<c>building</c> or <c>default</c>).
+    /// The same suggestion again changes nothing and writes no event. An Unsure job gets no suggestion.
+    /// </summary>
+    /// <returns>True when the suggestion changed.</returns>
+    public bool SuggestContractor(ContractorSuggestion suggestion, DateTime nowUtc)
+    {
+        ArgumentNullException.ThrowIfNull(suggestion);
+        if (suggestion.ContractorId == Guid.Empty)
+        {
+            throw new ArgumentException("A contractor id is required.", nameof(suggestion));
+        }
+
+        if (!Enum.IsDefined(suggestion.Rule))
+        {
+            throw new ArgumentOutOfRangeException(nameof(suggestion), suggestion.Rule, "Unknown contractor rule.");
+        }
+
+        Guards.RequireUtc(nowUtc, nameof(nowUtc));
+        if (Category == Category.Unsure)
+        {
+            throw new InvalidOperationException($"Job {Reference} is Unsure and needs a person, not a suggested contractor.");
+        }
+
+        if (SuggestedContractorId == suggestion.ContractorId && SuggestedContractorRule == suggestion.Rule)
+        {
+            return false;
+        }
+
+        SuggestedContractorId = suggestion.ContractorId;
+        SuggestedContractorRule = suggestion.Rule;
+        Append(
+            EventType.ContractorSuggested,
+            nowUtc,
+            JobEvent.SystemActor,
+            new { contractorId = suggestion.ContractorId, rule = suggestion.Rule.ToString().ToLowerInvariant() });
+        return true;
     }
 
     /// <summary>

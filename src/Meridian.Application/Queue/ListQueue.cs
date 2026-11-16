@@ -1,5 +1,7 @@
 using Meridian.Application.Abstractions;
+using Meridian.Domain.Contractors;
 using Meridian.Domain.Jobs;
+using Meridian.Domain.Properties;
 
 namespace Meridian.Application.Queue;
 
@@ -17,27 +19,38 @@ public sealed record QueueItem(
     IReadOnlyList<string> RuleIds,
     Guid? PropertyId,
     string? PropertyName,
-    int FollowUpCount);
+    int FollowUpCount,
+    string? BuildingName,
+    Guid? SuggestedContractorId,
+    string? SuggestedContractorName,
+    string? SuggestedContractorPhone,
+    ContractorRule? SuggestedContractorRule);
 
-/// <summary>The review queue: most urgent first, then oldest first (R13).</summary>
+/// <summary>
+/// The review queue: most urgent first, then oldest first (R13). Each item carries its building and suggested
+/// contractor (R11); no contractor means a person must choose.
+/// </summary>
 public sealed class ListQueue
 {
     public const int PreviewLength = 120;
 
     private readonly IJobRepository _jobs;
     private readonly IPropertyRepository _properties;
+    private readonly IContractorRepository _contractors;
 
-    public ListQueue(IJobRepository jobs, IPropertyRepository properties)
+    public ListQueue(IJobRepository jobs, IPropertyRepository properties, IContractorRepository contractors)
     {
         _jobs = jobs;
         _properties = properties;
+        _contractors = contractors;
     }
 
     public async Task<IReadOnlyList<QueueItem>> ExecuteAsync(CancellationToken cancellationToken)
     {
         var jobs = await _jobs.ListAsync(cancellationToken);
-        var names = (await _properties.ListAsync(cancellationToken)).ToDictionary(p => p.Id, p => p.Name);
-        return Order(jobs).Select(j => ToItem(j, names)).ToList();
+        var properties = (await _properties.ListAsync(cancellationToken)).ToDictionary(p => p.Id);
+        var contractors = (await _contractors.ListAsync(cancellationToken)).ToDictionary(c => c.Id);
+        return Order(jobs).Select(j => ToItem(j, properties, contractors)).ToList();
     }
 
     public static IEnumerable<Job> Order(IEnumerable<Job> jobs) =>
@@ -62,9 +75,14 @@ public sealed class ListQueue
         return text[..length];
     }
 
-    private static QueueItem ToItem(Job job, IReadOnlyDictionary<Guid, string> propertyNames)
+    private static QueueItem ToItem(
+        Job job,
+        IReadOnlyDictionary<Guid, Property> properties,
+        IReadOnlyDictionary<Guid, Contractor> contractors)
     {
         var first = job.Messages.OrderBy(m => m.ReceivedAtUtc).FirstOrDefault();
+        var property = job.PropertyId is { } propertyId ? properties.GetValueOrDefault(propertyId) : null;
+        var contractor = job.SuggestedContractorId is { } contractorId ? contractors.GetValueOrDefault(contractorId) : null;
         return new QueueItem(
             job.Id,
             job.Reference,
@@ -78,7 +96,12 @@ public sealed class ListQueue
             job.SummaryEn,
             job.RuleIds,
             job.PropertyId,
-            job.PropertyId is { } id && propertyNames.TryGetValue(id, out var name) ? name : null,
-            job.FollowUpCount);
+            property?.Name,
+            job.FollowUpCount,
+            property?.Building?.Name,
+            contractor?.Id,
+            contractor?.Name,
+            contractor?.Phone,
+            contractor is null ? null : job.SuggestedContractorRule);
     }
 }

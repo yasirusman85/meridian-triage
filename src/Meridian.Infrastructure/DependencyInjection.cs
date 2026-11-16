@@ -37,6 +37,7 @@ public static class DependencyInjection
 
         services.AddScoped<IJobRepository, JobRepository>();
         services.AddScoped<IPropertyRepository, PropertyRepository>();
+        services.AddScoped<IContractorRepository, ContractorRepository>();
         services.AddScoped<IUnitOfWork, EfUnitOfWork>();
         services.AddScoped<IOutbox, SimulatedOutbox>();
         services.AddSingleton<IClock, SystemClock>();
@@ -75,8 +76,8 @@ public static class DependencyInjection
     }
 
     /// <summary>
-    /// Applies pending EF migrations (creates the database on first run), then seeds buildings and properties when
-    /// there are none (<see cref="SeedData"/>).
+    /// Applies pending EF migrations (creates the database on first run), then seeds buildings and properties, and
+    /// contractors and their assignments, each when there are none (<see cref="SeedData"/>).
     /// </summary>
     public static async Task MigrateMeridianDatabaseAsync(this IServiceProvider services, CancellationToken cancellationToken = default)
     {

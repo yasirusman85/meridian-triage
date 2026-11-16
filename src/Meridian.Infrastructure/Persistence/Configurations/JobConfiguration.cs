@@ -1,3 +1,4 @@
+using Meridian.Domain.Contractors;
 using Meridian.Domain.Jobs;
 using Meridian.Domain.Messages;
 using Meridian.Domain.Properties;
@@ -45,6 +46,15 @@ internal sealed class JobConfiguration : IEntityTypeConfiguration<Job>
             .IsRequired(false)
             .OnDelete(DeleteBehavior.Restrict);
         builder.HasIndex(j => j.PropertyId);
+
+        // The contractor ContractorLookup suggested (R12); null means a person must choose.
+        builder.HasOne<Contractor>()
+            .WithMany()
+            .HasForeignKey(j => j.SuggestedContractorId)
+            .IsRequired(false)
+            .OnDelete(DeleteBehavior.Restrict);
+        builder.HasIndex(j => j.SuggestedContractorId);
+        builder.Property(j => j.SuggestedContractorRule).HasMaxLength(16);
 
         // Many jobs per message (one per issue) and many messages per job (the first plus follow-ups).
         builder.HasMany(j => j.Messages)

@@ -1,4 +1,5 @@
 using Meridian.Application.Queue;
+using Meridian.Domain.Contractors;
 using Meridian.Domain.Jobs;
 using Meridian.Domain.Messages;
 
@@ -16,7 +17,7 @@ public class ListQueueTests
         repo.Add(Make("MER-000001", T0));
         repo.Add(Make("MER-000003", T0.AddMinutes(10)));
 
-        var items = await new ListQueue(repo, new SubmitMessageTests.FakePropertyRepository()).ExecuteAsync(default);
+        var items = await new ListQueue(repo, new SubmitMessageTests.FakePropertyRepository(), new SubmitMessageTests.FakeContractorRepository()).ExecuteAsync(default);
 
         Assert.Equal(new[] { "MER-000001", "MER-000002", "MER-000003" }, items.Select(i => i.Reference));
     }
@@ -31,7 +32,7 @@ public class ListQueueTests
         repo.Add(resolved);
         repo.Add(Make("MER-000002", T0.AddMinutes(1)));
 
-        var items = await new ListQueue(repo, new SubmitMessageTests.FakePropertyRepository()).ExecuteAsync(default);
+        var items = await new ListQueue(repo, new SubmitMessageTests.FakePropertyRepository(), new SubmitMessageTests.FakeContractorRepository()).ExecuteAsync(default);
 
         Assert.Equal("Flat 4, 22 Pemberton Road", items[0].PropertyName);
         Assert.Equal(flat.Id, items[0].PropertyId);
@@ -39,6 +40,32 @@ public class ListQueueTests
         Assert.Equal("tap", items[0].Preview);
         Assert.Null(items[1].PropertyName);
         Assert.Equal(0, items[1].FollowUpCount);
+    }
+
+    [Fact]
+    public async Task Each_item_shows_its_building_and_suggested_contractor_or_none_when_a_person_must_choose()
+    {
+        var repo = new SubmitMessageTests.FakeJobRepository();
+        var flat = SubmitMessageTests.FakePropertyRepository.Named("14b Alder Court");
+        var heating = Job.CreateFromMessage(Message.Receive("m.walsh@example.com", "no heating", T0), "MER-000001", T0, flat.Id);
+        heating.ApplyModelPreparation(Category.Heating, Urgency.Routine, "No heating.", "No heating.", "en", "{}", T0);
+        var warmhold = SubmitMessageTests.FakeContractorRepository.Named("Warmhold Heating");
+        heating.SuggestContractor(new ContractorSuggestion(warmhold.Id, ContractorRule.Building), T0);
+        repo.Add(heating);
+        repo.Add(Make("MER-000002", T0.AddMinutes(1)));
+
+        var items = await new ListQueue(repo, new SubmitMessageTests.FakePropertyRepository(), new SubmitMessageTests.FakeContractorRepository()).ExecuteAsync(default);
+
+        Assert.Equal("Alder Court", items[0].BuildingName);
+        Assert.Equal(warmhold.Id, items[0].SuggestedContractorId);
+        Assert.Equal("Warmhold Heating", items[0].SuggestedContractorName);
+        Assert.Equal(warmhold.Phone, items[0].SuggestedContractorPhone);
+        Assert.Equal(ContractorRule.Building, items[0].SuggestedContractorRule);
+        Assert.Null(items[1].BuildingName);
+        Assert.Null(items[1].SuggestedContractorId);
+        Assert.Null(items[1].SuggestedContractorName);
+        Assert.Null(items[1].SuggestedContractorPhone);
+        Assert.Null(items[1].SuggestedContractorRule);
     }
 
     [Fact]

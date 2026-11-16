@@ -31,6 +31,14 @@ export interface JobListItem {
   propertyName: string | null;
   /** Messages attached after the first one. */
   followUpCount: number;
+  /** The building of the resolved property, e.g. "Alder Court"; null when unresolved. */
+  buildingName: string | null;
+  /** The contractor fixed code suggests; null means a person must choose ("needs a person"). */
+  suggestedContractorId: string | null;
+  suggestedContractorName: string | null;
+  suggestedContractorPhone: string | null;
+  /** "Building": the building's usual contractor; "Default": the company-wide default for the category. */
+  suggestedContractorRule: 'Building' | 'Default' | null;
 }
 
 export interface SubmittedJob {

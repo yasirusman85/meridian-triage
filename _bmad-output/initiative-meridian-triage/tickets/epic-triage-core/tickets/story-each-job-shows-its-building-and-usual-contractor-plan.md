@@ -3,7 +3,7 @@ title: 'Each job shows its building and usual contractor'
 type: feature
 ticket: '5'
 created: '2026-11-16'
-status: in-progress
+status: built
 baseline_revision: 'a81d0b389ff398fe7a59b11165a0b066c0af49a5'
 route: full
 route_source: auto
@@ -59,16 +59,24 @@ Read the current domain (Job, Building, Property), `SubmitMessage`, `SeedData`, 
 ## Tasks & Acceptance
 
 **Execution:**
-- [ ] Domain entities and job method -- R11, R12
-- [ ] Application lookup and pipeline call -- R12
-- [ ] Infrastructure mapping, migration, seed -- persistence
-- [ ] Web and client display -- R11
-- [ ] Tests -- I/O matrix
+- [x] Domain entities and job method -- R11, R12
+- [x] Application lookup and pipeline call -- R12
+- [x] Infrastructure mapping, migration, seed -- persistence
+- [x] Web and client display -- R11
+- [x] Tests -- I/O matrix
 
 **Acceptance Criteria:**
 - Given the six client messages posted, when the queue is shown, then every job with a resolved category shows a building and a contractor, and the Nowak (Unsure) job shows "needs a person".
 
 ## Implementation Notes
+
+- **Domain.** `Contractor` (name, trade = `Category`, phone) and `ContractorAssignment` (`BuildingId` null = company-wide default for the category) in `Meridian.Domain/Contractors`, with `ContractorRule { Building, Default }` and the `ContractorSuggestion(ContractorId, Rule)` record. `Job.SuggestContractor(suggestion, nowUtc)` sets `SuggestedContractorId`/`SuggestedContractorRule` and appends `ContractorSuggested {contractorId, rule: "building"|"default"}`; the same suggestion again is a no-op (no event); it throws on an Unsure job.
+- **Lookup.** `ContractorLookup(assignments).Suggest(buildingId?, category)`: building assignment, else the default, else null; Unsure → null. Duplicate assignments throw. `SubmitMessage` takes a new `IContractorRepository` and calls the lookup right after `PrepareJob.RecordIssue` for each new job (AD-3 order: jobs, then contractor lookup). Follow-ups do not change category, so they write no new suggestion. Model-failure, not-maintenance and orphan-recovery jobs are Unsure and get none.
+- **"No property" row vs. "Always".** The lookup gives the default for a null building (matrix row). In the pipeline an unresolved property already forces category Unsure (story 4), so such a job gets no suggestion, which satisfies "unresolved property gives no suggestion". The default-for-no-building path will apply when a person later sets the category (review story); that story should call `ContractorLookup` + `SuggestContractor` on a category change. There is no way yet to clear a suggestion if a person sets a job back to Unsure.
+- **Persistence.** Tables `Contractors`, `ContractorAssignments` (unique `(BuildingId, Category)` plus a filtered unique index on `Category` where `BuildingId IS NULL`, since SQLite treats NULLs as distinct); `Jobs.SuggestedContractorId` (nullable FK) and `SuggestedContractorRule`. Migration `Contractors` (dotnet-ef 8.0.34) checked up and down on a database holding a job row.
+- **Seed.** Nine fictional contractors (phones in Ofcom's 07700 900xxx drama range): one per trade plus `Irwell Pipe and Drain` (plumbing) and `Cottonfield Boiler Services` (heating) as fallbacks that are nobody's usual contractor. Defaults for all seven trades; every seeded building has its own Heating, Plumbing, Electrical and General assignment (to the usual trade contractor), so Pest, Appliances and LocksAndDoors use the default. `EnsureSeededAsync` now seeds buildings when there are none and contractors + assignments when there are no contractors, so existing databases pick them up at next start; an overload takes other assignments (used by the "seed changed" test).
+- **API and client.** `GET /api/jobs` adds `buildingName`, `suggestedContractorId`, `suggestedContractorName`, `suggestedContractorPhone`, `suggestedContractorRule`. The queue has a Contractor column: "Building · Contractor (phone)" with "usual for building" / "company default", or "Building · needs a person".
+- **Interface change.** `SubmitMessage` and `ListQueue` constructors gained an `IContractorRepository` parameter (DI registered in `AddMeridianInfrastructure`); anything constructing them directly (e.g. the eval runner in story 8) must pass one.
 
 ## Plan Change Log
 

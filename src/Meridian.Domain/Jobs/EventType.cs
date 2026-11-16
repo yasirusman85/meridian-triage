@@ -26,4 +26,7 @@ public enum EventType
 
     /// <summary>A fixed acknowledgement (or the gas safety message) was written to the outbox for the tenant (R16).</summary>
     AcknowledgementSent,
+
+    /// <summary>Fixed code suggested the usual contractor for the job's category and building (R12, AD-3).</summary>
+    ContractorSuggested,
 }

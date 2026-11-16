@@ -359,7 +359,7 @@ public class SubmitMessageSplittingTests
         public Pipeline(ITriageModel model, DateTime now)
         {
             Clock = new FakeClock(now);
-            _submit = new SubmitMessage(Jobs, new FakePropertyRepository(), new FakeUnitOfWork(), Clock, new PrepareJob(model), new AcknowledgeTenant(new FakeOutbox()));
+            _submit = new SubmitMessage(Jobs, new FakePropertyRepository(), new FakeContractorRepository(), new FakeUnitOfWork(), Clock, new PrepareJob(model), new AcknowledgeTenant(new FakeOutbox()));
         }
 
         public FakeJobRepository Jobs { get; } = new();

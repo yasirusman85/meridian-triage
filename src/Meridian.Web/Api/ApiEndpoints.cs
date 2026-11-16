@@ -31,7 +31,8 @@ public static class ApiEndpoints
             var items = await listQueue.ExecuteAsync(ct);
             return Results.Ok(items.Select(i => new JobListItemDto(
                 i.Id, i.Reference, i.ReceivedAtUtc, i.Status, i.Urgency, i.Category, i.Sender, i.Preview, i.Explanation, i.SummaryEn, i.RuleIds,
-                i.PropertyId, i.PropertyName, i.FollowUpCount)));
+                i.PropertyId, i.PropertyName, i.FollowUpCount,
+                i.BuildingName, i.SuggestedContractorId, i.SuggestedContractorName, i.SuggestedContractorPhone, i.SuggestedContractorRule)));
         });
 
         api.MapGet("/jobs/{id:guid}/outbound", async (Guid id, ListOutbound listOutbound, CancellationToken ct) =>

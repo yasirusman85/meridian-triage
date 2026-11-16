@@ -101,7 +101,7 @@ public class AcknowledgementTests
         int? sentWhenCalled = null;
         model.OnCall = () => sentWhenCalled = outbox.Sent.Count;
         var submit = new SubmitMessage(
-            jobs, new FakePropertyRepository(), uow, clock, new PrepareJob(model), new AcknowledgeTenant(outbox));
+            jobs, new FakePropertyRepository(), new FakeContractorRepository(), uow, clock, new PrepareJob(model), new AcknowledgeTenant(outbox));
 
         await submit.ExecuteAsync(new SubmitMessageCommand("tenant@example.com", PatelText), default);
 
@@ -244,7 +244,7 @@ public class AcknowledgementTests
         var clock = new FakeClock(now ?? Now);
         var outbox = new FakeOutbox();
         var prepare = new PrepareJob(model, new PrepareJobOptions { Timeout = TimeSpan.FromMilliseconds(100) });
-        var submit = new SubmitMessage(jobs, new FakePropertyRepository(), uow, clock, prepare, new AcknowledgeTenant(outbox));
+        var submit = new SubmitMessage(jobs, new FakePropertyRepository(), new FakeContractorRepository(), uow, clock, prepare, new AcknowledgeTenant(outbox));
         return (submit, jobs, outbox, uow);
     }
 }

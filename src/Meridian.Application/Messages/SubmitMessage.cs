@@ -1,4 +1,5 @@
 using Meridian.Application.Abstractions;
+using Meridian.Application.Contractors;
 using Meridian.Application.Outbox;
 using Meridian.Application.Triage;
 using Meridian.Domain.Jobs;
@@ -34,6 +35,7 @@ public sealed record SubmitMessageResult(
 /// <item><see cref="PropertyResolver"/> matches each issue's <c>property_text</c>; unresolved or ambiguous → Unsure, property unset.</item>
 /// <item><see cref="FollowUpMatcher"/> attaches an issue to an existing open job as a follow-up, which can raise its urgency.</item>
 /// <item>Every other issue becomes its own job; one message can make several jobs.</item>
+/// <item><see cref="ContractorLookup"/> suggests each new job's usual contractor from its category and building (R12).</item>
 /// </list>
 /// The message is committed before the model is called, so a model failure never loses it; when the model fails
 /// the message makes one Unsure job, and a valid answer with no issues makes one Unsure job flagged for a person.
@@ -47,6 +49,7 @@ public sealed class SubmitMessage
 {
     private readonly IJobRepository _jobs;
     private readonly IPropertyRepository _properties;
+    private readonly IContractorRepository _contractors;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IClock _clock;
     private readonly PrepareJob _prepareJob;
@@ -55,6 +58,7 @@ public sealed class SubmitMessage
     public SubmitMessage(
         IJobRepository jobs,
         IPropertyRepository properties,
+        IContractorRepository contractors,
         IUnitOfWork unitOfWork,
         IClock clock,
         PrepareJob prepareJob,
@@ -62,6 +66,7 @@ public sealed class SubmitMessage
     {
         _jobs = jobs;
         _properties = properties;
+        _contractors = contractors;
         _unitOfWork = unitOfWork;
         _clock = clock;
         _prepareJob = prepareJob;
@@ -150,6 +155,7 @@ public sealed class SubmitMessage
                 message.ReceivedAtUtc - FollowUpMatcher.Window,
                 cancellationToken);
 
+        var lookup = new ContractorLookup(await _contractors.ListAssignmentsAsync(cancellationToken));
         var result = new List<SubmittedJob>();
         var created = new List<Job>();
         var followUps = new Dictionary<Job, Urgency>();
@@ -172,6 +178,13 @@ public sealed class SubmitMessage
 
             var job = await NewJobAsync(message, hits, property.Property?.Id, cancellationToken);
             PrepareJob.RecordIssue(job, preparation, index, property, _clock.UtcNow);
+
+            // Contractor lookup after the job's category is set (AD-3); Unsure gets none ("needs a person").
+            if (lookup.Suggest(property.Property?.BuildingId, job.Category) is { } suggestion)
+            {
+                job.SuggestContractor(suggestion, _clock.UtcNow);
+            }
+
             created.Add(job);
             result.Add(new SubmittedJob(job.Id, job.Reference, false));
         }

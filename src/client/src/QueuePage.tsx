@@ -33,6 +33,8 @@ function describeSubmitted(jobs: SubmittedJob[]): string {
   return parts.join('; ');
 }
 
+const UNKNOWN_BUILDING = 'Building unknown';
+
 function errorText(error: unknown): string {
   if (error instanceof ApiError) {
     const fieldErrors = Object.values(error.problem.errors ?? {}).flat();
@@ -131,6 +133,7 @@ export function QueuePage() {
                 <th>Urgency</th>
                 <th>Category</th>
                 <th>Property</th>
+                <th>Contractor</th>
                 <th>Summary</th>
                 <th>Message</th>
               </tr>
@@ -156,6 +159,27 @@ export function QueuePage() {
                       <span className="follow-up-label">
                         {job.followUpCount} follow-up{job.followUpCount === 1 ? '' : 's'}
                       </span>
+                    )}
+                  </td>
+                  <td>
+                    {job.suggestedContractorName ? (
+                      <>
+                        {job.buildingName ?? UNKNOWN_BUILDING} · {job.suggestedContractorName} ({job.suggestedContractorPhone})
+                        <span
+                          className="muted contractor-rule"
+                          title={
+                            job.suggestedContractorRule === 'Building'
+                              ? 'The usual contractor for this building and category'
+                              : 'The company-wide default for this category'
+                          }
+                        >
+                          {job.suggestedContractorRule === 'Building' ? 'usual for building' : 'company default'}
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        {job.buildingName ?? UNKNOWN_BUILDING} · <span className="needs-person">needs a person</span>
+                      </>
                     )}
                   </td>
                   <td className="summary">

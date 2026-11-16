@@ -256,6 +256,96 @@ public sealed class MessagesApiTests : IDisposable
     }
 
     [Fact]
+    public async Task The_six_client_messages_show_a_building_and_contractor_for_every_resolved_category_and_needs_a_person_for_Nowak()
+    {
+        var clock = new TickingClock(ClientMessages[0].ReceivedAt);
+        using var factory = CreateFactory(clock);
+        using var client = factory.CreateClient();
+
+        foreach (var message in ClientMessages)
+        {
+            await PostAsync(client, clock, message);
+        }
+
+        var jobs = (await client.GetFromJsonAsync<JsonElement>("/api/jobs")).EnumerateArray().ToList();
+        Assert.Equal(5, jobs.Count);
+        foreach (var job in jobs.Where(j => j.GetProperty("category").GetString() != "Unsure"))
+        {
+            var reference = job.GetProperty("reference").GetString();
+            Assert.False(string.IsNullOrWhiteSpace(job.GetProperty("buildingName").GetString()), reference);
+            Assert.False(string.IsNullOrWhiteSpace(job.GetProperty("suggestedContractorName").GetString()), reference);
+            Assert.False(string.IsNullOrWhiteSpace(job.GetProperty("suggestedContractorPhone").GetString()), reference);
+            Assert.Equal("Building", job.GetProperty("suggestedContractorRule").GetString());
+        }
+
+        var walsh = Assert.Single(jobs, j => j.GetProperty("sender").GetString() == "m.walsh@example.com");
+        Assert.Equal("Alder Court", walsh.GetProperty("buildingName").GetString());
+        Assert.Equal("Warmhold Heating", walsh.GetProperty("suggestedContractorName").GetString());
+        Assert.Equal("Warmhold Heating", Assert.Single(jobs, j => j.GetProperty("sender").GetString() == "r.patel@example.com")
+            .GetProperty("suggestedContractorName").GetString());
+
+        // The Nowak job is Unsure: its building shows, but a person must choose the contractor.
+        var nowak = Assert.Single(jobs, j => j.GetProperty("sender").GetString() == "a.nowak@example.com");
+        Assert.Equal("Unsure", nowak.GetProperty("category").GetString());
+        Assert.Equal("Beechwood House", nowak.GetProperty("buildingName").GetString());
+        Assert.Equal(JsonValueKind.Null, nowak.GetProperty("suggestedContractorId").ValueKind);
+        Assert.Equal(JsonValueKind.Null, nowak.GetProperty("suggestedContractorName").ValueKind);
+        Assert.Equal(JsonValueKind.Null, nowak.GetProperty("suggestedContractorRule").ValueKind);
+        Assert.Equal(4, jobs.Count(j => j.GetProperty("suggestedContractorName").ValueKind == JsonValueKind.String));
+
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<MeridianDbContext>();
+        Assert.Equal(4, await db.JobEvents.CountAsync(e => e.Type == EventType.ContractorSuggested));
+    }
+
+    [Fact]
+    public async Task Contractors_and_assignments_are_seeded_once_at_startup()
+    {
+        using (var first = CreateFactory())
+        using (first.CreateClient())
+        {
+        }
+
+        using var second = CreateFactory();
+        using var client = second.CreateClient();
+        using var scope = second.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<MeridianDbContext>();
+        Assert.Equal(SeedData.Contractors.Count, await db.Contractors.CountAsync());
+        Assert.Equal(SeedData.Assignments.Count, await db.ContractorAssignments.CountAsync());
+
+        // Seeding again changes nothing.
+        await SeedData.EnsureSeededAsync(db);
+        Assert.Equal(SeedData.Contractors.Count, await db.Contractors.CountAsync());
+        Assert.Equal(SeedData.Assignments.Count, await db.ContractorAssignments.CountAsync());
+    }
+
+    [Fact]
+    public async Task A_changed_assignment_seeded_fresh_gives_the_new_suggestion()
+    {
+        var changed = SeedData.Assignments
+            .Select(a => a.Building == "Alder Court" && a.Category == Category.Heating
+                ? (a.Building, a.Category, "Cottonfield Boiler Services")
+                : a)
+            .ToList();
+        await using (var connection = new SqliteConnection($"Data Source={_dbPath}"))
+        {
+            var options = new DbContextOptionsBuilder<MeridianDbContext>().UseSqlite(connection).Options;
+            await using var db = new MeridianDbContext(options);
+            await db.Database.MigrateAsync();
+            await SeedData.EnsureSeededAsync(db, changed);
+        }
+
+        var clock = new TickingClock(Walsh.ReceivedAt);
+        using var factory = CreateFactory(clock);
+        using var client = factory.CreateClient();
+        await PostAsync(client, clock, Walsh);
+
+        var listed = Assert.Single((await client.GetFromJsonAsync<JsonElement>("/api/jobs")).EnumerateArray());
+        Assert.Equal("Cottonfield Boiler Services", listed.GetProperty("suggestedContractorName").GetString());
+        Assert.Equal("Building", listed.GetProperty("suggestedContractorRule").GetString());
+    }
+
+    [Fact]
     public async Task Buildings_and_properties_are_seeded_once_at_startup()
     {
         using (var first = CreateFactory())

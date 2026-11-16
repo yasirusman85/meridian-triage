@@ -75,7 +75,7 @@ public class SubmitMessageRulesTests
         var model = new FakeTriageModel();
         int? messagesWhenCalled = null;
         model.OnCall = () => messagesWhenCalled = jobs.Messages.Count;
-        var submit = new SubmitMessage(jobs, new FakePropertyRepository(), uow, clock, new PrepareJob(model), new AcknowledgeTenant(new FakeOutbox()));
+        var submit = new SubmitMessage(jobs, new FakePropertyRepository(), new FakeContractorRepository(), uow, clock, new PrepareJob(model), new AcknowledgeTenant(new FakeOutbox()));
 
         await submit.ExecuteAsync(new SubmitMessageCommand("tenant@example.com", "water coming through the ceiling"), default);
 
@@ -121,6 +121,6 @@ public class SubmitMessageRulesTests
         var uow = new FakeUnitOfWork();
         var clock = new FakeClock(now);
         var prepare = new PrepareJob(model, new PrepareJobOptions { Timeout = TimeSpan.FromMilliseconds(100) });
-        return (new SubmitMessage(jobs, new FakePropertyRepository(), uow, clock, prepare, new AcknowledgeTenant(new FakeOutbox())), jobs);
+        return (new SubmitMessage(jobs, new FakePropertyRepository(), new FakeContractorRepository(), uow, clock, prepare, new AcknowledgeTenant(new FakeOutbox())), jobs);
     }
 }
