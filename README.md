@@ -49,18 +49,29 @@ Everything the code trusts from a model goes through one validator; invalid outp
 - **Tenant acknowledgement** for every message, quoting the reference of each job it made or joined, and a fixed gas safety message (National Gas Emergency, 0800 111 999) for gas reports. Sending is simulated and visible on the job. A message stored without a job (the app stopped mid-intake) still gets one, with its acknowledgement, at the next start.
 - **Event log:** every step of every job, including the model's raw output, model id and prompt version.
 - **Review queue page** in React, ordered by urgency then age.
-- **Eval set:** 52 labelled cases in [`eval/`](eval/README.md).
+- **Contractor map:** each job shows its building and the usual contractor for its category there (or the company default), chosen by fixed lookup, never by the AI.
+- **Eval:** 52 labelled cases and a runner that pushes them through the real intake pipeline (see results below).
 
 *This list is updated as the remaining stories land; see "Still in progress" below.*
 
 ## Still in progress
 
-- The built-in contractor map.
 - Approve, edit and reject in the queue.
 - A job history page.
-- The eval runner and its recorded results.
 - Escalation to Rachel, then the backup after 30 minutes.
 - Contractor attendance links and the MD's numbers page.
+
+## Eval results
+
+Run with `dotnet run --project src/Meridian.Eval` (add `OPENROUTER_API_KEY` for the real model). Full reports, with every failure listed by harm, are in [`eval/results/`](eval/results/).
+
+| Run | Emergency recall (target 100%) | Category accuracy (target ≥85%) | Critical failures | Result |
+|---|---|---|---|---|
+| `anthropic/claude-haiku-5.5`, prompt `triage.v2` | 100% (22/22) | 92.6% (50/54) | 0 | pass |
+| `anthropic/claude-haiku-5.5`, prompt `triage.v1` | 100% (22/22) | 83.3% (45/54) | 0 | fail on category |
+| stub (hand-written answers for the 6 client messages only) | 77.3% (17/22) | 18.5% | 5 | fail, as expected |
+
+The stub run shows what the fixed rules catch on their own: the five emergencies it misses are the ones no rule covers (a sparking socket, an oxygen concentrator in a power cut, a toddler locked out at night, a bulging wet ceiling) and that the model has to catch. 52 cases cost about $0.015 on OpenRouter. The prompt was revised once after the v1 run (DECISIONS D23); the eval set was written by the builder with AI help, so a fresh set of real messages is the real test.
 
 ## What I cut, and why
 
