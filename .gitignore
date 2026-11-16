@@ -18,3 +18,4 @@ __pycache__/
 src/Meridian.Web/wwwroot/
 src/client/node_modules/
 src/client/dist/
+.claude/worktrees/
