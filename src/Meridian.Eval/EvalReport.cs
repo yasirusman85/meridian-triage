@@ -21,6 +21,10 @@ public static class EvalReport
     public static string BaseName(DateOnly date, string modelId) =>
         $"{date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)}-{Sanitise(modelId)}";
 
+    /// <summary>Like <see cref="BaseName(DateOnly, string)"/> plus the prompt version, so runs of different prompts never overwrite each other.</summary>
+    public static string BaseName(DateOnly date, string modelId, string promptVersion) =>
+        $"{BaseName(date, modelId)}-{Sanitise(promptVersion)}";
+
     /// <summary>Keeps letters, digits, '.', '_' and '-'; everything else (e.g. '/' or ':') becomes '-'.</summary>
     public static string Sanitise(string modelId)
     {
@@ -38,7 +42,7 @@ public static class EvalReport
     public static (string JsonPath, string MarkdownPath) Write(string directory, DateOnly date, EvalRun run, EvalScore score)
     {
         Directory.CreateDirectory(directory);
-        var baseName = BaseName(date, run.ModelId);
+        var baseName = BaseName(date, run.ModelId, run.PromptVersion);
         var jsonPath = Path.Combine(directory, baseName + ".json");
         var markdownPath = Path.Combine(directory, baseName + ".md");
         File.WriteAllText(jsonPath, ToJson(date, run, score) + "\n", new UTF8Encoding(false));

@@ -39,7 +39,8 @@ public sealed class OpenRouterTriageModel : ITriageModel
         IHttpClientFactory httpClientFactory,
         string modelId,
         string systemPrompt,
-        ILogger<OpenRouterTriageModel>? logger = null)
+        ILogger<OpenRouterTriageModel>? logger = null,
+        string? promptVersion = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(modelId);
         ArgumentException.ThrowIfNullOrWhiteSpace(systemPrompt);
@@ -47,15 +48,21 @@ public sealed class OpenRouterTriageModel : ITriageModel
         ModelId = modelId;
         _systemPrompt = systemPrompt;
         _logger = logger ?? NullLogger<OpenRouterTriageModel>.Instance;
+        PromptVersion = string.IsNullOrWhiteSpace(promptVersion) ? TriageContract.Version : promptVersion;
     }
 
     public string ModelId { get; }
 
-    public string PromptVersion => TriageContract.Version;
+    /// <summary>The system prompt version sent (e.g. <c>triage.v2</c>); the output contract is always <c>triage.v1</c>.</summary>
+    public string PromptVersion { get; }
 
     /// <summary>Reads the <c>triage.v1</c> system prompt from <paramref name="path"/>.</summary>
     public static string LoadSystemPrompt(string? path = null) =>
         File.ReadAllText(path ?? DefaultPromptPath, Encoding.UTF8);
+
+    /// <summary>Reads the system prompt <c>Prompts/&lt;version&gt;.md</c> from the build output.</summary>
+    public static string LoadSystemPromptVersion(string version) =>
+        LoadSystemPrompt(Path.Combine(AppContext.BaseDirectory, "Prompts", $"{version}.md"));
 
     /// <summary>
     /// The user turn: the received time and the message text between <c>&lt;message&gt;</c> tags, nothing about

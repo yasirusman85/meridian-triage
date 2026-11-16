@@ -46,9 +46,9 @@ public sealed class EvalRunnerTests : IDisposable
             date: new DateOnly(2026, 11, 16));
 
         Assert.Equal(EvalCommand.Passed, exit);
-        var json = Path.Combine(_results, "2026-11-16-stub.json");
+        var json = Path.Combine(_results, "2026-11-16-stub-triage.v1.json");
         Assert.True(File.Exists(json));
-        Assert.True(File.Exists(Path.Combine(_results, "2026-11-16-stub.md")));
+        Assert.True(File.Exists(Path.Combine(_results, "2026-11-16-stub-triage.v1.md")));
 
         using var document = JsonDocument.Parse(await File.ReadAllTextAsync(json));
         var root = document.RootElement;
@@ -85,7 +85,7 @@ public sealed class EvalRunnerTests : IDisposable
             date: new DateOnly(2026, 11, 16));
 
         Assert.Equal(EvalCommand.Failed, exit);
-        var markdown = await File.ReadAllTextAsync(Path.Combine(_results, "2026-11-16-stub.md"));
+        var markdown = await File.ReadAllTextAsync(Path.Combine(_results, "2026-11-16-stub-triage.v1.md"));
         Assert.Contains("| x-01 | urgency | Emergency | Routine |", markdown);
         Assert.Contains("### Critical (1)", markdown);
         Assert.Contains("`no-recorded-response` 1", markdown);

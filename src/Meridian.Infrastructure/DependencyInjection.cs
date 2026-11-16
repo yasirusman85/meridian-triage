@@ -69,8 +69,9 @@ public static class DependencyInjection
             return new OpenRouterTriageModel(
                 sp.GetRequiredService<IHttpClientFactory>(),
                 options.Model,
-                OpenRouterTriageModel.LoadSystemPrompt(),
-                sp.GetService<ILogger<OpenRouterTriageModel>>());
+                OpenRouterTriageModel.LoadSystemPromptVersion(options.PromptVersion),
+                sp.GetService<ILogger<OpenRouterTriageModel>>(),
+                options.PromptVersion);
         });
         return services;
     }

@@ -201,3 +201,12 @@ Every point where the client input did not say what to do. Quotes are from `docs
 - **Why this one:** Simpler and testable; the cost is that an emergency reaches the queue up to 20 seconds later, well inside the 30-minute escalation window and the 5-minute acknowledgement target.
 - **What would change my mind:** Model latency regularly near the limit, or a need to acknowledge in under a minute.
 - **Blast radius:** `SubmitMessage`, `RecoverOrphanMessages`, the acknowledgement step.
+
+### D23. Prompt changed once after the first eval, and both results kept
+
+- **The gap:** The first real run (prompt `triage.v1`, `anthropic/claude-haiku-5.5`) caught every emergency but scored 83.3% on category, under the 85% target, mostly by putting gas reports in Unsure instead of Heating.
+- **What I decided:** One prompt revision, `triage.v2`: gas and boiler faults are Heating (gas hob or oven is Appliances), a new symptom on a working gas appliance is Urgent, and a chasing message keeps its address. The output contract stays `triage.v1`. Both runs are kept in `eval/results/`; v2 scored 100% emergency recall and 92.6% category accuracy.
+- **The alternative:** Keep v1 and report the miss, or tune further until every case passes.
+- **Why this one:** The changes are rules a coordinator would state anyway, not case-by-case fixes. Tuning against the same 52 cases risks overfitting, so I stopped after one revision and say so.
+- **What would change my mind:** A fresh, unseen set of messages scoring much lower than 92.6%, which would show the revision fitted the test set.
+- **Blast radius:** `Prompts/triage.v2.md` and the `Triage:PromptVersion` setting; switching back is one config value.

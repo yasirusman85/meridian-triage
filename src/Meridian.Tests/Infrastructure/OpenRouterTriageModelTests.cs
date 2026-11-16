@@ -167,7 +167,7 @@ public sealed class OpenRouterTriageModelTests
 
         Assert.IsType<OpenRouterTriageModel>(model);
         Assert.Equal("openai/gpt-6-luna", model.ModelId);
-        Assert.Equal("triage.v1", model.PromptVersion);
+        Assert.Equal(TriageOptions.DefaultPromptVersion, model.PromptVersion);
 
         var client = services.GetRequiredService<IHttpClientFactory>().CreateClient(OpenRouterTriageModel.HttpClientName);
         Assert.Equal(new Uri("https://openrouter.ai/api/v1/"), client.BaseAddress);

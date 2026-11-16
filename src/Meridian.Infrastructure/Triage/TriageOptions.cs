@@ -14,6 +14,7 @@ public sealed class TriageOptions
     public const string OpenRouterProvider = "openrouter";
     public const string DefaultModel = "anthropic/claude-haiku-5.5";
     public const string DefaultOpenRouterBaseUrl = "https://openrouter.ai/api/v1";
+    public const string DefaultPromptVersion = "triage.v2";
 
     /// <summary>
     /// <c>stub</c>, <c>openrouter</c>, or empty. Empty means OpenRouter when the key is set, otherwise the stub.
@@ -25,6 +26,9 @@ public sealed class TriageOptions
 
     public string OpenRouterBaseUrl { get; init; } = DefaultOpenRouterBaseUrl;
 
+    /// <summary>The system prompt file, <c>Prompts/&lt;version&gt;.md</c>, recorded in events. The output contract stays <c>triage.v1</c>.</summary>
+    public string PromptVersion { get; init; } = DefaultPromptVersion;
+
     public static TriageOptions From(IConfiguration configuration)
     {
         var section = configuration.GetSection(SectionName);
@@ -33,6 +37,7 @@ public sealed class TriageOptions
             Provider = Blank(section["Provider"]),
             Model = Blank(section["Model"]) ?? DefaultModel,
             OpenRouterBaseUrl = Blank(section["OpenRouterBaseUrl"]) ?? DefaultOpenRouterBaseUrl,
+            PromptVersion = Blank(section["PromptVersion"]) ?? DefaultPromptVersion,
         };
     }
 
