@@ -18,6 +18,10 @@ internal sealed class JobConfiguration : IEntityTypeConfiguration<Job>
         builder.Property(j => j.Category).IsRequired().HasMaxLength(32);
         builder.Property(j => j.ReceivedAtUtc).IsRequired();
         builder.Property(j => j.CreatedAtUtc).IsRequired();
+        builder.Property(j => j.Explanation);
+        builder.Property(j => j.SummaryEn);
+        builder.Property(j => j.Language).HasMaxLength(16);
+        builder.Ignore(j => j.HasModelOutcome);
 
         builder.HasMany(j => j.Messages)
             .WithOne()

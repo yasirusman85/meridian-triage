@@ -36,8 +36,11 @@ public sealed class MessagesApiTests : IDisposable
         var listed = Assert.Single(jobs.EnumerateArray());
         Assert.Equal(reference, listed.GetProperty("reference").GetString());
         Assert.Equal("Prepared", listed.GetProperty("status").GetString());
+        // Prepared by the recorded stub answer for the Nowak message.
         Assert.Equal("Unsure", listed.GetProperty("category").GetString());
-        Assert.Equal("Routine", listed.GetProperty("urgency").GetString());
+        Assert.Equal("Urgent", listed.GetProperty("urgency").GetString());
+        Assert.False(string.IsNullOrWhiteSpace(listed.GetProperty("summaryEn").GetString()));
+        Assert.False(string.IsNullOrWhiteSpace(listed.GetProperty("explanation").GetString()));
         Assert.Equal(NowakText[..120], listed.GetProperty("preview").GetString());
 
         using var scope = factory.Services.CreateScope();
@@ -62,6 +65,46 @@ public sealed class MessagesApiTests : IDisposable
         Assert.Equal(NowakText, reader.GetString(0));
         Assert.Equal("Prepared", reader.GetString(1));
         Assert.Equal("MessageReceived", reader.GetString(2));
+    }
+
+    [Theory]
+    [InlineData(NowakText, "ModelPrepared")]
+    [InlineData("A message with no recorded answer", "ModelPreparationFailed")]
+    public async Task Exactly_one_model_outcome_event_follows_JobPrepared_with_stub_metadata(string text, string expectedType)
+    {
+        using var factory = CreateFactory();
+        using var client = factory.CreateClient();
+
+        var response = await client.PostAsJsonAsync("/api/messages", new { sender = "tenant@example.com", text });
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        var jobId = (await response.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("jobId").GetGuid();
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<MeridianDbContext>();
+        var events = (await db.JobEvents.Where(e => e.JobId == jobId).ToListAsync())
+            .OrderBy(e => e.OccurredAtUtc)
+            .ToList();
+        var outcomes = events.Where(e => e.Type is EventType.ModelPrepared or EventType.ModelPreparationFailed).ToList();
+        var outcome = Assert.Single(outcomes);
+        Assert.Equal(expectedType, outcome.Type.ToString());
+        Assert.True(events.FindIndex(e => e.Type == EventType.JobPrepared) < events.IndexOf(outcome));
+        using var payload = JsonDocument.Parse(outcome.PayloadJson);
+        Assert.Equal("stub", payload.RootElement.GetProperty("modelId").GetString());
+        Assert.Equal("triage.v1", payload.RootElement.GetProperty("promptVersion").GetString());
+
+        var job = await db.Jobs.SingleAsync(j => j.Id == jobId);
+        if (outcome.Type == EventType.ModelPreparationFailed)
+        {
+            Assert.Equal(Category.Unsure, job.Category);
+            Assert.Equal(Urgency.Routine, job.Urgency);
+            Assert.Null(job.SummaryEn);
+            Assert.Equal("no-recorded-response", payload.RootElement.GetProperty("reason").GetString());
+        }
+        else
+        {
+            Assert.Equal("pl", job.Language);
+            Assert.Contains(events, e => e.Type == EventType.UrgencyRaised);
+        }
     }
 
     [Theory]

@@ -25,7 +25,7 @@ public static class ApiEndpoints
         {
             var items = await listQueue.ExecuteAsync(ct);
             return Results.Ok(items.Select(i => new JobListItemDto(
-                i.Id, i.Reference, i.ReceivedAtUtc, i.Status, i.Urgency, i.Category, i.Sender, i.Preview)));
+                i.Id, i.Reference, i.ReceivedAtUtc, i.Status, i.Urgency, i.Category, i.Sender, i.Preview, i.Explanation, i.SummaryEn)));
         });
 
         // Unknown API routes are 404 problem details, never the SPA page.

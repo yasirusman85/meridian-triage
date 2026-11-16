@@ -1,5 +1,7 @@
 using Meridian.Application.Abstractions;
+using Meridian.Application.Triage;
 using Meridian.Infrastructure.Persistence;
+using Meridian.Infrastructure.Triage;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -23,6 +25,9 @@ public static class DependencyInjection
         services.AddScoped<IJobRepository, JobRepository>();
         services.AddScoped<IUnitOfWork, EfUnitOfWork>();
         services.AddSingleton<IClock, SystemClock>();
+
+        // AD-1: the recorded-response stub is the default model adapter (OpenRouter arrives in story 9).
+        services.AddSingleton<ITriageModel>(_ => StubTriageModel.FromDirectory(StubTriageModel.DefaultDirectory));
         return services;
     }
 

@@ -1,0 +1,17 @@
+{
+  "text": "Dzień dobry, w mieszkaniu jest pleśń na ścianie w sypialni, coraz gorzej, dziecko ma astmę. Mieszkanie 9, Beechwood House. Dziękuję.",
+  "response": {
+    "language": "pl",
+    "issues": [
+      {
+        "summary_en": "Mould on the bedroom wall, getting worse; the tenant's child has asthma.",
+        "category": "Unsure",
+        "urgency": "Urgent",
+        "property_text": "Mieszkanie 9, Beechwood House",
+        "explanation": "Mould is a general building problem; it is urgent because it is spreading and a child with asthma lives there.",
+        "vulnerability_mentioned": true,
+        "confidence": "medium"
+      }
+    ]
+  }
+}

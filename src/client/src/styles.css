@@ -80,3 +80,26 @@ td.preview {
   color: #9a6700;
   font-weight: 600;
 }
+
+td.summary {
+  overflow-wrap: anywhere;
+  max-width: 24rem;
+}
+
+.explanation {
+  margin: 0.3rem 0 0;
+  color: #57606a;
+  font-size: 0.9em;
+}
+
+.ai-label {
+  font-size: 0.75em;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #57606a;
+}
+
+.muted {
+  color: #57606a;
+}

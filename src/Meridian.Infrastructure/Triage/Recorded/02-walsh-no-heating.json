@@ -1,0 +1,17 @@
+{
+  "text": "URGENT URGENT no hot water and no heating at all since this morning, I have a baby in the house, this is unacceptable, I have called three times. 14b Alder Court. Please someone call me TONIGHT.",
+  "response": {
+    "language": "en",
+    "issues": [
+      {
+        "summary_en": "No heating and no hot water since this morning; a baby lives in the home and the tenant has called three times.",
+        "category": "Heating",
+        "urgency": "Emergency",
+        "property_text": "14b Alder Court",
+        "explanation": "Total loss of heating and hot water is an emergency, made more serious by a baby in the home.",
+        "vulnerability_mentioned": true,
+        "confidence": "high"
+      }
+    ]
+  }
+}

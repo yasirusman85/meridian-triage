@@ -14,4 +14,6 @@ public sealed record JobListItemDto(
     Urgency Urgency,
     Category Category,
     string Sender,
-    string Preview);
+    string Preview,
+    string? Explanation,
+    string? SummaryEn);

@@ -11,7 +11,9 @@ public sealed record QueueItem(
     Urgency Urgency,
     Category Category,
     string Sender,
-    string Preview);
+    string Preview,
+    string? Explanation,
+    string? SummaryEn);
 
 /// <summary>The review queue: most urgent first, then oldest first (R13).</summary>
 public sealed class ListQueue
@@ -64,6 +66,8 @@ public sealed class ListQueue
             job.Urgency,
             job.Category,
             first?.Sender ?? string.Empty,
-            first is null ? string.Empty : Preview(first.Text));
+            first is null ? string.Empty : Preview(first.Text),
+            job.Explanation,
+            job.SummaryEn);
     }
 }

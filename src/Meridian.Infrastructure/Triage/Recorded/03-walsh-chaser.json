@@ -1,0 +1,17 @@
+{
+  "text": "Still nothing. Michael Walsh, 14b Alder Court.",
+  "response": {
+    "language": "en",
+    "issues": [
+      {
+        "summary_en": "Tenant is chasing an earlier report; the message itself describes no problem.",
+        "category": "Unsure",
+        "urgency": "Routine",
+        "property_text": "14b Alder Court",
+        "explanation": "The message only says nothing has happened yet; the problem it refers to is not stated, so a person should link it to the earlier report.",
+        "vulnerability_mentioned": false,
+        "confidence": "low"
+      }
+    ]
+  }
+}

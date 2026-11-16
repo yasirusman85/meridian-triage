@@ -1,0 +1,17 @@
+{
+  "text": "The boiler is making a loud banging noise when it comes on. It's still working and we've got hot water. Didn't do this before. 8 Carlton Street.",
+  "response": {
+    "language": "en",
+    "issues": [
+      {
+        "summary_en": "Boiler makes a loud banging noise when it starts; it still works and there is hot water.",
+        "category": "Heating",
+        "urgency": "Urgent",
+        "property_text": "8 Carlton Street",
+        "explanation": "A new banging noise from a working boiler is a heating fault that should be checked soon, but heating and hot water still work.",
+        "vulnerability_mentioned": false,
+        "confidence": "medium"
+      }
+    ]
+  }
+}

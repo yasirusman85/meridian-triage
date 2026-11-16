@@ -1,4 +1,5 @@
 using Meridian.Application.Abstractions;
+using Meridian.Application.Triage;
 using Meridian.Domain.Jobs;
 using Meridian.Domain.Messages;
 
@@ -20,20 +21,23 @@ public sealed record SubmitMessageResult(
 }
 
 /// <summary>
-/// Stores a pasted message unchanged and creates its placeholder job, in one transaction.
-/// No rules or model preparation yet (later stories extend the pipeline per AD-3).
+/// Stores a pasted message unchanged and creates its placeholder job, in one transaction, then runs model
+/// preparation (<see cref="PrepareJob"/>). The message and job are saved before the model is called, so a model
+/// failure never loses a message. Emergency rules and splitting arrive in later stories (AD-3).
 /// </summary>
 public sealed class SubmitMessage
 {
     private readonly IJobRepository _jobs;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IClock _clock;
+    private readonly PrepareJob _prepareJob;
 
-    public SubmitMessage(IJobRepository jobs, IUnitOfWork unitOfWork, IClock clock)
+    public SubmitMessage(IJobRepository jobs, IUnitOfWork unitOfWork, IClock clock, PrepareJob prepareJob)
     {
         _jobs = jobs;
         _unitOfWork = unitOfWork;
         _clock = clock;
+        _prepareJob = prepareJob;
     }
 
     public static IReadOnlyDictionary<string, string[]> Validate(SubmitMessageCommand command)
@@ -72,6 +76,9 @@ public sealed class SubmitMessage
                 return created;
             },
             cancellationToken);
+
+        // After the commit: the message is safe whatever the model does (RULE-11).
+        await _prepareJob.ExecuteAsync(job.Id, cancellationToken);
 
         return SubmitMessageResult.Created(job.Id, job.Reference);
     }

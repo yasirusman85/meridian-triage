@@ -1,0 +1,17 @@
+{
+  "text": "My husband has emailed twice about the heating at 14b Alder Court, no one has responded. We have a 7 month old baby. What is going on.",
+  "response": {
+    "language": "en",
+    "issues": [
+      {
+        "summary_en": "Heating problem at 14b Alder Court reported twice with no response; a 7-month-old baby lives in the home.",
+        "category": "Heating",
+        "urgency": "Emergency",
+        "property_text": "14b Alder Court",
+        "explanation": "A heating fault that has gone unanswered in a home with a young baby should be treated as an emergency.",
+        "vulnerability_mentioned": true,
+        "confidence": "medium"
+      }
+    ]
+  }
+}

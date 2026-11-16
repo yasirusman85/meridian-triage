@@ -12,6 +12,13 @@ function formatReceived(utc: string): string {
   return londonTime.format(new Date(utc));
 }
 
+const EXPLANATION_LENGTH = 140;
+
+function shorten(value: string, max: number): string {
+  const chars = Array.from(value);
+  return chars.length <= max ? value : `${chars.slice(0, max - 1).join('').trimEnd()}…`;
+}
+
 function errorText(error: unknown): string {
   if (error instanceof ApiError) {
     const fieldErrors = Object.values(error.problem.errors ?? {}).flat();
@@ -109,6 +116,7 @@ export function QueuePage() {
                 <th>Status</th>
                 <th>Urgency</th>
                 <th>Category</th>
+                <th>Summary</th>
                 <th>Message</th>
               </tr>
             </thead>
@@ -120,6 +128,20 @@ export function QueuePage() {
                   <td>{job.status}</td>
                   <td className={`urgency-${job.urgency.toLowerCase()}`}>{job.urgency}</td>
                   <td>{job.category}</td>
+                  <td className="summary">
+                    {job.summaryEn ? (
+                      <>
+                        <span className="ai-label">AI summary</span> {job.summaryEn}
+                        {job.explanation && (
+                          <p className="explanation" title={job.explanation}>
+                            <span className="ai-label">Why</span> {shorten(job.explanation, EXPLANATION_LENGTH)}
+                          </p>
+                        )}
+                      </>
+                    ) : (
+                      <span className="muted">Not prepared</span>
+                    )}
+                  </td>
                   <td className="preview">{job.preview}</td>
                 </tr>
               ))}

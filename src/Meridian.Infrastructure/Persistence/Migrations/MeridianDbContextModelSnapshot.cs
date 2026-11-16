@@ -30,6 +30,13 @@ namespace Meridian.Infrastructure.Persistence.Migrations
                     b.Property<DateTime>("CreatedAtUtc")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("Explanation")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Language")
+                        .HasMaxLength(16)
+                        .HasColumnType("TEXT");
+
                     b.Property<DateTime>("ReceivedAtUtc")
                         .HasColumnType("TEXT");
 
@@ -41,6 +48,9 @@ namespace Meridian.Infrastructure.Persistence.Migrations
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(32)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SummaryEn")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Urgency")

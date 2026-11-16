@@ -19,6 +19,10 @@ export interface JobListItem {
   category: Category;
   sender: string;
   preview: string;
+  /** Why the AI prepared the job this way; null when it was not prepared. */
+  explanation: string | null;
+  /** English summary from the AI; null when it was not prepared. */
+  summaryEn: string | null;
 }
 
 export interface SubmitMessageResponse {

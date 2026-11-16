@@ -3,14 +3,14 @@ title: 'The AI prepares a message through the model port'
 type: feature
 ticket: '2'
 created: '2026-11-16'
-status: in-progress
+status: built
 baseline_revision: 'd065634c6019cfde17533aabe3ed6312332d5f3b'
 route: full
 route_source: auto
 risk: high
-review: ''
-review_source: ''
-lenses_ran: []
+review: quick
+review_source: pinned
+lenses_ran: [inline]
 review_loop_iteration: 0
 context:
   - '{project-root}/_bmad-output/initiative-meridian-triage/architecture-meridian-triage/architecture-meridian-triage.md'
@@ -72,13 +72,13 @@ Categories: `Plumbing, Electrical, Heating, Appliances, LocksAndDoors, Pest, Gen
 ## Tasks & Acceptance
 
 **Execution:**
-- [ ] `src/Meridian.Domain/Jobs/` -- new properties, methods and event types -- AD-4, AD-5
-- [ ] `src/Meridian.Application/Triage/` -- port, contract, validator, `PrepareJob` -- AD-1, AD-2, RULE-11
-- [ ] `src/Meridian.Application/Messages/SubmitMessage.cs` -- call `PrepareJob` after save -- pipeline order AD-3
-- [ ] `src/Meridian.Infrastructure/Triage/`, `Prompts/` -- stub adapter, recorded answers for the six messages, prompt file -- AD-1, AD-10
-- [ ] `src/Meridian.Infrastructure/` -- EF mapping and migration -- persistence
-- [ ] `src/Meridian.Web/`, `src/client/` -- show explanation and summary in the queue -- R7 visible
-- [ ] `src/Meridian.Tests/` -- one test per matrix row plus validator unit tests for each rejected field -- I/O matrix
+- [x] `src/Meridian.Domain/Jobs/` -- new properties, methods and event types -- AD-4, AD-5
+- [x] `src/Meridian.Application/Triage/` -- port, contract, validator, `PrepareJob` -- AD-1, AD-2, RULE-11
+- [x] `src/Meridian.Application/Messages/SubmitMessage.cs` -- call `PrepareJob` after save -- pipeline order AD-3
+- [x] `src/Meridian.Infrastructure/Triage/`, `Prompts/` -- stub adapter, recorded answers for the six messages, prompt file -- AD-1, AD-10
+- [x] `src/Meridian.Infrastructure/` -- EF mapping and migration -- persistence
+- [x] `src/Meridian.Web/`, `src/client/` -- show explanation and summary in the queue -- R7 visible
+- [x] `src/Meridian.Tests/` -- one test per matrix row plus validator unit tests for each rejected field -- I/O matrix
 
 **Acceptance Criteria:**
 - Given the app started with `./run.sh`, when the Nowak message is pasted, then its queue row shows an English summary and an explanation.
@@ -86,9 +86,29 @@ Categories: `Plumbing, Electrical, Heating, Appliances, LocksAndDoors, Pest, Gen
 
 ## Implementation Notes
 
+- `ITriageModel` also exposes `ModelId` and `PromptVersion`, so a failure event without any adapter result (timeout, exception) still carries model id `stub` and prompt version `triage.v1` (AC 2). `PrepareAsync` keeps the AD-1 signature.
+- The 20 s timeout is the budget for the whole preparation step, both attempts included (AD-3 "model preparation (20 s timeout)"), so the worst case is 20 s, not 40 s. It is enforced with a linked token plus `Task.WaitAsync`, so an adapter that ignores the token still times out. Configurable only through `PrepareJobOptions` (tests use 100 ms).
+- Only invalid output is retried. An adapter failure (`no-recorded-response`, `unavailable`) or a timeout ends the step at once.
+- If the HTTP caller cancels mid-call, the outcome is recorded with reason `cancelled` and saved with `CancellationToken.None`, so every job still gets exactly one outcome event.
+- The model is called outside any database transaction (SQLite write lock); the outcome is saved in a second unit of work. `IJobRepository.GetAsync` loads the job tracked with messages and events.
+- `Job.ApplyModelPreparation` / `RecordModelFailure` refuse a second model outcome (`HasModelOutcome`, from loaded events) and require the payload to be a JSON object. Event order on success: `ModelPrepared`, then `UrgencyRaised` when the proposal is higher.
+- Low confidence is mapped to Unsure in `PrepareJob`, not in the domain; the `ModelPrepared` payload's `applied` block records the proposed and applied category and urgency.
+- Validator: enum values are exact and case-sensitive; unknown extra fields are ignored; `property_text` must be present but may be empty (a message may name no property); `language` must be non-empty and at most 16 characters (column length).
+- The event payload keeps only the exception type for a thrown adapter, never its message, since it may echo tenant text.
+- `StubTriageModel` is a singleton loaded once from `Triage/Recorded/` in the build output. A recording's `response` may be a JSON string to hold deliberately malformed output.
+- Recorded answers: Okafor has two issues (tap, bulb); only the first prepares the job until splitting lands. The Walsh chaser (message 3) is recorded as Unsure, low confidence.
+- Migration `ModelPreparation` generated with `dotnet-ef` 8.0.34 (global tool, not in the repo).
+
 ## Plan Change Log
 
 ## Review Triage Log
+
+**Pass 1 (inline review by the orchestrator, 2026-11-16).** high 0, medium 1, low 0. Build, 105 tests and client build pass.
+
+| Verdict | Route | Finding | Evidence / action |
+|---|---|---|---|
+| medium | patch | Prompt and Nowak recorded answer put mould under General, against DECISIONS D5 and PRD UJ-3 (Unsure) | Patched `Prompts/triage.v1.md` and `Recorded/05-nowak-mould.json`; updated three test expectations. Tests pass. |
+| medium | defer | Events saved in one transaction share a timestamp, so history order between `ModelPrepared` and `UrgencyRaised` is not fixed | Real for R17 (history in time order); fix with a per-job sequence number in story 1.7 (history view). Recorded in deferred-work.md. |
 
 ## Verification
 
