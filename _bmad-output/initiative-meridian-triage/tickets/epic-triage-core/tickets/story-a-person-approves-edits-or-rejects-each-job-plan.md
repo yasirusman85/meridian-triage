@@ -3,14 +3,14 @@ title: 'A person approves, edits or rejects each job'
 type: feature
 ticket: '6'
 created: '2026-11-16'
-status: in-progress
+status: built
 baseline_revision: 'c70a9c3f77cbbf37035e0c9fcb2152bcfa019927'
 route: full
 route_source: auto
 risk: medium
-review: ''
-review_source: ''
-lenses_ran: []
+review: quick
+review_source: pinned
+lenses_ran: [inline]
 review_loop_iteration: 0
 context:
   - '{project-root}/_bmad-output/initiative-meridian-triage/architecture-meridian-triage/architecture-meridian-triage.md'
@@ -59,16 +59,25 @@ Read current `Job`, `JobStatus`, `ContractorLookup`, `ListQueue`, `ApiEndpoints`
 ## Tasks & Acceptance
 
 **Execution:**
-- [ ] Domain transitions and events -- AD-6, R14, R15
-- [ ] Application review use case and detail query -- R13, R14
-- [ ] Web endpoints and staff list -- API
-- [ ] Client switch, detail panel, actions -- R13
-- [ ] Tests -- I/O matrix
+- [x] Domain transitions and events -- AD-6, R14, R15
+- [x] Application review use case and detail query -- R13, R14
+- [x] Web endpoints and staff list -- API
+- [x] Client switch, detail panel, actions -- R13
+- [x] Tests -- I/O matrix
 
 **Acceptance Criteria:**
 - Given the Nowak job (Unsure), when Rachel sets it to General with a contractor and approves it, then it is Approved and its events show the edits and approval with actor rachel.
 
 ## Implementation Notes
+
+- The job's contractor stays in `SuggestedContractorId`/`SuggestedContractorRule` (no migration): a person's choice gets the new `ContractorRule.Person`. Approve requires that contractor to be set.
+- Domain: new `Job` methods only (`MissingForApproval`, `Approve`, `Reject`, `EditCategory`, `EditProperty`, `ChooseContractor`, `ClearContractor`, `EditUrgency`), inserted before the private helpers; existing members untouched. Illegal transitions and missing approval fields throw `JobStateException` (carries `Missing`). Event types `JobApproved`, `JobRejected`, `JobEdited` appended to `EventType`.
+- Urgency edits go through `EditUrgency` → `SetUrgencyByPerson` (event `UrgencySetByPerson`, not `JobEdited`); raising without a reason records "raised in review".
+- Contractor re-suggestion: a category change re-runs `ContractorLookup` (system `ContractorSuggested`); when the lookup gives none (e.g. Unsure) the contractor is cleared with a `JobEdited` (field contractor, `cause`) by the person. A property change also re-runs it unless the current contractor was a person's choice. A contractor in the same edit always wins.
+- `ReviewJob` validates everything before touching the job; domain exceptions propagate out of the unit of work so nothing is saved. Order of checks: actor (400) → job exists (404) → Prepared (409) → fields (400).
+- Staff list: config section `Staff` in `appsettings.json` (Rachel, Dawn), with the same default in `StaffDirectory`; header value is matched case-insensitively and recorded as the lowercase id.
+- Added `GET /api/contractors` and `GET /api/properties` (not in the code map) so the edit form can offer choices.
+- Client: acting-as switch remembered in `localStorage` (`meridian.actingAs`); clicking a reference opens the detail panel with approve, edit and reject.
 
 ## Plan Change Log
 

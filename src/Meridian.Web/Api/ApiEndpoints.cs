@@ -47,6 +47,8 @@ public static class ApiEndpoints
                 o.Id, o.JobId, o.Channel, o.Recipient, o.TemplateId, o.Body, o.Status, o.CreatedAtUtc)));
         });
 
+        api.MapReviewApi();
+
         // Unknown API routes are 404 problem details, never the SPA page.
         api.MapFallback(() => Results.Problem(statusCode: StatusCodes.Status404NotFound, title: "Not found"));
 

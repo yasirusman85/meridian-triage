@@ -419,6 +419,276 @@ public sealed class Job
         return true;
     }
 
+    /// <summary>What the job still needs before it can be approved (AD-6).</summary>
+    public static class ApprovalNeeds
+    {
+        /// <summary>The category is Unsure: a person must set one.</summary>
+        public const string Category = "category";
+
+        /// <summary>No contractor is suggested or chosen.</summary>
+        public const string Contractor = "contractor";
+    }
+
+    /// <summary>
+    /// What stops approval: <see cref="ApprovalNeeds.Category"/> while the category is Unsure and
+    /// <see cref="ApprovalNeeds.Contractor"/> while there is no contractor. Empty when the job can be approved
+    /// (status aside).
+    /// </summary>
+    public IReadOnlyList<string> MissingForApproval()
+    {
+        var missing = new List<string>();
+        if (Category == Category.Unsure)
+        {
+            missing.Add(ApprovalNeeds.Category);
+        }
+
+        if (SuggestedContractorId is null)
+        {
+            missing.Add(ApprovalNeeds.Contractor);
+        }
+
+        return missing;
+    }
+
+    /// <summary>
+    /// A person approves the job (AD-6: Prepared → Approved) and <see cref="EventType.JobApproved"/> records who, with
+    /// the category, urgency and contractor approved. Never automatic. Nothing is sent to the contractor here.
+    /// </summary>
+    /// <exception cref="JobStateException">The job is not Prepared, or still has no category or contractor.</exception>
+    public void Approve(string actor, DateTime nowUtc)
+    {
+        RequirePersonActor(actor);
+        Guards.RequireUtc(nowUtc, nameof(nowUtc));
+        RequirePrepared("approved");
+        var missing = MissingForApproval();
+        if (missing.Count > 0)
+        {
+            throw new JobStateException(
+                $"Job {Reference} cannot be approved yet: it needs a {string.Join(" and a ", missing)}.", Status, missing);
+        }
+
+        var from = Status;
+        Status = JobStatus.Approved;
+        Append(
+            EventType.JobApproved,
+            nowUtc,
+            actor,
+            new
+            {
+                from = from.ToString(),
+                to = Status.ToString(),
+                category = Category.ToString(),
+                urgency = Urgency.ToString(),
+                contractorId = SuggestedContractorId,
+                contractorRule = SuggestedContractorRule?.ToString().ToLowerInvariant(),
+            });
+    }
+
+    /// <summary>
+    /// A person rejects the job with a reason (AD-6: Prepared → Rejected); <see cref="EventType.JobRejected"/> records
+    /// who and why. A rejected job takes no more follow-ups.
+    /// </summary>
+    /// <exception cref="JobStateException">The job is not Prepared.</exception>
+    public void Reject(string actor, string reason, DateTime nowUtc)
+    {
+        RequirePersonActor(actor);
+        if (string.IsNullOrWhiteSpace(reason))
+        {
+            throw new ArgumentException("A reason is required.", nameof(reason));
+        }
+
+        Guards.RequireUtc(nowUtc, nameof(nowUtc));
+        RequirePrepared("rejected");
+        var from = Status;
+        Status = JobStatus.Rejected;
+        Append(
+            EventType.JobRejected,
+            nowUtc,
+            actor,
+            new { from = from.ToString(), to = Status.ToString(), reason = reason.Trim() });
+    }
+
+    /// <summary>Field names written in <see cref="EventType.JobEdited"/> payloads.</summary>
+    public static class EditedFields
+    {
+        public const string Category = "category";
+        public const string Contractor = "contractor";
+        public const string Property = "property";
+    }
+
+    /// <summary>
+    /// A person sets the category of a Prepared job; <see cref="EventType.JobEdited"/> records the field, the value
+    /// before and after. The same value again changes nothing. The caller re-runs the contractor lookup.
+    /// </summary>
+    /// <returns>True when the category changed.</returns>
+    /// <exception cref="JobStateException">The job is not Prepared.</exception>
+    public bool EditCategory(Category category, string actor, DateTime nowUtc)
+    {
+        if (!Enum.IsDefined(category))
+        {
+            throw new ArgumentOutOfRangeException(nameof(category), category, "Unknown category.");
+        }
+
+        RequirePersonActor(actor);
+        Guards.RequireUtc(nowUtc, nameof(nowUtc));
+        RequirePrepared("edited");
+        if (category == Category)
+        {
+            return false;
+        }
+
+        var before = Category;
+        Category = category;
+        AppendEdited(EditedFields.Category, before.ToString(), category.ToString(), actor, nowUtc);
+        return true;
+    }
+
+    /// <summary>
+    /// A person sets the property of a Prepared job (for example one the address did not resolve to);
+    /// <see cref="EventType.JobEdited"/> records the property ids before and after.
+    /// </summary>
+    /// <returns>True when the property changed.</returns>
+    /// <exception cref="JobStateException">The job is not Prepared.</exception>
+    public bool EditProperty(Guid propertyId, string actor, DateTime nowUtc)
+    {
+        if (propertyId == Guid.Empty)
+        {
+            throw new ArgumentException("A property id is required.", nameof(propertyId));
+        }
+
+        RequirePersonActor(actor);
+        Guards.RequireUtc(nowUtc, nameof(nowUtc));
+        RequirePrepared("edited");
+        if (PropertyId == propertyId)
+        {
+            return false;
+        }
+
+        var before = PropertyId;
+        PropertyId = propertyId;
+        AppendEdited(EditedFields.Property, before, propertyId, actor, nowUtc);
+        return true;
+    }
+
+    /// <summary>
+    /// A person chooses the contractor of a Prepared job: it becomes the job's contractor with rule
+    /// <see cref="ContractorRule.Person"/>, and <see cref="EventType.JobEdited"/> records the contractor ids before and
+    /// after. Choosing the contractor the job already has changes nothing.
+    /// </summary>
+    /// <returns>True when the contractor changed.</returns>
+    /// <exception cref="JobStateException">The job is not Prepared.</exception>
+    public bool ChooseContractor(Guid contractorId, string actor, DateTime nowUtc)
+    {
+        if (contractorId == Guid.Empty)
+        {
+            throw new ArgumentException("A contractor id is required.", nameof(contractorId));
+        }
+
+        RequirePersonActor(actor);
+        Guards.RequireUtc(nowUtc, nameof(nowUtc));
+        RequirePrepared("edited");
+        if (SuggestedContractorId == contractorId)
+        {
+            return false;
+        }
+
+        var before = SuggestedContractorId;
+        SuggestedContractorId = contractorId;
+        SuggestedContractorRule = ContractorRule.Person;
+        AppendEdited(EditedFields.Contractor, before, contractorId, actor, nowUtc);
+        return true;
+    }
+
+    /// <summary>
+    /// Removes the job's contractor after a person's edit left none to suggest (the category was set to Unsure, or
+    /// the lookup has no contractor for it); <see cref="EventType.JobEdited"/> records it with the person as actor.
+    /// </summary>
+    /// <param name="cause">What led to it, e.g. <c>category</c>; written in the payload.</param>
+    /// <returns>True when there was a contractor to remove.</returns>
+    /// <exception cref="JobStateException">The job is not Prepared.</exception>
+    public bool ClearContractor(string actor, string cause, DateTime nowUtc)
+    {
+        RequirePersonActor(actor);
+        if (string.IsNullOrWhiteSpace(cause))
+        {
+            throw new ArgumentException("A cause is required.", nameof(cause));
+        }
+
+        Guards.RequireUtc(nowUtc, nameof(nowUtc));
+        RequirePrepared("edited");
+        if (SuggestedContractorId is null)
+        {
+            return false;
+        }
+
+        var before = SuggestedContractorId;
+        SuggestedContractorId = null;
+        SuggestedContractorRule = null;
+        Append(
+            EventType.JobEdited,
+            nowUtc,
+            actor,
+            new { field = EditedFields.Contractor, before, after = (Guid?)null, cause });
+        return true;
+    }
+
+    /// <summary>Reason written when a person raises urgency in review without giving one.</summary>
+    public const string RaisedInReviewReason = "raised in review";
+
+    /// <summary>
+    /// A person sets the urgency of a Prepared job through <see cref="SetUrgencyByPerson"/> (AD-4). Lowering needs a
+    /// reason; raising without one records <see cref="RaisedInReviewReason"/>. The same urgency again changes nothing.
+    /// </summary>
+    /// <returns>True when the urgency changed.</returns>
+    /// <exception cref="JobStateException">The job is not Prepared.</exception>
+    public bool EditUrgency(Urgency level, string actor, string? reason, DateTime nowUtc)
+    {
+        if (!Enum.IsDefined(level))
+        {
+            throw new ArgumentOutOfRangeException(nameof(level), level, "Unknown urgency.");
+        }
+
+        RequirePersonActor(actor);
+        Guards.RequireUtc(nowUtc, nameof(nowUtc));
+        RequirePrepared("edited");
+        if (level == Urgency)
+        {
+            return false;
+        }
+
+        if (level < Urgency && string.IsNullOrWhiteSpace(reason))
+        {
+            throw new ArgumentException("A reason is required to lower urgency.", nameof(reason));
+        }
+
+        SetUrgencyByPerson(level, actor, string.IsNullOrWhiteSpace(reason) ? RaisedInReviewReason : reason.Trim(), nowUtc);
+        return true;
+    }
+
+    private void RequirePrepared(string action)
+    {
+        if (Status != JobStatus.Prepared)
+        {
+            throw new JobStateException($"Job {Reference} is {Status} and cannot be {action}.", Status);
+        }
+    }
+
+    private static void RequirePersonActor(string actor)
+    {
+        if (string.IsNullOrWhiteSpace(actor) || string.Equals(actor.Trim(), JobEvent.SystemActor, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new ArgumentException("A person is required.", nameof(actor));
+        }
+
+        if (actor.Length > JobEvent.MaxActorLength)
+        {
+            throw new ArgumentException($"Actor must be at most {JobEvent.MaxActorLength} characters.", nameof(actor));
+        }
+    }
+
+    private void AppendEdited<T>(string field, T before, T after, string actor, DateTime nowUtc) =>
+        Append(EventType.JobEdited, nowUtc, actor, new { field, before, after });
+
     private const char RuleIdSeparator = ',';
     private const string RuleReasonPrefix = "rule:";
     private const string FollowUpReason = "follow-up";

@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
-import { ApiError, listJobs, submitMessage, type JobListItem, type SubmittedJob } from './api';
+import { errorText, listJobs, submitMessage, type ContractorRule, type JobListItem, type SubmittedJob } from './api';
+import { ActingAsSwitch, useActingAs } from './ActingAs';
+import { JobDetailPanel } from './JobDetailPanel';
 import { SentToTenant } from './SentToTenant';
 
 // Stored times are UTC; the UI shows Europe/London (AD-9).
@@ -35,13 +37,11 @@ function describeSubmitted(jobs: SubmittedJob[]): string {
 
 const UNKNOWN_BUILDING = 'Building unknown';
 
-function errorText(error: unknown): string {
-  if (error instanceof ApiError) {
-    const fieldErrors = Object.values(error.problem.errors ?? {}).flat();
-    return fieldErrors.length > 0 ? fieldErrors.join(' ') : (error.problem.detail ?? error.message);
-  }
-  return error instanceof Error ? error.message : 'Something went wrong.';
-}
+const RULE_LABELS: Record<ContractorRule, { label: string; title: string }> = {
+  Building: { label: 'usual for building', title: 'The usual contractor for this building and category' },
+  Default: { label: 'company default', title: 'The company-wide default for this category' },
+  Person: { label: 'chosen by a person', title: 'Chosen by a person in review' },
+};
 
 export function QueuePage() {
   const [jobs, setJobs] = useState<JobListItem[]>([]);
@@ -51,6 +51,9 @@ export function QueuePage() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [lastResult, setLastResult] = useState<string | null>(null);
+  const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
+  const { staff, actingAs, setActingAs, error: staffError } = useActingAs();
+  const actingAsName = staff.find((s) => s.id === actingAs)?.name ?? null;
 
   const refresh = useCallback(async () => {
     try {
@@ -85,7 +88,20 @@ export function QueuePage() {
 
   return (
     <main>
-      <h1>Review queue</h1>
+      <header className="page-header">
+        <h1>Review queue</h1>
+        <ActingAsSwitch staff={staff} actingAs={actingAs} onChange={setActingAs} error={staffError} />
+      </header>
+
+      {selectedJobId && (
+        <JobDetailPanel
+          jobId={selectedJobId}
+          actingAs={actingAs}
+          actingAsName={actingAsName}
+          onChanged={() => void refresh()}
+          onClose={() => setSelectedJobId(null)}
+        />
+      )}
 
       <section aria-labelledby="paste-heading" className="panel">
         <h2 id="paste-heading">Paste a message</h2>
@@ -140,8 +156,12 @@ export function QueuePage() {
             </thead>
             <tbody>
               {jobs.map((job) => (
-                <tr key={job.id}>
-                  <td>{job.reference}</td>
+                <tr key={job.id} className={job.id === selectedJobId ? 'selected' : undefined}>
+                  <td>
+                    <button type="button" className="link" onClick={() => setSelectedJobId(job.id)}>
+                      {job.reference}
+                    </button>
+                  </td>
                   <td>{formatReceived(job.receivedAtUtc)}</td>
                   <td>{job.status}</td>
                   <td>
@@ -165,16 +185,11 @@ export function QueuePage() {
                     {job.suggestedContractorName ? (
                       <>
                         {job.buildingName ?? UNKNOWN_BUILDING} · {job.suggestedContractorName} ({job.suggestedContractorPhone})
-                        <span
-                          className="muted contractor-rule"
-                          title={
-                            job.suggestedContractorRule === 'Building'
-                              ? 'The usual contractor for this building and category'
-                              : 'The company-wide default for this category'
-                          }
-                        >
-                          {job.suggestedContractorRule === 'Building' ? 'usual for building' : 'company default'}
-                        </span>
+                        {job.suggestedContractorRule && (
+                          <span className="muted contractor-rule" title={RULE_LABELS[job.suggestedContractorRule].title}>
+                            {RULE_LABELS[job.suggestedContractorRule].label}
+                          </span>
+                        )}
                       </>
                     ) : (
                       <>

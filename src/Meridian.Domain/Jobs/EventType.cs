@@ -29,4 +29,13 @@ public enum EventType
 
     /// <summary>Fixed code suggested the usual contractor for the job's category and building (R12, AD-3).</summary>
     ContractorSuggested,
+
+    /// <summary>A person approved the prepared job (AD-6: Prepared → Approved); the payload has the category, urgency and contractor.</summary>
+    JobApproved,
+
+    /// <summary>A person rejected the prepared job with a reason (AD-6: Prepared → Rejected).</summary>
+    JobRejected,
+
+    /// <summary>A person changed one field of a prepared job; the payload has the field, the value before and after.</summary>
+    JobEdited,
 }

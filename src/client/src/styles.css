@@ -157,3 +157,118 @@ td.summary {
   font-weight: 600;
   color: #9a6700;
 }
+
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.acting-as {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+select {
+  font: inherit;
+  padding: 0.35rem;
+  border: 1px solid #d0d7de;
+  border-radius: 4px;
+  background: #fff;
+}
+
+button.link {
+  padding: 0;
+  border: none;
+  background: none;
+  color: #0969da;
+  text-decoration: underline;
+}
+
+button.danger {
+  color: #cf222e;
+}
+
+tr.selected {
+  background: #ddf4ff;
+}
+
+.detail-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.detail-header h2 {
+  margin: 0;
+}
+
+.status {
+  font-size: 0.7em;
+  font-weight: 600;
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+  background: #eaeef2;
+  vertical-align: middle;
+}
+
+.status-approved {
+  background: #dafbe1;
+  color: #1a7f37;
+}
+
+.status-rejected {
+  background: #ffebe9;
+  color: #cf222e;
+}
+
+.facts {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0.3rem 1rem;
+  margin: 1rem 0;
+}
+
+.facts dt {
+  font-weight: 600;
+}
+
+.facts dd {
+  margin: 0;
+}
+
+.rule-label.inline {
+  display: inline;
+  margin-right: 0.5rem;
+}
+
+.detail-message blockquote {
+  margin: 0 0 0.6rem;
+  padding: 0.3rem 0.6rem;
+  border-left: 3px solid #d0d7de;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.detail-message p {
+  margin: 0.4rem 0 0.2rem;
+  font-size: 0.9em;
+}
+
+.edit-form,
+.reject-form {
+  max-width: 32rem;
+  margin-top: 1rem;
+}
+
+.history {
+  padding-left: 1.2rem;
+  font-size: 0.9em;
+}
+
+.history li {
+  margin-bottom: 0.2rem;
+}

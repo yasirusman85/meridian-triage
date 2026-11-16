@@ -2,6 +2,7 @@ using System.Text.Json.Serialization;
 using Meridian.Application.Messages;
 using Meridian.Application.Outbox;
 using Meridian.Application.Queue;
+using Meridian.Application.Review;
 using Meridian.Application.Triage;
 using Meridian.Infrastructure;
 using Meridian.Web.Api;
@@ -22,6 +23,11 @@ builder.Services.AddScoped<ListQueue>();
 builder.Services.AddScoped<AcknowledgeTenant>();
 builder.Services.AddScoped<ListOutbound>();
 builder.Services.AddScoped<RecoverOrphanMessages>();
+
+// The "acting as" people (no login): config section Staff, Rachel and Dawn by default.
+builder.Services.AddSingleton(new StaffDirectory(builder.Configuration.GetSection("Staff").Get<List<StaffMember>>()));
+builder.Services.AddScoped<GetJob>();
+builder.Services.AddScoped<ReviewJob>();
 
 var app = builder.Build();
 
