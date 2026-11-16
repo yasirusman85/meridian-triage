@@ -192,3 +192,12 @@ Every point where the client input did not say what to do. Quotes are from `docs
 - **Why this one:** The task asks for the current version, and the docs site is the primary source; v6.12 was the fallback if V7 broke.
 - **What would change my mind:** V7 changing incompatibly mid-task.
 - **Blast radius:** Only where the BMAD outputs live and how they are named.
+
+### D22. Jobs are created after the model answers, with a recovery sweep
+
+- **The gap:** The architecture (AD-3) put the acknowledgement before the model call, but how many jobs a message makes (Joy's two problems) is only known after the model answers, and the acknowledgement must quote the job reference.
+- **What I decided:** Save the message first, run the rules, call the model (20-second limit), then create or match the jobs and send the acknowledgement in one transaction. A recovery step turns any message left without a job (a crash between the two saves) into an Unsure job with rules applied and an acknowledgement; it runs at startup.
+- **The alternative:** Create a provisional job before the model and merge it away later if the model finds a follow-up.
+- **Why this one:** Simpler and testable; the cost is that an emergency reaches the queue up to 20 seconds later, well inside the 30-minute escalation window and the 5-minute acknowledgement target.
+- **What would change my mind:** Model latency regularly near the limit, or a need to acknowledge in under a minute.
+- **Blast radius:** `SubmitMessage`, `RecoverOrphanMessages`, the acknowledgement step.

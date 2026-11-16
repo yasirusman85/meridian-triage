@@ -3,14 +3,14 @@ title: 'Every tenant gets an acknowledgement'
 type: feature
 ticket: '1'
 created: '2026-11-16'
-status: in-progress
+status: built
 baseline_revision: '730939f0345268feb258abc8916e075699534f7e'
 route: full
 route_source: auto
 risk: medium
-review: ''
-review_source: ''
-lenses_ran: []
+review: quick
+review_source: pinned
+lenses_ran: [inline]
 review_loop_iteration: 0
 context:
   - '{project-root}/_bmad-output/initiative-meridian-triage/architecture-meridian-triage/architecture-meridian-triage.md'
