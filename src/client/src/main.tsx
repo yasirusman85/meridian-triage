@@ -1,5 +1,6 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
+import { NumbersPage } from './NumbersPage';
 import { QueuePage } from './QueuePage';
 import './styles.css';
 
@@ -10,6 +11,6 @@ if (!root) {
 
 createRoot(root).render(
   <StrictMode>
-    <QueuePage />
+    {window.location.pathname === '/numbers' ? <NumbersPage /> : <QueuePage />}
   </StrictMode>,
 );

@@ -55,15 +55,21 @@ Read `JobEvent`, `EventType`, `IJobRepository`, an existing query like `ListQueu
 ## Tasks & Acceptance
 
 **Execution:**
-- [ ] Application query and repository read
-- [ ] Web endpoint
-- [ ] Client page and header link
-- [ ] Tests for every matrix row
+- [x] Application query and repository read
+- [x] Web endpoint
+- [x] Client page and header link
+- [x] Tests for every matrix row
 
 **Acceptance Criteria:**
 - Given the six client messages posted and one job approved by Rachel, when the numbers page opens, then counts by category and urgency match the queue and time to first human look shows a value.
 
 ## Implementation Notes
+
+- `MetricsQuery` (Application/Metrics) reads `IJobRepository.ListWithEventsAsync` and computes everything from events. Only category and urgency are read from current job fields, for grouping. Open jobs by status are derived from the status-changing events.
+- Attendance is not in `EventType` yet, so `JobAttended` and `SentToContractor` are matched by name (`MetricsQuery.AttendedEventName`). `MetricsQuery.AttendanceSupported` is false until the enum member exists: attendance measures and both promises then show "no data yet". The constructor takes the flag, so tests can exercise the promise rules.
+- First human look starts at the first `JobPrepared` and ends at the first `JobApproved`, `JobRejected`, `JobEdited`, `UrgencySetByPerson` or `EscalationAcknowledged` whose actor is not `system`. Urgency changes by a person count as edits.
+- Median is the mean of the middle pair for an even count. The 90th percentile is nearest-rank. Working days are Monday to Friday in UTC with no bank holidays, and the five-day deadline keeps the time of day.
+- The page is at `/numbers`, served by the existing SPA fallback. `main.tsx` picks the page from the path, and the queue header links to it.
 
 ## Plan Change Log
 
