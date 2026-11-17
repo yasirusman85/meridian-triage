@@ -1,6 +1,7 @@
 using System.Text.Json.Serialization;
 using Meridian.Application.Attendance;
 using Meridian.Application.Escalation;
+using Meridian.Application.Metrics;
 using Meridian.Application.Messages;
 using Meridian.Application.Outbox;
 using Meridian.Application.Queue;
@@ -37,6 +38,9 @@ builder.Services.AddSingleton(sp => EscalationConfiguration.Read(sp.GetRequiredS
 builder.Services.AddScoped<EscalationService>();
 builder.Services.AddScoped<AcknowledgeEscalation>();
 builder.Services.AddScoped<ListNotifications>();
+
+// The numbers page (R24): computed from events only.
+builder.Services.AddScoped<MetricsQuery>();
 builder.Services.AddHostedService<EscalationWorker>();
 
 // Contractor attendance (R20, R21, AD-11): the single-job link, mark attended, the overdue check and resend.

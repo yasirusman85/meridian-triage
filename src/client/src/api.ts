@@ -356,3 +356,43 @@ export async function markContractorJobAttended(token: string): Promise<Contract
 /** A person sends an overdue job to a fallback contractor; the old link stops working (R21). */
 export const resendJob = (jobId: string, actingAs: string, contractorId: string) =>
   reviewAction('POST', `/api/jobs/${encodeURIComponent(jobId)}/resend`, actingAs, { contractorId });
+
+/** A count for one category, urgency or status; name is the enum name, e.g. "Heating". */
+export interface MetricCount {
+  name: string;
+  count: number;
+}
+
+/** A duration in minutes over `jobs` jobs; the medians and percentiles are null when there is no data yet. */
+export interface DurationMeasure {
+  jobs: number;
+  medianMinutes: number | null;
+  percentile90Minutes: number | null;
+}
+
+/** `met` of `eligible` jobs kept the promise; eligible 0 means no data yet. */
+export interface PromiseMeasure {
+  eligible: number;
+  met: number;
+}
+
+/** The numbers for one window of jobs: last 30 days or all time (R24). */
+export interface MetricsWindow {
+  jobCount: number;
+  byCategory: MetricCount[];
+  byUrgency: MetricCount[];
+  openByStatus: MetricCount[];
+  firstHumanLook: DurationMeasure;
+  timeToApproval: DurationMeasure;
+  timeToAttendance: DurationMeasure;
+  emergency24Hours: PromiseMeasure;
+  nonEmergency5WorkingDays: PromiseMeasure;
+}
+
+export interface Metrics {
+  generatedAtUtc: string;
+  last30Days: MetricsWindow;
+  allTime: MetricsWindow;
+}
+
+export const getMetrics = () => getJson<Metrics>('/api/metrics');

@@ -112,4 +112,11 @@ internal sealed class JobRepository : IJobRepository
             .AsNoTracking()
             .Include(j => j.Messages)
             .ToListAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<Job>> ListWithEventsAsync(CancellationToken cancellationToken) =>
+        await _db.Jobs
+            .AsNoTracking()
+            .Include(j => j.Events)
+            .AsSplitQuery()
+            .ToListAsync(cancellationToken);
 }

@@ -155,6 +155,9 @@ public class SubmitMessageTests
             Task.FromResult<IReadOnlyList<Job>>(Added
                 .Where(j => j.Urgency == Urgency.Emergency && j.Status == JobStatus.SentToContractor && j.AttendanceOverdueFlaggedAtUtc is null)
                 .ToList());
+
+        public Task<IReadOnlyList<Job>> ListWithEventsAsync(CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<Job>>(Added);
     }
 
     /// <summary>The seeded properties (<see cref="SeedData"/>), in memory.</summary>

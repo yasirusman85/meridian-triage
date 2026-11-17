@@ -1,6 +1,7 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { ContractorPage, contractorTokenFromPath } from './ContractorPage';
+import { NumbersPage } from './NumbersPage';
 import { QueuePage } from './QueuePage';
 import './styles.css';
 
@@ -13,5 +14,13 @@ if (!root) {
 const contractorToken = contractorTokenFromPath(window.location.pathname);
 
 createRoot(root).render(
-  <StrictMode>{contractorToken !== null ? <ContractorPage token={contractorToken} /> : <QueuePage />}</StrictMode>,
+  <StrictMode>
+    {contractorToken !== null ? (
+      <ContractorPage token={contractorToken} />
+    ) : window.location.pathname === '/numbers' ? (
+      <NumbersPage />
+    ) : (
+      <QueuePage />
+    )}
+  </StrictMode>,
 );

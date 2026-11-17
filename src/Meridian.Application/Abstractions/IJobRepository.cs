@@ -55,4 +55,7 @@ public interface IJobRepository
 
     /// <summary>All jobs with their messages, read-only.</summary>
     Task<IReadOnlyList<Job>> ListAsync(CancellationToken cancellationToken);
+
+    /// <summary>All jobs with their events, read-only: the numbers page is computed from events only (AD-5).</summary>
+    Task<IReadOnlyList<Job>> ListWithEventsAsync(CancellationToken cancellationToken);
 }

@@ -392,3 +392,44 @@ button.mark-attended {
   font-size: 1.1em;
   padding: 0.6rem 1.2rem;
 }
+
+.numbers-columns {
+  display: grid;
+  gap: 0 1.5rem;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+@media (min-width: 52rem) {
+  .numbers-columns {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.numbers-column h3 {
+  font-size: 1rem;
+  margin: 1.25rem 0 0.4rem;
+}
+
+.numbers-column th[scope='row'] {
+  font-weight: 400;
+  width: 55%;
+}
+
+.numeric {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.no-data {
+  color: #57606a;
+  font-style: italic;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}

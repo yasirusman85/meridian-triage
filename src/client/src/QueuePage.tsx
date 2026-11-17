@@ -153,6 +153,7 @@ export function QueuePage() {
     <main>
       <header className="page-header">
         <h1>Review queue</h1>
+        <a href="/numbers">Numbers</a>
         <ActingAsSwitch staff={staff} actingAs={actingAs} onChange={setActingAs} error={staffError} />
       </header>
 
