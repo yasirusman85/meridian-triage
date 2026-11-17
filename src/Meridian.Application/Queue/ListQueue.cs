@@ -27,12 +27,14 @@ public sealed record QueueItem(
     ContractorRule? SuggestedContractorRule,
     EscalationState EscalationState = EscalationState.None,
     string? EscalationAcknowledgedBy = null,
-    DateTime? EscalationAcknowledgedAtUtc = null);
+    DateTime? EscalationAcknowledgedAtUtc = null,
+    bool AttendanceOverdue = false);
 
 /// <summary>
-/// The review queue: jobs whose escalation failed first (R19), then most urgent, then oldest first (R13). Each item
-/// carries its building and suggested contractor (R11), where no contractor means a person must choose, and its
-/// escalation state.
+/// The review queue: jobs sent to a contractor past the 24-hour emergency promise first (R21), then jobs whose
+/// escalation failed (R19), then most urgent, then oldest first (R13). Each item carries its building and contractor
+/// (R11), where no contractor means a person must choose, and its escalation state. A job sent to a contractor shows
+/// that contractor, not the one first suggested.
 /// </summary>
 public sealed class ListQueue
 {
@@ -58,7 +60,8 @@ public sealed class ListQueue
     }
 
     public static IEnumerable<Job> Order(IEnumerable<Job> jobs) =>
-        jobs.OrderByDescending(j => j.EscalationState == EscalationState.Failed)
+        jobs.OrderByDescending(j => j.AttendanceOverdueFlaggedAtUtc is not null)
+            .ThenByDescending(j => j.EscalationState == EscalationState.Failed)
             .ThenByDescending(j => j.Urgency)
             .ThenBy(j => j.ReceivedAtUtc)
             .ThenBy(j => j.Reference, StringComparer.Ordinal);
@@ -87,7 +90,8 @@ public sealed class ListQueue
     {
         var first = job.Messages.OrderBy(m => m.ReceivedAtUtc).FirstOrDefault();
         var property = job.PropertyId is { } propertyId ? properties.GetValueOrDefault(propertyId) : null;
-        var contractor = job.SuggestedContractorId is { } contractorId ? contractors.GetValueOrDefault(contractorId) : null;
+        var contractorId = job.SentToContractorId ?? job.SuggestedContractorId;
+        var contractor = contractorId is { } id ? contractors.GetValueOrDefault(id) : null;
         return new QueueItem(
             job.Id,
             job.Reference,
@@ -107,9 +111,10 @@ public sealed class ListQueue
             contractor?.Id,
             contractor?.Name,
             contractor?.Phone,
-            contractor is null ? null : job.SuggestedContractorRule,
+            contractor is null ? null : job.SentContractorRule,
             job.EscalationState,
             job.EscalationAcknowledgedBy,
-            job.EscalationAcknowledgedAtUtc);
+            job.EscalationAcknowledgedAtUtc,
+            job.AttendanceOverdueFlaggedAtUtc is not null);
     }
 }

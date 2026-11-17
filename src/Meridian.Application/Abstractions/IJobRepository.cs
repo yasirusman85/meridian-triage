@@ -41,6 +41,18 @@ public interface IJobRepository
     /// </summary>
     Task<IReadOnlyList<Job>> ListEscalatingAsync(CancellationToken cancellationToken);
 
+    /// <summary>
+    /// The job whose contractor token hashes to <paramref name="tokenHash"/>, with events, tracked for changes; null when
+    /// no job holds it (AD-11: a used or replaced token matches nothing).
+    /// </summary>
+    Task<Job?> GetByContractorTokenHashAsync(string tokenHash, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Emergency jobs sent to a contractor that have not been flagged as overdue, with events, tracked for changes: the
+    /// overdue check's candidates (RULE-8). The time test is made by <see cref="Job.IsAttendanceOverdue"/>.
+    /// </summary>
+    Task<IReadOnlyList<Job>> ListAwaitingAttendanceAsync(CancellationToken cancellationToken);
+
     /// <summary>All jobs with their messages, read-only.</summary>
     Task<IReadOnlyList<Job>> ListAsync(CancellationToken cancellationToken);
 }

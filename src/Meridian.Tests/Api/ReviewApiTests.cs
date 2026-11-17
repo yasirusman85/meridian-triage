@@ -38,7 +38,7 @@ public sealed class ReviewApiTests : IDisposable
 
         Assert.Equal(HttpStatusCode.OK, approved.StatusCode);
         var detail = await approved.Content.ReadFromJsonAsync<JsonElement>();
-        Assert.Equal("Approved", detail.GetProperty("status").GetString());
+        Assert.Equal("SentToContractor", detail.GetProperty("status").GetString());
         Assert.Equal("General", detail.GetProperty("category").GetString());
         Assert.Equal("Handyside Maintenance", detail.GetProperty("contractor").GetProperty("name").GetString());
         Assert.Equal("Person", detail.GetProperty("contractor").GetProperty("rule").GetString());
@@ -46,7 +46,7 @@ public sealed class ReviewApiTests : IDisposable
 
         var events = detail.GetProperty("events").EnumerateArray().ToList();
         var review = events.Where(e => e.GetProperty("actor").GetString() == "rachel").ToList();
-        Assert.Equal(new[] { "JobEdited", "JobEdited", "JobApproved" }, review.Select(e => e.GetProperty("type").GetString()));
+        Assert.Equal(new[] { "JobEdited", "JobEdited", "JobApproved", "SentToContractor" }, review.Select(e => e.GetProperty("type").GetString()));
         Assert.Contains(review, e => e.GetProperty("summary").GetString() == "Edited category: Unsure → General");
         Assert.Contains(review, e => e.GetProperty("summary").GetString() == "Edited contractor: none → Handyside Maintenance");
 
@@ -59,7 +59,8 @@ public sealed class ReviewApiTests : IDisposable
         Assert.Equal("Unsure", payload.RootElement.GetProperty("before").GetString());
         Assert.Equal("General", payload.RootElement.GetProperty("after").GetString());
         Assert.Single(stored, e => e.Type == EventType.JobApproved);
-        Assert.Equal(JobStatus.Approved, (await db.Jobs.SingleAsync(j => j.Id == jobId)).Status);
+        Assert.Single(stored, e => e.Type == EventType.SentToContractor);
+        Assert.Equal(JobStatus.SentToContractor, (await db.Jobs.SingleAsync(j => j.Id == jobId)).Status);
     }
 
     [Fact]
@@ -73,10 +74,11 @@ public sealed class ReviewApiTests : IDisposable
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var detail = await response.Content.ReadFromJsonAsync<JsonElement>();
-        Assert.Equal("Approved", detail.GetProperty("status").GetString());
-        var last = detail.GetProperty("events").EnumerateArray().Last();
-        Assert.Equal("JobApproved", last.GetProperty("type").GetString());
-        Assert.Equal("dawn", last.GetProperty("actor").GetString());
+        Assert.Equal("SentToContractor", detail.GetProperty("status").GetString());
+        var events = detail.GetProperty("events").EnumerateArray().ToList();
+        Assert.Equal(new[] { "JobApproved", "SentToContractor" }, events.TakeLast(2).Select(e => e.GetProperty("type").GetString()));
+        Assert.Equal("dawn", events[^2].GetProperty("actor").GetString());
+        Assert.Equal("dawn", events[^1].GetProperty("actor").GetString());
     }
 
     [Fact]
@@ -202,7 +204,7 @@ public sealed class ReviewApiTests : IDisposable
         Assert.Equal("application/problem+json", again.Content.Headers.ContentType?.MediaType);
         Assert.Equal(before, await EventCountAsync(factory, jobId));
         var detail = await DetailAsync(client, jobId);
-        Assert.Equal("Approved", detail.GetProperty("status").GetString());
+        Assert.Equal("SentToContractor", detail.GetProperty("status").GetString());
         Assert.Equal("Heating", detail.GetProperty("category").GetString());
     }
 

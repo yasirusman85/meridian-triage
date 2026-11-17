@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
+import { ContractorMessage } from './ContractorMessage';
 import {
   approveJob,
   CATEGORIES,
@@ -296,6 +297,8 @@ export function JobDetailPanel({ jobId, actingAs, actingAsName, onChanged, onClo
       ) : (
         <p className="muted">Not prepared by the AI.</p>
       )}
+
+      <ContractorMessage jobId={job.id} status={job.status} />
 
       <h3>Messages ({job.messages.length})</h3>
       {job.messages.map((m) => (

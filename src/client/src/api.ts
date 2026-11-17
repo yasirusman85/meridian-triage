@@ -64,6 +64,8 @@ export interface JobListItem {
   /** Who acknowledged the emergency, e.g. "rachel"; null until acknowledged. */
   escalationAcknowledgedBy: string | null;
   escalationAcknowledgedAtUtc: string | null;
+  /** An emergency sent to a contractor is more than 24 hours past its first message and not attended (RULE-8). */
+  attendanceOverdue: boolean;
 }
 
 export interface SubmittedJob {
@@ -88,6 +90,9 @@ export interface OutboundMessage {
 
 /** Template ids of staff notifications; they are listed in the notifications panel, not as "sent to tenant". */
 export const STAFF_TEMPLATE_IDS: readonly string[] = ['escalation-primary', 'escalation-backup'];
+
+/** Messages to a contractor, with the single-job link (AD-11). Shown to staff in the job, never as "sent to tenant". */
+export const CONTRACTOR_TEMPLATE_IDS: readonly string[] = ['contractor-job'];
 
 /** A staff notification (simulated SMS) about an emergency, newest first. */
 export interface StaffNotification {
@@ -320,3 +325,34 @@ export async function acknowledgeEscalation(jobId: string, actingAs: string): Pr
   }
   return (await response.json()) as EscalationResult;
 }
+
+/** What a contractor sees through its link: that one job only (AD-11). */
+export interface ContractorJob {
+  reference: string;
+  address: string | null;
+  category: Category;
+  summary: string | null;
+  contractorName: string;
+}
+
+export interface ContractorAttended {
+  reference: string;
+  status: JobStatus;
+}
+
+/** The contractor's view of its job; rejects with 404 when the link is wrong, used or replaced. */
+export const getContractorJob = (token: string) =>
+  getJson<ContractorJob>(`/api/contractor-jobs/${encodeURIComponent(token)}`);
+
+/** The contractor marks the job attended through its link; the link stops working. */
+export async function markContractorJobAttended(token: string): Promise<ContractorAttended> {
+  const response = await fetch(`/api/contractor-jobs/${encodeURIComponent(token)}/attended`, { method: 'POST' });
+  if (!response.ok) {
+    throw new ApiError(await readProblem(response));
+  }
+  return (await response.json()) as ContractorAttended;
+}
+
+/** A person sends an overdue job to a fallback contractor; the old link stops working (R21). */
+export const resendJob = (jobId: string, actingAs: string, contractorId: string) =>
+  reviewAction('POST', `/api/jobs/${encodeURIComponent(jobId)}/resend`, actingAs, { contractorId });

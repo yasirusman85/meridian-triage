@@ -47,4 +47,13 @@ public enum EventType
 
     /// <summary>Neither the primary nor the backup acknowledged the emergency in time.</summary>
     EscalationFailed,
+
+    /// <summary>The job was sent to its contractor with a single-job link (AD-6, AD-11); the payload has the contractor and the outbound id.</summary>
+    SentToContractor,
+
+    /// <summary>The contractor marked the job attended through its link; the actor is <c>contractor:&lt;id&gt;</c>.</summary>
+    JobAttended,
+
+    /// <summary>An Emergency job was not attended within 24 hours of its first message (RULE-8); flagged once per send.</summary>
+    AttendanceOverdue,
 }

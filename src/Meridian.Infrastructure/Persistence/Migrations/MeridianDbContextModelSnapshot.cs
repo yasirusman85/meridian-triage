@@ -96,9 +96,22 @@ namespace Meridian.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("TEXT");
 
+                    b.Property<DateTime?>("AttendanceOverdueFlaggedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("AttendedAtUtc")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Category")
                         .IsRequired()
                         .HasMaxLength(32)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("ContractorResentAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ContractorTokenHash")
+                        .HasMaxLength(64)
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime>("CreatedAtUtc")
@@ -143,6 +156,9 @@ namespace Meridian.Infrastructure.Persistence.Migrations
                         .HasMaxLength(16)
                         .HasColumnType("TEXT");
 
+                    b.Property<Guid?>("SentToContractorId")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(32)
@@ -173,12 +189,17 @@ namespace Meridian.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("ContractorTokenHash")
+                        .IsUnique();
+
                     b.HasIndex("EscalationState");
 
                     b.HasIndex("PropertyId");
 
                     b.HasIndex("Reference")
                         .IsUnique();
+
+                    b.HasIndex("SentToContractorId");
 
                     b.HasIndex("SuggestedContractorId");
 
@@ -387,6 +408,11 @@ namespace Meridian.Infrastructure.Persistence.Migrations
                     b.HasOne("Meridian.Domain.Properties.Property", null)
                         .WithMany()
                         .HasForeignKey("PropertyId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Meridian.Domain.Contractors.Contractor", null)
+                        .WithMany()
+                        .HasForeignKey("SentToContractorId")
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("Meridian.Domain.Contractors.Contractor", null)

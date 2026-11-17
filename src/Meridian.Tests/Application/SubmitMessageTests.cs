@@ -147,6 +147,14 @@ public class SubmitMessageTests
 
         public Task<IReadOnlyList<Job>> ListAsync(CancellationToken cancellationToken) =>
             Task.FromResult<IReadOnlyList<Job>>(Added);
+
+        public Task<Job?> GetByContractorTokenHashAsync(string tokenHash, CancellationToken cancellationToken) =>
+            Task.FromResult(Added.SingleOrDefault(j => j.ContractorTokenHash == tokenHash));
+
+        public Task<IReadOnlyList<Job>> ListAwaitingAttendanceAsync(CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<Job>>(Added
+                .Where(j => j.Urgency == Urgency.Emergency && j.Status == JobStatus.SentToContractor && j.AttendanceOverdueFlaggedAtUtc is null)
+                .ToList());
     }
 
     /// <summary>The seeded properties (<see cref="SeedData"/>), in memory.</summary>

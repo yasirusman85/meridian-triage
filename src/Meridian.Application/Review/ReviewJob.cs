@@ -1,5 +1,7 @@
 using Meridian.Application.Abstractions;
+using Meridian.Application.Attendance;
 using Meridian.Application.Contractors;
+using Meridian.Application.Outbox;
 using Meridian.Domain.Contractors;
 using Meridian.Domain.Jobs;
 
@@ -55,8 +57,8 @@ public sealed record ReviewResult(
 
 /// <summary>
 /// The review use case (R13–R15, AD-6): a person approves, rejects or edits a Prepared job. Each action is one unit
-/// of work with its events (AD-5), recorded with the acting person. Illegal transitions are conflicts; nothing is
-/// sent to a contractor here, and nothing is approved automatically.
+/// of work with its events (AD-5), recorded with the acting person. Approval also sends the job to its contractor in
+/// the same unit of work (AD-6, AD-11). Illegal transitions are conflicts; nothing is approved automatically.
 /// </summary>
 public sealed class ReviewJob
 {
@@ -81,6 +83,7 @@ public sealed class ReviewJob
     private readonly IUnitOfWork _unitOfWork;
     private readonly IClock _clock;
     private readonly StaffDirectory _staff;
+    private readonly IOutbox _outbox;
 
     public ReviewJob(
         IJobRepository jobs,
@@ -88,7 +91,8 @@ public sealed class ReviewJob
         IContractorRepository contractors,
         IUnitOfWork unitOfWork,
         IClock clock,
-        StaffDirectory staff)
+        StaffDirectory staff,
+        IOutbox outbox)
     {
         _jobs = jobs;
         _properties = properties;
@@ -96,20 +100,35 @@ public sealed class ReviewJob
         _unitOfWork = unitOfWork;
         _clock = clock;
         _staff = staff;
+        _outbox = outbox;
     }
 
-    /// <summary>Approves a Prepared job that has a category (not Unsure) and a contractor.</summary>
+    /// <summary>
+    /// Approves a Prepared job that has a category (not Unsure) and a contractor, and sends it to that contractor with a
+    /// single-job link (Approved → SentToContractor, one unit of work). Every check runs before anything changes.
+    /// </summary>
     public Task<ReviewResult> ApproveAsync(Guid jobId, string? actor, CancellationToken cancellationToken) =>
-        RunAsync(jobId, actor, (job, person, _) =>
+        RunAsync(jobId, actor, async (job, person, ct) =>
         {
             var missing = job.MissingForApproval();
             if (missing.Count > 0)
             {
-                return Task.FromResult(ReviewResult.Conflict(MissingText(missing), missing));
+                return ReviewResult.Conflict(MissingText(missing), missing);
             }
 
-            job.Approve(person, _clock.UtcNow);
-            return Task.FromResult(ReviewResult.Done);
+            var contractor = (await _contractors.ListAsync(ct)).FirstOrDefault(c => c.Id == job.SuggestedContractorId);
+            if (contractor is null)
+            {
+                return ReviewResult.Conflict(
+                    "The suggested contractor no longer exists. Choose another contractor before approving.",
+                    new[] { Job.ApprovalNeeds.Contractor });
+            }
+
+            var address = await PropertyNameAsync(job, ct);
+            var now = _clock.UtcNow;
+            job.Approve(person, now);
+            ContractorDispatch.Send(job, contractor, address, _outbox, person, now, resend: false);
+            return ReviewResult.Done;
         }, cancellationToken);
 
     /// <summary>Rejects a Prepared job; a reason is required.</summary>
@@ -244,6 +263,11 @@ public sealed class ReviewJob
 
         return null;
     }
+
+    private async Task<string?> PropertyNameAsync(Job job, CancellationToken cancellationToken) =>
+        job.PropertyId is { } propertyId
+            ? (await _properties.ListAsync(cancellationToken)).FirstOrDefault(p => p.Id == propertyId)?.Name
+            : null;
 
     /// <summary>An unknown actor is reported before any other problem with the request.</summary>
     private Task<ReviewResult> CheckedAsync(string? actor, ReviewResult otherwise) =>

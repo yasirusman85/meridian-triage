@@ -64,7 +64,7 @@ public static class ReviewEndpoints
         return api;
     }
 
-    private static async Task<IResult> ToResultAsync(ReviewResult result, Guid id, GetJob getJob, CancellationToken ct) =>
+    internal static async Task<IResult> ToResultAsync(ReviewResult result, Guid id, GetJob getJob, CancellationToken ct) =>
         result.Outcome switch
         {
             ReviewOutcome.Done => await DetailAsync(id, getJob, ct),
@@ -78,13 +78,13 @@ public static class ReviewEndpoints
             _ => throw new InvalidOperationException($"Unknown review outcome {result.Outcome}."),
         };
 
-    private static async Task<IResult> DetailAsync(Guid id, GetJob getJob, CancellationToken ct)
+    internal static async Task<IResult> DetailAsync(Guid id, GetJob getJob, CancellationToken ct)
     {
         var detail = await getJob.ExecuteAsync(id, ct);
         return detail is null ? JobNotFound() : Results.Ok(ToDto(detail));
     }
 
-    private static IResult JobNotFound() =>
+    internal static IResult JobNotFound() =>
         Results.Problem(statusCode: StatusCodes.Status404NotFound, title: "Job not found");
 
     private static JobDetailDto ToDto(JobDetail d) => new(

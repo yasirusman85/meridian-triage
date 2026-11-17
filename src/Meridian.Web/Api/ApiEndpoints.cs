@@ -33,7 +33,7 @@ public static class ApiEndpoints
                 i.Id, i.Reference, i.ReceivedAtUtc, i.Status, i.Urgency, i.Category, i.Sender, i.Preview, i.Explanation, i.SummaryEn, i.RuleIds,
                 i.PropertyId, i.PropertyName, i.FollowUpCount,
                 i.BuildingName, i.SuggestedContractorId, i.SuggestedContractorName, i.SuggestedContractorPhone, i.SuggestedContractorRule,
-                i.EscalationState, i.EscalationAcknowledgedBy, i.EscalationAcknowledgedAtUtc)));
+                i.EscalationState, i.EscalationAcknowledgedBy, i.EscalationAcknowledgedAtUtc, i.AttendanceOverdue)));
         });
 
         api.MapGet("/jobs/{id:guid}/outbound", async (Guid id, ListOutbound listOutbound, CancellationToken ct) =>

@@ -67,6 +67,19 @@ internal sealed class JobConfiguration : IEntityTypeConfiguration<Job>
         builder.HasIndex(j => j.SuggestedContractorId);
         builder.Property(j => j.SuggestedContractorRule).HasMaxLength(16);
 
+        // Contractor attendance (AD-11): only the token's hash is stored; one live token per job, none after attended.
+        builder.Property(j => j.ContractorTokenHash).HasMaxLength(Job.ContractorTokenHashLength);
+        builder.HasIndex(j => j.ContractorTokenHash).IsUnique();
+        builder.HasOne<Contractor>()
+            .WithMany()
+            .HasForeignKey(j => j.SentToContractorId)
+            .IsRequired(false)
+            .OnDelete(DeleteBehavior.Restrict);
+        builder.HasIndex(j => j.SentToContractorId);
+        builder.Property(j => j.AttendedAtUtc);
+        builder.Property(j => j.ContractorResentAtUtc);
+        builder.Property(j => j.AttendanceOverdueFlaggedAtUtc);
+
         // Many jobs per message (one per issue) and many messages per job (the first plus follow-ups).
         builder.HasMany(j => j.Messages)
             .WithMany()

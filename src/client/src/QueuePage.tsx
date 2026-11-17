@@ -14,6 +14,7 @@ import {
 import { ActingAsSwitch, useActingAs } from './ActingAs';
 import { JobDetailPanel } from './JobDetailPanel';
 import { NotificationsPanel } from './NotificationsPanel';
+import { OverdueAlert } from './OverdueAlert';
 import { SentToTenant } from './SentToTenant';
 
 // Stored times are UTC; the UI shows Europe/London (AD-9).
@@ -192,6 +193,13 @@ export function QueuePage() {
         </form>
       </section>
 
+      <OverdueAlert
+        jobs={jobs.filter((j) => j.attendanceOverdue)}
+        actingAs={actingAs}
+        actingAsName={actingAsName}
+        onResent={() => void refresh()}
+      />
+
       <section aria-labelledby="queue-heading">
         <h2 id="queue-heading">Jobs ({jobs.length})</h2>
         {ackError && (
@@ -225,7 +233,11 @@ export function QueuePage() {
               {jobs.map((job) => (
                 <tr
                   key={job.id}
-                  className={[job.id === selectedJobId ? 'selected' : '', job.escalationState === 'Failed' ? 'escalation-failed-row' : ''].filter(Boolean).join(' ') || undefined}
+                  className={[
+                    job.id === selectedJobId ? 'selected' : '',
+                    job.escalationState === 'Failed' ? 'escalation-failed-row' : '',
+                    job.attendanceOverdue ? 'attendance-overdue-row' : '',
+                  ].filter(Boolean).join(' ') || undefined}
                 >
                   <td>
                     <button type="button" className="link" onClick={() => setSelectedJobId(job.id)}>
@@ -233,7 +245,10 @@ export function QueuePage() {
                     </button>
                   </td>
                   <td>{formatReceived(job.receivedAtUtc)}</td>
-                  <td>{job.status}</td>
+                  <td>
+                    {job.status}
+                    {job.attendanceOverdue && <span className="overdue-label">Overdue: send fallback</span>}
+                  </td>
                   <td>
                     <span className={`urgency-${job.urgency.toLowerCase()}`}>{job.urgency}</span>
                     {job.ruleIds.map((rule) => (

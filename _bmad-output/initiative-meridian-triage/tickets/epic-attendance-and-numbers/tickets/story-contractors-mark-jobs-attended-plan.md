@@ -3,14 +3,14 @@ title: 'Contractors mark jobs attended'
 type: feature
 ticket: '1'
 created: '2026-11-17'
-status: in-progress
+status: built
 baseline_revision: '8df848f1738a9830f80134ab994d42dfc7e98101'
 route: full
 route_source: auto
 risk: medium
-review: ''
+review: quick
 review_source: ''
-lenses_ran: []
+lenses_ran: [sonnet-review]
 review_loop_iteration: 0
 context:
   - '{project-root}/_bmad-output/initiative-meridian-triage/architecture-meridian-triage/architecture-meridian-triage.md'
@@ -62,21 +62,41 @@ Read `Job.cs` (Approve at line ~459, `Append` path), `Job.Escalation.cs`, `JobSt
 ## Tasks & Acceptance
 
 **Execution:**
-- [ ] Domain attendance members and events
-- [ ] Application send-on-approve, link, attended, resend, overdue check
-- [ ] Infrastructure mapping and migration
-- [ ] Web endpoints and worker hook
-- [ ] Client contractor page, staff link display, overdue alert and resend
-- [ ] Tests for every matrix row
+- [x] Domain attendance members and events
+- [x] Application send-on-approve, link, attended, resend, overdue check
+- [x] Infrastructure mapping and migration
+- [x] Web endpoints and worker hook
+- [x] Client contractor page, staff link display, overdue alert and resend
+- [x] Tests for every matrix row
 
 **Acceptance Criteria:**
 - Given the Walsh emergency approved by Rachel, when the contractor opens the link and marks it attended, then the job is Attended and its history shows JobApproved, SentToContractor and JobAttended in order.
 
 ## Implementation Notes
 
+- `SendToContractor` and `ResendToContractor` take the outbound message id as a fourth argument after the token (the `SentToContractor` event records it; the signature in Intent did not carry it).
+- New job field `SentToContractorId` (the contractor the job was last sent to). Queue, job detail and the contractor page show it, so a fallback shows after resend. `SuggestedContractorId` is not changed by a resend.
+- Contractor message: template `contractor-job`, channel `sms` (simulated), recipient `Name (phone)`, link is the relative path `/c/<token>`.
+- Queue order: overdue first, then escalation failed, then urgency, then oldest first.
+- Jobs approved before this change stay `Approved` and are not sent (no backfill).
+- Resend re-alert (orchestrator decision, resolves the earlier open risk): the 24h promise stays measured from the first message, but after a resend the alert re-raises only if the job is not attended more than 4 hours after the resend. New column `ContractorResentAtUtc` (null until a resend) is set by resend; `AttendanceOverdue` is raised once per send (resend clears the flag).
+- Migration `ContractorAttendance` adds the token hash (unique), sent-to contractor, attended time, resent time and overdue flag columns.
+
 ## Plan Change Log
 
 ## Review Triage Log
+
+| Verdict | Finding | Action |
+|---------|---------|--------|
+| Fixed (decision) | Resend cleared the flag but overdue stayed measured from the first message, so the next tick re-alerted at once (open risk) | Added `ContractorResentAtUtc`; overdue = never resent and first message >24h, or resent and >4h since resend; once per send; migration, snapshot and tests (resend clears alert, none at +1h, re-alert at +4h01m, one event per send, attended fallback never flagged) |
+| Fixed | Job history text for `AttendanceOverdue` said "more than 24 hours after the first message", wrong for a post-resend alert | Text now covers both windows |
+| Dismissed | AD-5/AD-6: approve and send in one transaction, Approved then SentToContractor events | Met: one unit of work, all checks before any change |
+| Dismissed | AD-7/RULE-5: model summary reaches only the contractor, tenant outbound list excludes `contractor-job` | Met |
+| Dismissed | AD-9: time from `IClock` only | Met (domain takes `nowUtc`) |
+| Dismissed | AD-11 / token handling: hashed (SHA-256) and unique, raw token only in outbound body and link, wrong/used/replaced token gives 404 with title only, request logging off for `Microsoft.AspNetCore` | Met; no raw token in events, logs or storage |
+| Dismissed | Contractor page leaking the token via Referer | No external resources on the page |
+| Dismissed | Resend allowed for a not-yet-overdue job or to the same contractor | Intentional: a person chooses, only the status must be SentToContractor |
+| Noted | Queue shows "Overdue: send fallback" with a colon where the matrix shows a dash | Wording only, kept |
 
 ## Verification
 

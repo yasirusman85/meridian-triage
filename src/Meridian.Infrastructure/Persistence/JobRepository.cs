@@ -93,6 +93,20 @@ internal sealed class JobRepository : IJobRepository
         return jobs.Where(j => j.IsEscalating).ToList();
     }
 
+    public Task<Job?> GetByContractorTokenHashAsync(string tokenHash, CancellationToken cancellationToken) =>
+        _db.Jobs
+            .Include(j => j.Events)
+            .AsSplitQuery()
+            .SingleOrDefaultAsync(j => j.ContractorTokenHash == tokenHash, cancellationToken);
+
+    public async Task<IReadOnlyList<Job>> ListAwaitingAttendanceAsync(CancellationToken cancellationToken) =>
+        await _db.Jobs
+            .Include(j => j.Events)
+            .Where(j => j.Urgency == Urgency.Emergency)
+            .Where(j => j.Status == JobStatus.SentToContractor)
+            .Where(j => j.AttendanceOverdueFlaggedAtUtc == null)
+            .ToListAsync(cancellationToken);
+
     public async Task<IReadOnlyList<Job>> ListAsync(CancellationToken cancellationToken) =>
         await _db.Jobs
             .AsNoTracking()

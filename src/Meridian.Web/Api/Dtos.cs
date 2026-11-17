@@ -39,7 +39,8 @@ public sealed record JobListItemDto(
     ContractorRule? SuggestedContractorRule,
     EscalationState EscalationState,
     string? EscalationAcknowledgedBy,
-    DateTime? EscalationAcknowledgedAtUtc);
+    DateTime? EscalationAcknowledgedAtUtc,
+    bool AttendanceOverdue);
 
 /// <summary>A message written to the outbox for a job (AD-8); <c>status</c> is <c>Simulated</c> in the first version.</summary>
 public sealed record OutboundMessageDto(

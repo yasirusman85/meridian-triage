@@ -11,6 +11,7 @@ public class ReviewJobTests
 
     private readonly SubmitMessageTests.FakeJobRepository _jobs = new();
     private readonly FakeClock _clock = new(T0.AddMinutes(10));
+    private readonly FakeOutbox _outbox = new();
 
     [Fact]
     public async Task Setting_the_category_re_runs_the_contractor_lookup_for_the_building()
@@ -169,7 +170,7 @@ public class ReviewJobTests
             .ExecuteAsync(job.Id, default);
 
         Assert.NotNull(detail);
-        Assert.Equal(JobStatus.Approved, detail.Status);
+        Assert.Equal(JobStatus.SentToContractor, detail.Status);
         Assert.False(detail.CanReview);
         Assert.Equal("Beechwood House", detail.BuildingName);
         Assert.Equal("Handyside Maintenance", detail.Contractor?.Name);
@@ -177,7 +178,7 @@ public class ReviewJobTests
         Assert.Equal("mould in the bedroom", Assert.Single(detail.Messages).Text);
         Assert.Contains(detail.Events, e => e.Summary == "Edited category: Unsure → General" && e.Actor == "rachel");
         Assert.Contains(detail.Events, e => e.Summary == "Edited contractor: none → Handyside Maintenance" && e.Actor == "rachel");
-        Assert.Equal(EventType.JobApproved, detail.Events[^1].Type);
+        Assert.Equal(new[] { EventType.JobApproved, EventType.SentToContractor }, detail.Events.TakeLast(2).Select(e => e.Type));
         Assert.Equal("rachel", detail.Events[^1].Actor);
     }
 
@@ -187,7 +188,8 @@ public class ReviewJobTests
         new SubmitMessageTests.FakeContractorRepository(),
         new SubmitMessageTests.FakeUnitOfWork(),
         _clock,
-        new StaffDirectory());
+        new StaffDirectory(),
+        _outbox);
 
     private Job AddJob(string? propertyName)
     {

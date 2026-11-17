@@ -86,7 +86,8 @@ public sealed class GetJob
         var properties = (await _properties.ListAsync(cancellationToken)).ToDictionary(p => p.Id);
         var contractors = (await _contractors.ListAsync(cancellationToken)).ToDictionary(c => c.Id);
         var property = job.PropertyId is { } propertyId ? properties.GetValueOrDefault(propertyId) : null;
-        var contractor = job.SuggestedContractorId is { } contractorId ? contractors.GetValueOrDefault(contractorId) : null;
+        var contractorId = job.SentToContractorId ?? job.SuggestedContractorId;
+        var contractor = contractorId is { } contractorKey ? contractors.GetValueOrDefault(contractorKey) : null;
 
         string PropertyName(Guid? value) =>
             value is not { } key ? "none" : properties.TryGetValue(key, out var p) ? p.Name : key.ToString();
@@ -121,7 +122,12 @@ public sealed class GetJob
             property?.Building?.Name,
             contractor is null
                 ? null
-                : new JobDetailContractor(contractor.Id, contractor.Name, contractor.Phone, contractor.Trade, job.SuggestedContractorRule),
+                : new JobDetailContractor(
+                    contractor.Id,
+                    contractor.Name,
+                    contractor.Phone,
+                    contractor.Trade,
+                    job.SentContractorRule),
             RulesOf(job),
             job.Messages
                 .OrderBy(m => m.ReceivedAtUtc)
@@ -176,6 +182,9 @@ public sealed class GetJob
             EventType.JobApproved => "Approved",
             EventType.JobRejected => $"Rejected: {Text(root, "reason")}",
             EventType.JobEdited => EditedSummary(root, propertyName, contractorName),
+            EventType.SentToContractor => $"Sent to contractor: {contractorName(GuidOf(root, "contractorId"))}",
+            EventType.JobAttended => "Marked attended by the contractor",
+            EventType.AttendanceOverdue => "Attendance overdue: not attended in time (24 hours from the first message, 4 hours after a resend)",
             _ => e.Type.ToString(),
         };
     }

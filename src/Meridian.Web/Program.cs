@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using Meridian.Application.Attendance;
 using Meridian.Application.Escalation;
 using Meridian.Application.Messages;
 using Meridian.Application.Outbox;
@@ -38,6 +39,12 @@ builder.Services.AddScoped<AcknowledgeEscalation>();
 builder.Services.AddScoped<ListNotifications>();
 builder.Services.AddHostedService<EscalationWorker>();
 
+// Contractor attendance (R20, R21, AD-11): the single-job link, mark attended, the overdue check and resend.
+builder.Services.AddScoped<GetContractorJob>();
+builder.Services.AddScoped<MarkAttended>();
+builder.Services.AddScoped<ResendToContractor>();
+builder.Services.AddScoped<CheckOverdueAttendance>();
+
 var app = builder.Build();
 
 await app.Services.MigrateMeridianDatabaseAsync();
@@ -57,6 +64,7 @@ app.UseStaticFiles();
 
 app.MapMeridianApi();
 app.MapEscalationApi();
+app.MapGroup("/api").MapAttendanceApi();
 app.MapFallbackToFile("index.html");
 
 await app.RunAsync();
