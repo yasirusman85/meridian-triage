@@ -70,6 +70,22 @@ All sending (tenant replies, staff texts, contractor messages) is simulated: mes
 - **Two messages arriving at the same moment** for the same flat could make two jobs instead of one with a follow-up.
 - **Data protection and retention** (how long tenant messages are kept, what may be sent to a model provider) are open questions for Meridian (PRD OQ-3).
 
+## Screenshots
+
+Taken from a fresh run of the app (`./run.sh`), using the seeded data.
+
+**1. Review queue.** The five jobs from the forwarded messages, each with its urgency, AI summary and suggested contractor.
+![Review queue](docs/screenshots/1-review-queue.png)
+
+**2. Job detail.** MER-000003, the Walsh emergency, after it was acknowledged and approved, with its full history.
+![Job detail](docs/screenshots/2-job-detail.png)
+
+**3. Numbers page.** Counts and times for the last 30 days and all time, computed from the event log.
+![Numbers page](docs/screenshots/3-numbers.png)
+
+**4. Contractor link.** The single-job page a contractor opens to mark the job attended.
+![Contractor link](docs/screenshots/4-contractor-link.png)
+
 ## Eval results
 
 Run with `dotnet run --project src/Meridian.Eval` (add `OPENROUTER_API_KEY` for the real model). Full reports, with every failure listed by harm, are in [`eval/results/`](eval/results/).
