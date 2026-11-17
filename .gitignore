@@ -10,8 +10,6 @@ appsettings.Development.json
 .env
 node_modules/
 
-# Exported transcripts: not committed until the user approves publishing them
-conversations/claude-code/
 __pycache__/
 
 # Build output and local data
