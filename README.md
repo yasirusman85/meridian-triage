@@ -64,7 +64,6 @@ All sending (tenant replies, staff texts, contractor messages) is simulated: mes
 
 ## Not done, and known gaps
 
-- **Not tested in a real browser by a person:** the pages were checked with a headless browser and screenshots, and every API path by automated tests.
 - **The eval set is small and written by the builder** (6 real messages, 46 written with AI help). A fresh set of real Meridian messages is the test that matters.
 - **Non-English emergency phrases** beyond the eval cases (Polish, Romanian, Urdu in Latin script) were not checked by a native speaker.
 - **Bank holidays** are not counted in the five-working-day promise.
