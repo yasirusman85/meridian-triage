@@ -31,4 +31,9 @@ public interface IOutbox
     /// linked to it (so a message that made two jobs shows its one acknowledgement on both).
     /// </summary>
     Task<IReadOnlyList<OutboundMessage>> ListForJobAsync(Guid jobId, CancellationToken cancellationToken);
+
+    /// <summary>Every outbound message rendered from one of <paramref name="templateIds"/>, newest first.</summary>
+    Task<IReadOnlyList<OutboundMessage>> ListByTemplatesAsync(
+        IReadOnlyCollection<string> templateIds,
+        CancellationToken cancellationToken);
 }

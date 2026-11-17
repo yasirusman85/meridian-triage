@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using Meridian.Application.Escalation;
 using Meridian.Application.Messages;
 using Meridian.Application.Outbox;
 using Meridian.Application.Queue;
@@ -6,6 +7,7 @@ using Meridian.Application.Review;
 using Meridian.Application.Triage;
 using Meridian.Infrastructure;
 using Meridian.Web.Api;
+using Meridian.Web.Workers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -25,9 +27,16 @@ builder.Services.AddScoped<ListOutbound>();
 builder.Services.AddScoped<RecoverOrphanMessages>();
 
 // The "acting as" people (no login): config section Staff, Rachel and Dawn by default.
-builder.Services.AddSingleton(new StaffDirectory(builder.Configuration.GetSection("Staff").Get<List<StaffMember>>()));
+builder.Services.AddSingleton(new StaffDirectory(builder.Configuration.GetSection("Staff").Get<List<Meridian.Application.Review.StaffMember>>()));
 builder.Services.AddScoped<GetJob>();
 builder.Services.AddScoped<ReviewJob>();
+
+// Out-of-hours escalation (R18, R19, AD-9): staff and window from Escalation:*, a worker ticking every minute.
+builder.Services.AddSingleton(sp => EscalationConfiguration.Read(sp.GetRequiredService<IConfiguration>()));
+builder.Services.AddScoped<EscalationService>();
+builder.Services.AddScoped<AcknowledgeEscalation>();
+builder.Services.AddScoped<ListNotifications>();
+builder.Services.AddHostedService<EscalationWorker>();
 
 var app = builder.Build();
 
@@ -47,6 +56,7 @@ app.UseDefaultFiles();
 app.UseStaticFiles();
 
 app.MapMeridianApi();
+app.MapEscalationApi();
 app.MapFallbackToFile("index.html");
 
 await app.RunAsync();

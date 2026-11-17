@@ -24,11 +24,15 @@ public sealed record QueueItem(
     Guid? SuggestedContractorId,
     string? SuggestedContractorName,
     string? SuggestedContractorPhone,
-    ContractorRule? SuggestedContractorRule);
+    ContractorRule? SuggestedContractorRule,
+    EscalationState EscalationState = EscalationState.None,
+    string? EscalationAcknowledgedBy = null,
+    DateTime? EscalationAcknowledgedAtUtc = null);
 
 /// <summary>
-/// The review queue: most urgent first, then oldest first (R13). Each item carries its building and suggested
-/// contractor (R11); no contractor means a person must choose.
+/// The review queue: jobs whose escalation failed first (R19), then most urgent, then oldest first (R13). Each item
+/// carries its building and suggested contractor (R11), where no contractor means a person must choose, and its
+/// escalation state.
 /// </summary>
 public sealed class ListQueue
 {
@@ -54,7 +58,8 @@ public sealed class ListQueue
     }
 
     public static IEnumerable<Job> Order(IEnumerable<Job> jobs) =>
-        jobs.OrderByDescending(j => j.Urgency)
+        jobs.OrderByDescending(j => j.EscalationState == EscalationState.Failed)
+            .ThenByDescending(j => j.Urgency)
             .ThenBy(j => j.ReceivedAtUtc)
             .ThenBy(j => j.Reference, StringComparer.Ordinal);
 
@@ -102,6 +107,9 @@ public sealed class ListQueue
             contractor?.Id,
             contractor?.Name,
             contractor?.Phone,
-            contractor is null ? null : job.SuggestedContractorRule);
+            contractor is null ? null : job.SuggestedContractorRule,
+            job.EscalationState,
+            job.EscalationAcknowledgedBy,
+            job.EscalationAcknowledgedAtUtc);
     }
 }

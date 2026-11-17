@@ -38,4 +38,13 @@ public enum EventType
 
     /// <summary>A person changed one field of a prepared job; the payload has the field, the value before and after.</summary>
     JobEdited,
+
+    /// <summary>A staff member was notified of the emergency (R18, R19); the payload names the recipient and the outbound id.</summary>
+    EscalationNotified,
+
+    /// <summary>A staff member acknowledged the emergency; the event actor is who acknowledged it.</summary>
+    EscalationAcknowledged,
+
+    /// <summary>Neither the primary nor the backup acknowledged the emergency in time.</summary>
+    EscalationFailed,
 }

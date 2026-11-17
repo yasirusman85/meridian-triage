@@ -11,6 +11,9 @@ public enum OutboundStatus
 public static class OutboundChannels
 {
     public const string Email = "email";
+
+    /// <summary>Staff notifications (R18, R19); simulated, no real SMS.</summary>
+    public const string Sms = "sms";
 }
 
 /// <summary>

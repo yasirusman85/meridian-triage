@@ -309,3 +309,50 @@ tr.selected {
   margin: 0;
   min-width: 0;
 }
+
+.escalation-badge {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.75em;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.escalation-pending,
+.escalation-notifiedrachel,
+.escalation-notifiedbackup {
+  color: #9a6700;
+}
+
+.escalation-acknowledged {
+  color: #1a7f37;
+}
+
+.escalation-failed {
+  color: #ffffff;
+  background: #cf222e;
+  padding: 0.1rem 0.35rem;
+  border-radius: 3px;
+  display: inline-block;
+}
+
+.escalation-failed-row {
+  background: #ffebe9;
+}
+
+button.acknowledge {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 0.8em;
+}
+
+.notification-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.notification {
+  border-top: 1px solid #d0d7de;
+  padding-top: 0.3rem;
+}

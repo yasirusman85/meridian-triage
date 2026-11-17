@@ -614,10 +614,16 @@ public sealed class MessagesApiTests : IDisposable
             builder.UseSetting("ConnectionStrings:Meridian", $"Data Source={_dbPath}");
             // Never call a real model, even when a developer has OPENROUTER_API_KEY set.
             builder.UseSetting("Triage:Provider", "stub");
-            if (clock is not null)
+            builder.ConfigureTestServices(services =>
             {
-                builder.ConfigureTestServices(services => services.AddSingleton(clock));
-            }
+                if (clock is not null)
+                {
+                    services.AddSingleton(clock);
+                }
+
+                // The escalation worker would tick on its own timer; these tests do not need it.
+                EscalationApiTests.RemoveEscalationWorker(services);
+            });
         });
 
     /// <summary>A fixed start time that moves on a millisecond per read, so events of different saves sort apart.</summary>

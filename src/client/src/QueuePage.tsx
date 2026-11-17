@@ -1,7 +1,19 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
-import { errorText, listJobs, submitMessage, type ContractorRule, type JobListItem, type SubmittedJob } from './api';
+import {
+  acknowledgeEscalation,
+  errorText,
+  listJobs,
+  listNotifications,
+  submitMessage,
+  type ContractorRule,
+  type EscalationState,
+  type JobListItem,
+  type StaffNotification,
+  type SubmittedJob,
+} from './api';
 import { ActingAsSwitch, useActingAs } from './ActingAs';
 import { JobDetailPanel } from './JobDetailPanel';
+import { NotificationsPanel } from './NotificationsPanel';
 import { SentToTenant } from './SentToTenant';
 
 // Stored times are UTC; the UI shows Europe/London (AD-9).
@@ -43,6 +55,27 @@ const RULE_LABELS: Record<ContractorRule, { label: string; title: string }> = {
   Person: { label: 'chosen by a person', title: 'Chosen by a person in review' },
 };
 
+// The escalation worker ticks every minute; the queue and notifications refresh a little more often.
+const REFRESH_MS = 20_000;
+
+const ESCALATION_LABELS: Record<Exclude<EscalationState, 'None'>, string> = {
+  NotifiedRachel: 'Rachel notified',
+  NotifiedBackup: 'Backup notified',
+  Acknowledged: 'Acknowledged',
+  Failed: 'Escalation failed',
+};
+
+function EscalationBadge({ job, staffName }: { job: JobListItem; staffName: (id: string | null) => string }) {
+  if (job.escalationState === 'None') {
+    return job.urgency === 'Emergency' ? <span className="escalation-badge escalation-pending">Notifying…</span> : null;
+  }
+  const label =
+    job.escalationState === 'Acknowledged'
+      ? `Acknowledged by ${staffName(job.escalationAcknowledgedBy)}`
+      : ESCALATION_LABELS[job.escalationState];
+  return <span className={`escalation-badge escalation-${job.escalationState.toLowerCase()}`}>{label}</span>;
+}
+
 export function QueuePage() {
   const [jobs, setJobs] = useState<JobListItem[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -54,6 +87,11 @@ export function QueuePage() {
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
   const { staff, actingAs, setActingAs, error: staffError } = useActingAs();
   const actingAsName = staff.find((s) => s.id === actingAs)?.name ?? null;
+  const staffName = (id: string | null) => staff.find((m) => m.id === id)?.name ?? id ?? 'someone';
+  const [notifications, setNotifications] = useState<StaffNotification[]>([]);
+  const [notificationsError, setNotificationsError] = useState<string | null>(null);
+  const [acknowledging, setAcknowledging] = useState<string | null>(null);
+  const [ackError, setAckError] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
     try {
@@ -62,11 +100,35 @@ export function QueuePage() {
     } catch (error) {
       setLoadError(errorText(error));
     }
+    try {
+      setNotifications(await listNotifications());
+      setNotificationsError(null);
+    } catch (error) {
+      setNotificationsError(errorText(error));
+    }
   }, []);
 
   useEffect(() => {
     void refresh();
+    const timer = window.setInterval(() => void refresh(), REFRESH_MS);
+    return () => window.clearInterval(timer);
   }, [refresh]);
+
+  async function onAcknowledge(job: JobListItem) {
+    if (!actingAs) {
+      return;
+    }
+    setAcknowledging(job.id);
+    setAckError(null);
+    try {
+      await acknowledgeEscalation(job.id, actingAs);
+    } catch (error) {
+      setAckError(`${job.reference}: ${errorText(error)}`);
+    } finally {
+      setAcknowledging(null);
+      await refresh();
+    }
+  }
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -132,6 +194,11 @@ export function QueuePage() {
 
       <section aria-labelledby="queue-heading">
         <h2 id="queue-heading">Jobs ({jobs.length})</h2>
+        {ackError && (
+          <p role="alert" className="error">
+            {ackError}
+          </p>
+        )}
         {loadError && (
           <p role="alert" className="error">
             {loadError}
@@ -156,7 +223,10 @@ export function QueuePage() {
             </thead>
             <tbody>
               {jobs.map((job) => (
-                <tr key={job.id} className={job.id === selectedJobId ? 'selected' : undefined}>
+                <tr
+                  key={job.id}
+                  className={[job.id === selectedJobId ? 'selected' : '', job.escalationState === 'Failed' ? 'escalation-failed-row' : ''].filter(Boolean).join(' ') || undefined}
+                >
                   <td>
                     <button type="button" className="link" onClick={() => setSelectedJobId(job.id)}>
                       {job.reference}
@@ -171,6 +241,17 @@ export function QueuePage() {
                         rule: {rule}
                       </span>
                     ))}
+                    <EscalationBadge job={job} staffName={staffName} />
+                    {job.urgency === 'Emergency' && job.escalationState !== 'Acknowledged' && (
+                      <button
+                        type="button"
+                        className="acknowledge"
+                        disabled={acknowledging === job.id || !actingAs}
+                        onClick={() => void onAcknowledge(job)}
+                      >
+                        {acknowledging === job.id ? 'Acknowledging…' : `Acknowledge as ${actingAsName ?? '…'}`}
+                      </button>
+                    )}
                   </td>
                   <td>{job.category}</td>
                   <td>
@@ -223,6 +304,8 @@ export function QueuePage() {
           </table>
         )}
       </section>
+
+      <NotificationsPanel notifications={notifications} error={notificationsError} formatTime={formatReceived} />
     </main>
   );
 }
