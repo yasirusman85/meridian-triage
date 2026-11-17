@@ -69,7 +69,8 @@ public sealed class Job
     /// <summary>True while the job can still take follow-ups: not <see cref="JobStatus.Attended"/> or <see cref="JobStatus.Rejected"/>.</summary>
     public bool IsOpen => Status is not (JobStatus.Attended or JobStatus.Rejected);
 
-    public IReadOnlyList<JobEvent> Events => _events;
+    /// <summary>The job's history in <see cref="JobEvent.Sequence"/> order, whatever order the events were loaded in.</summary>
+    public IReadOnlyList<JobEvent> Events => _events.OrderBy(e => e.Sequence).ToList();
 
     /// <summary>
     /// Creates a job for one issue of a received message (or the message as a whole when there is no usable issue):
@@ -721,5 +722,8 @@ public sealed class Job
         AppendRaw(type, occurredAtUtc, actor, JsonSerializer.Serialize(payload));
 
     private void AppendRaw(EventType type, DateTime occurredAtUtc, string actor, string payloadJson) =>
-        _events.Add(new JobEvent(Id, type, occurredAtUtc, actor, payloadJson));
+        _events.Add(new JobEvent(Id, type, occurredAtUtc, actor, payloadJson, NextSequence()));
+
+    /// <summary>The next event's sequence: one more than the highest so far, 1 for the first (AD-5).</summary>
+    private int NextSequence() => _events.Count == 0 ? 1 : _events.Max(e => e.Sequence) + 1;
 }

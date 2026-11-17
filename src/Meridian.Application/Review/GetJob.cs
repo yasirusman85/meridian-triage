@@ -12,8 +12,33 @@ public sealed record JobDetailRule(string Id, string MatchedPhrase);
 
 public sealed record JobDetailContractor(Guid Id, string Name, string Phone, Category Trade, ContractorRule? Rule);
 
-/// <summary>One history row, oldest first, with a one-line description for the job view (R23).</summary>
-public sealed record JobDetailEvent(EventType Type, DateTime OccurredAtUtc, string Actor, string Summary);
+/// <summary>
+/// One history row in sequence order, with a one-line description for the job view (R23), the raw payload JSON as
+/// stored, and for a model event the fields that explain the AI decision (R17).
+/// </summary>
+public sealed record JobDetailEvent(
+    EventType Type,
+    DateTime OccurredAtUtc,
+    string Actor,
+    string Summary,
+    int Sequence,
+    string PayloadJson,
+    JobDetailModelRun? Model);
+
+/// <summary>
+/// What the model did for a <c>ModelPrepared</c> or <c>ModelPreparationFailed</c> event: model id, prompt version,
+/// total latency, tokens summed over attempts (null when none were reported), the last raw output (null when the
+/// model gave none), the failure reason (null on success) and the number of attempts.
+/// </summary>
+public sealed record JobDetailModelRun(
+    string? ModelId,
+    string? PromptVersion,
+    long? LatencyMs,
+    int? InputTokens,
+    int? OutputTokens,
+    string? RawOutput,
+    string? Reason,
+    int Attempts);
 
 /// <summary>Everything the job detail panel shows (R13): the AI's explanation, messages, rules, contractor and history.</summary>
 public sealed record JobDetail(
@@ -70,8 +95,15 @@ public sealed class GetJob
             value is not { } key ? "none" : contractors.TryGetValue(key, out var c) ? c.Name : key.ToString();
 
         var events = job.Events
-            .OrderBy(e => e.OccurredAtUtc)
-            .Select(e => new JobDetailEvent(e.Type, e.OccurredAtUtc, e.Actor, Summarise(e, PropertyName, ContractorName)))
+            .OrderBy(e => e.Sequence)
+            .Select(e => new JobDetailEvent(
+                e.Type,
+                e.OccurredAtUtc,
+                e.Actor,
+                Summarise(e, PropertyName, ContractorName),
+                e.Sequence,
+                e.PayloadJson,
+                ModelRunOf(e)))
             .ToList();
 
         return new JobDetail(
@@ -103,7 +135,7 @@ public sealed class GetJob
     private static IReadOnlyList<JobDetailRule> RulesOf(Job job)
     {
         var rules = new List<JobDetailRule>();
-        foreach (var applied in job.Events.Where(e => e.Type == EventType.RulesApplied).OrderBy(e => e.OccurredAtUtc))
+        foreach (var applied in job.Events.Where(e => e.Type == EventType.RulesApplied).OrderBy(e => e.Sequence))
         {
             using var payload = JsonDocument.Parse(applied.PayloadJson);
             if (!payload.RootElement.TryGetProperty("rules", out var list) || list.ValueKind != JsonValueKind.Array)
@@ -147,6 +179,53 @@ public sealed class GetJob
             _ => e.Type.ToString(),
         };
     }
+
+    private static JobDetailModelRun? ModelRunOf(JobEvent e)
+    {
+        if (e.Type is not (EventType.ModelPrepared or EventType.ModelPreparationFailed))
+        {
+            return null;
+        }
+
+        using var payload = JsonDocument.Parse(e.PayloadJson);
+        var root = payload.RootElement;
+        var attempts = root.TryGetProperty("attempts", out var list) && list.ValueKind == JsonValueKind.Array
+            ? list.EnumerateArray().Where(a => a.ValueKind == JsonValueKind.Object).ToList()
+            : new List<JsonElement>();
+
+        int? Sum(string name)
+        {
+            var values = attempts.Select(a => Int(a, name)).OfType<int>().ToList();
+            return values.Count == 0 ? null : values.Sum();
+        }
+
+        var count = Int(root, "attemptCount") ?? attempts.Count;
+        return new JobDetailModelRun(
+            Text(root, "modelId") ?? attempts.Select(a => Text(a, "modelId")).LastOrDefault(m => m is not null),
+            Text(root, "promptVersion") ?? attempts.Select(a => Text(a, "promptVersion")).LastOrDefault(p => p is not null),
+            Long(root, "latencyMs"),
+            Sum("inputTokens"),
+            Sum("outputTokens"),
+            attempts.Select(a => Text(a, "rawOutput")).LastOrDefault(r => r is not null),
+            Text(root, "reason"),
+            count);
+    }
+
+    private static int? Int(JsonElement element, string name) =>
+        element.ValueKind == JsonValueKind.Object
+        && element.TryGetProperty(name, out var value)
+        && value.ValueKind == JsonValueKind.Number
+        && value.TryGetInt32(out var number)
+            ? number
+            : null;
+
+    private static long? Long(JsonElement element, string name) =>
+        element.ValueKind == JsonValueKind.Object
+        && element.TryGetProperty(name, out var value)
+        && value.ValueKind == JsonValueKind.Number
+        && value.TryGetInt64(out var number)
+            ? number
+            : null;
 
     private static string RulesSummary(JsonElement root)
     {

@@ -13,6 +13,7 @@ import {
   type ContractorOption,
   type ContractorRule,
   type JobDetail,
+  type JobDetailEvent,
   type JobEdit,
   type PropertyOption,
   type Urgency,
@@ -37,6 +38,65 @@ const MISSING_LABELS: Record<string, string> = {
 };
 
 const URGENCY_ORDER: Record<Urgency, number> = { Routine: 0, Urgent: 1, Emergency: 2 };
+
+/** Pretty-prints stored JSON; falls back to the text as stored if it does not parse. */
+function formatJson(json: string): string {
+  try {
+    return JSON.stringify(JSON.parse(json), null, 2);
+  } catch {
+    return json;
+  }
+}
+
+/**
+ * One history row: time (Europe/London), actor, type and summary, the model run for AI events, and the raw payload
+ * behind a toggle. All text is rendered as text by React, never as HTML.
+ */
+function HistoryItem({ event }: { event: JobDetailEvent }) {
+  const model = event.model;
+  return (
+    <li value={event.sequence}>
+      <span className="muted">{londonTime.format(new Date(event.occurredAtUtc))}</span> · <strong>{event.actor}</strong> ·{' '}
+      <code className="event-type">{event.type}</code> · {event.summary}
+      {model && (
+        <dl className="model-run">
+          <dt>Model</dt>
+          <dd>{model.modelId ?? 'unknown'}</dd>
+          <dt>Prompt</dt>
+          <dd>{model.promptVersion ?? 'unknown'}</dd>
+          <dt>Latency</dt>
+          <dd>{model.latencyMs === null ? 'unknown' : `${model.latencyMs} ms`}</dd>
+          <dt>Tokens</dt>
+          <dd>
+            {model.inputTokens === null && model.outputTokens === null
+              ? 'not reported'
+              : `${model.inputTokens ?? '?'} in / ${model.outputTokens ?? '?'} out`}
+          </dd>
+          <dt>Attempts</dt>
+          <dd>{model.attempts}</dd>
+          {model.reason && (
+            <>
+              <dt>Reason</dt>
+              <dd>{model.reason}</dd>
+            </>
+          )}
+          <dt>Raw output</dt>
+          <dd>
+            {model.rawOutput === null ? (
+              <span className="muted">none</span>
+            ) : (
+              <pre className="raw-output">{formatJson(model.rawOutput)}</pre>
+            )}
+          </dd>
+        </dl>
+      )}
+      <details className="payload">
+        <summary>Raw payload</summary>
+        <pre>{formatJson(event.payloadJson)}</pre>
+      </details>
+    </li>
+  );
+}
 
 interface Props {
   jobId: string;
@@ -342,11 +402,8 @@ export function JobDetailPanel({ jobId, actingAs, actingAsName, onChanged, onClo
 
       <h3>History</h3>
       <ol className="history">
-        {job.events.map((e, i) => (
-          <li key={`${e.occurredAtUtc}-${i}`}>
-            <span className="muted">{londonTime.format(new Date(e.occurredAtUtc))}</span> · <strong>{e.actor}</strong> ·{' '}
-            {e.summary}
-          </li>
+        {job.events.map((e) => (
+          <HistoryItem key={e.sequence} event={e} />
         ))}
       </ol>
     </section>

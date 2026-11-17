@@ -186,12 +186,36 @@ export interface JobDetail {
   /** Emergency rules that fired, with the phrase each matched. */
   rules: { id: string; matchedPhrase: string }[];
   messages: { id: string; sender: string; text: string; receivedAtUtc: string }[];
-  /** The job's history, oldest first. */
-  events: { type: string; occurredAtUtc: string; actor: string; summary: string }[];
+  /** The job's history in sequence order (1, 2, 3… per job). */
+  events: JobDetailEvent[];
   /** True while the job is Prepared and can be approved, edited or rejected. */
   canReview: boolean;
   /** What approval still needs: "category", "contractor". */
   missingForApproval: string[];
+}
+
+/** The model run behind an AI event: tokens are summed over attempts; rawOutput is the last attempt's. */
+export interface ModelRun {
+  modelId: string | null;
+  promptVersion: string | null;
+  latencyMs: number | null;
+  inputTokens: number | null;
+  outputTokens: number | null;
+  rawOutput: string | null;
+  /** Why the model gave no usable answer; null when it did. */
+  reason: string | null;
+  attempts: number;
+}
+
+/** One history row. payloadJson is the event's stored payload; model is set for ModelPrepared and ModelPreparationFailed. */
+export interface JobDetailEvent {
+  type: string;
+  occurredAtUtc: string;
+  actor: string;
+  summary: string;
+  sequence: number;
+  payloadJson: string;
+  model: ModelRun | null;
 }
 
 /** A change to a Prepared job; omitted fields stay as they are. A reason is required to lower urgency. */

@@ -3,14 +3,14 @@ title: "A job's full history is visible"
 type: feature
 ticket: '7'
 created: '2026-11-16'
-status: in-progress
+status: built
 baseline_revision: '90389426d595b69766c83362d950005eef98f9bf'
 route: full
 route_source: auto
 risk: low
-review: ''
-review_source: ''
-lenses_ran: []
+review: quick
+review_source: pinned
+lenses_ran: [inline]
 review_loop_iteration: 0
 context:
   - '{project-root}/_bmad-output/initiative-meridian-triage/architecture-meridian-triage/architecture-meridian-triage.md'

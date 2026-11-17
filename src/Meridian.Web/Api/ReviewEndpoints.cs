@@ -103,7 +103,16 @@ public static class ReviewEndpoints
         d.Contractor is { } c ? new JobDetailContractorDto(c.Id, c.Name, c.Phone, c.Trade, c.Rule) : null,
         d.Rules.Select(r => new JobDetailRuleDto(r.Id, r.MatchedPhrase)).ToList(),
         d.Messages.Select(m => new JobDetailMessageDto(m.Id, m.Sender, m.Text, m.ReceivedAtUtc)).ToList(),
-        d.Events.Select(e => new JobDetailEventDto(e.Type, e.OccurredAtUtc, e.Actor, e.Summary)).ToList(),
+        d.Events.Select(e => new JobDetailEventDto(
+            e.Type,
+            e.OccurredAtUtc,
+            e.Actor,
+            e.Summary,
+            e.Sequence,
+            e.PayloadJson,
+            e.Model is { } m
+                ? new JobDetailModelRunDto(m.ModelId, m.PromptVersion, m.LatencyMs, m.InputTokens, m.OutputTokens, m.RawOutput, m.Reason, m.Attempts)
+                : null)).ToList(),
         d.CanReview,
         d.MissingForApproval);
 }

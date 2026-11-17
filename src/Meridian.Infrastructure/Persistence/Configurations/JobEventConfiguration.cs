@@ -15,6 +15,8 @@ internal sealed class JobEventConfiguration : IEntityTypeConfiguration<JobEvent>
         builder.Property(e => e.OccurredAtUtc).IsRequired();
         builder.Property(e => e.Actor).IsRequired().HasMaxLength(JobEvent.MaxActorLength);
         builder.Property(e => e.PayloadJson).IsRequired();
+        builder.Property(e => e.Sequence).IsRequired();
         builder.HasIndex(e => new { e.JobId, e.OccurredAtUtc });
+        builder.HasIndex(e => new { e.JobId, e.Sequence }).IsUnique();
     }
 }

@@ -182,6 +182,9 @@ namespace Meridian.Infrastructure.Persistence.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("Sequence")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("Type")
                         .IsRequired()
                         .HasMaxLength(64)
@@ -190,6 +193,9 @@ namespace Meridian.Infrastructure.Persistence.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("JobId", "OccurredAtUtc");
+
+                    b.HasIndex("JobId", "Sequence")
+                        .IsUnique();
 
                     b.ToTable("JobEvents", (string)null);
                 });

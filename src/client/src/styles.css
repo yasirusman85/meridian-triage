@@ -270,5 +270,42 @@ tr.selected {
 }
 
 .history li {
-  margin-bottom: 0.2rem;
+  margin-bottom: 0.6rem;
+}
+
+.history .event-type {
+  font-size: 0.9em;
+}
+
+.history pre {
+  margin: 0.3rem 0;
+  padding: 0.5rem;
+  max-height: 20rem;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-size: 0.85em;
+  background: rgba(127, 127, 127, 0.1);
+  border-radius: 4px;
+}
+
+.history .payload summary {
+  cursor: pointer;
+  font-size: 0.9em;
+}
+
+.model-run {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0.1rem 0.8rem;
+  margin: 0.3rem 0;
+}
+
+.model-run dt {
+  font-weight: 600;
+}
+
+.model-run dd {
+  margin: 0;
+  min-width: 0;
 }

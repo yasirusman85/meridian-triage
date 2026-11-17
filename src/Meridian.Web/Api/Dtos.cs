@@ -74,7 +74,29 @@ public sealed record JobDetailRuleDto(string Id, string MatchedPhrase);
 /// <summary>The job's contractor; <c>Rule</c> is <c>Building</c>, <c>Default</c> (suggested by fixed code) or <c>Person</c> (chosen in review).</summary>
 public sealed record JobDetailContractorDto(Guid Id, string Name, string Phone, Category Trade, ContractorRule? Rule);
 
-public sealed record JobDetailEventDto(EventType Type, DateTime OccurredAtUtc, string Actor, string Summary);
+/// <summary>
+/// One history row, in <c>Sequence</c> order (1, 2, 3… per job). <c>PayloadJson</c> is the event's stored payload;
+/// <c>Model</c> is set for <c>ModelPrepared</c> and <c>ModelPreparationFailed</c> events only.
+/// </summary>
+public sealed record JobDetailEventDto(
+    EventType Type,
+    DateTime OccurredAtUtc,
+    string Actor,
+    string Summary,
+    int Sequence,
+    string PayloadJson,
+    JobDetailModelRunDto? Model);
+
+/// <summary>The model run behind an AI event (R17): tokens are summed over attempts; <c>RawOutput</c> is the last attempt's.</summary>
+public sealed record JobDetailModelRunDto(
+    string? ModelId,
+    string? PromptVersion,
+    long? LatencyMs,
+    int? InputTokens,
+    int? OutputTokens,
+    string? RawOutput,
+    string? Reason,
+    int Attempts);
 
 /// <summary>
 /// One job for the detail panel. <c>CanReview</c> is true while it is Prepared; <c>MissingForApproval</c> lists what
