@@ -2,6 +2,7 @@ using Meridian.Application.Abstractions;
 using Meridian.Application.Attendance;
 using Meridian.Application.Contractors;
 using Meridian.Application.Outbox;
+using Meridian.Application.Staff;
 using Meridian.Domain.Contractors;
 using Meridian.Domain.Jobs;
 

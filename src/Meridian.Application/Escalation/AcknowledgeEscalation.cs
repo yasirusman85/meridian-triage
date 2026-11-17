@@ -1,4 +1,5 @@
 using Meridian.Application.Abstractions;
+using Meridian.Application.Staff;
 using Meridian.Domain.Jobs;
 
 namespace Meridian.Application.Escalation;
@@ -27,20 +28,20 @@ public sealed class AcknowledgeEscalation
     private readonly IJobRepository _jobs;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IClock _clock;
-    private readonly EscalationOptions _options;
+    private readonly StaffDirectory _staff;
 
-    public AcknowledgeEscalation(IJobRepository jobs, IUnitOfWork unitOfWork, IClock clock, EscalationOptions options)
+    public AcknowledgeEscalation(IJobRepository jobs, IUnitOfWork unitOfWork, IClock clock, StaffDirectory staff)
     {
         _jobs = jobs;
         _unitOfWork = unitOfWork;
         _clock = clock;
-        _options = options;
+        _staff = staff;
     }
 
     /// <param name="actingAs">The acting-as id, e.g. <c>rachel</c> or <c>dawn</c>.</param>
     public async Task<AcknowledgeResult> ExecuteAsync(Guid jobId, string? actingAs, CancellationToken cancellationToken)
     {
-        var staff = _options.FindStaff(actingAs);
+        var staff = _staff.Find(actingAs);
         if (staff is null)
         {
             return new AcknowledgeResult(AcknowledgeOutcome.UnknownStaff, null);

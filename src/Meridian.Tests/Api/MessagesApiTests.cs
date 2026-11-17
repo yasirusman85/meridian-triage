@@ -614,6 +614,7 @@ public sealed class MessagesApiTests : IDisposable
             builder.UseSetting("ConnectionStrings:Meridian", $"Data Source={_dbPath}");
             // Never call a real model, even when a developer has OPENROUTER_API_KEY set.
             builder.UseSetting("Triage:Provider", "stub");
+            builder.UseSetting("Demo:SeedClientMessages", "false");
             builder.ConfigureTestServices(services =>
             {
                 if (clock is not null)

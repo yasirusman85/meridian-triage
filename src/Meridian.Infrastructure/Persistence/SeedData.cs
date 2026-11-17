@@ -70,8 +70,8 @@ public static class SeedData
     };
 
     /// <summary>
-    /// The contractors: one per category, plus a second heating and a second plumbing contractor as fallbacks for
-    /// later stories (they are nobody's usual contractor).
+    /// The contractors: one per category, plus a second heating and a second plumbing contractor, whom a person can
+    /// choose in review (they are nobody's usual contractor).
     /// </summary>
     public static readonly IReadOnlyList<(string Name, Category Trade, string Phone)> Contractors = new[]
     {

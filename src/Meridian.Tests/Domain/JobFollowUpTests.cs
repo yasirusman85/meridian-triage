@@ -110,7 +110,7 @@ public class JobFollowUpTests
         Job.CreateFromMessage(Message.Receive("m.walsh@example.com", "No heating", Now), "MER-000002", Now, Guid.NewGuid());
 }
 
-/// <summary>Test-only helpers for job states that have no domain method yet (review and attendance stories).</summary>
+/// <summary>Test-only helper that sets a job's status directly, for states a test needs without walking the lifecycle.</summary>
 internal static class TestJobs
 {
     public static void SetStatus(Job job, JobStatus status) =>

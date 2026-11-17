@@ -109,14 +109,11 @@ public class JobEscalationTests
     }
 
     [Fact]
-    public void Options_reject_the_same_person_twice_and_a_zero_window()
+    public void Options_have_a_window_of_at_least_one_minute()
     {
-        var rachel = EscalationOptions.DefaultPrimary;
-        Assert.Throws<ArgumentException>(() => new EscalationOptions(rachel, rachel with { Name = "Other" }, 30));
-        Assert.Throws<ArgumentOutOfRangeException>(() => new EscalationOptions(rachel, EscalationOptions.DefaultBackup, 0));
+        Assert.Throws<ArgumentOutOfRangeException>(() => new EscalationOptions(0));
         Assert.Equal(TimeSpan.FromMinutes(30), EscalationOptions.Default.Window);
-        Assert.Equal("dawn", EscalationOptions.Default.FindStaff(" DAWN ")!.Id);
-        Assert.Null(EscalationOptions.Default.FindStaff("mallory"));
+        Assert.Equal(30, EscalationOptions.Default.WindowMinutes);
     }
 
     private static Job Emergency()

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { CONTRACTOR_TEMPLATE_IDS, errorText, listOutbound, type JobStatus, type OutboundMessage } from './api';
+import { errorText, listOutbound, type JobStatus, type OutboundMessage } from './api';
 
 /** The single-job link inside a contractor message, e.g. "/c/abc_DEF-123". */
 const LINK = /\/c\/[A-Za-z0-9_-]+/;
@@ -19,7 +19,7 @@ export function ContractorMessage({ jobId, status }: { jobId: string; status: Jo
     listOutbound(jobId)
       .then((messages) => {
         if (!cancelled) {
-          setMessage([...messages].reverse().find((m) => CONTRACTOR_TEMPLATE_IDS.includes(m.templateId)) ?? null);
+          setMessage([...messages].reverse().find((m) => m.audience === 'contractor') ?? null);
           setError(null);
         }
       })

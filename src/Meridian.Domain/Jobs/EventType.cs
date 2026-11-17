@@ -1,6 +1,6 @@
 namespace Meridian.Domain.Jobs;
 
-/// <summary>Job event types, past tense. Later stories add more.</summary>
+/// <summary>Job event types, past tense.</summary>
 public enum EventType
 {
     MessageReceived,

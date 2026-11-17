@@ -42,13 +42,17 @@ public sealed record JobListItemDto(
     DateTime? EscalationAcknowledgedAtUtc,
     bool AttendanceOverdue);
 
-/// <summary>A message written to the outbox for a job (AD-8); <c>status</c> is <c>Simulated</c> in the first version.</summary>
+/// <summary>
+/// A message written to the outbox for a job (AD-8); <c>status</c> is <c>Simulated</c> in the first version.
+/// <c>audience</c> is <c>tenant</c>, <c>staff</c> or <c>contractor</c>, from the template.
+/// </summary>
 public sealed record OutboundMessageDto(
     Guid Id,
     Guid JobId,
     string Channel,
     string Recipient,
     string TemplateId,
+    string Audience,
     string Body,
     OutboundStatus Status,
     DateTime CreatedAtUtc);

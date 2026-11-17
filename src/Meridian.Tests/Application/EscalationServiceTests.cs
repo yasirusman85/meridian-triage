@@ -1,6 +1,7 @@
 using System.Text.Json;
 using Meridian.Application.Escalation;
 using Meridian.Application.Queue;
+using Meridian.Application.Staff;
 using Meridian.Application.Templates;
 using Meridian.Domain.Jobs;
 using Meridian.Domain.Messages;
@@ -238,11 +239,8 @@ public class EscalationServiceTests
         var jobs = new FakeJobRepository();
         var outbox = new FakeOutbox();
         var clock = new FakeClock(Received);
-        var options = new EscalationOptions(
-            new StaffMember("rachel", "Rachel", "07700 900461"),
-            new StaffMember("dawn", "Dawn", "07700 900872"),
-            5);
-        var service = new EscalationService(jobs, new FakePropertyRepository(), new FakeUnitOfWork(), clock, outbox, options);
+        var service = new EscalationService(
+            jobs, new FakePropertyRepository(), new FakeUnitOfWork(), clock, outbox, new StaffDirectory(), new EscalationOptions(5));
         jobs.Add(Walsh());
 
         await service.TickAsync(default);
@@ -303,14 +301,15 @@ public class EscalationServiceTests
     }
 
     private static AcknowledgeEscalation Acknowledge(FakeJobRepository jobs, FakeClock clock) =>
-        new(jobs, new FakeUnitOfWork(), clock, EscalationOptions.Default);
+        new(jobs, new FakeUnitOfWork(), clock, new StaffDirectory());
 
     private static (EscalationService Service, FakeJobRepository Jobs, FakeOutbox Outbox, FakeClock Clock) Create(DateTime now)
     {
         var jobs = new FakeJobRepository();
         var outbox = new FakeOutbox();
         var clock = new FakeClock(now);
-        var service = new EscalationService(jobs, new FakePropertyRepository(), new FakeUnitOfWork(), clock, outbox, EscalationOptions.Default);
+        var service = new EscalationService(
+            jobs, new FakePropertyRepository(), new FakeUnitOfWork(), clock, outbox, new StaffDirectory(), EscalationOptions.Default);
         return (service, jobs, outbox, clock);
     }
 }

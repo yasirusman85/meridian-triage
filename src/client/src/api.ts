@@ -83,16 +83,15 @@ export interface OutboundMessage {
   recipient: string;
   /** The fixed template the body came from, e.g. "acknowledgement" or "gas-safety". */
   templateId: string;
+  /** Who it is for: only "tenant" messages are listed as sent to the tenant. */
+  audience: OutboundAudience;
   body: string;
   status: 'Simulated';
   createdAtUtc: string;
 }
 
-/** Template ids of staff notifications; they are listed in the notifications panel, not as "sent to tenant". */
-export const STAFF_TEMPLATE_IDS: readonly string[] = ['escalation-primary', 'escalation-backup'];
-
-/** Messages to a contractor, with the single-job link (AD-11). Shown to staff in the job, never as "sent to tenant". */
-export const CONTRACTOR_TEMPLATE_IDS: readonly string[] = ['contractor-job'];
+/** Who an outbound message is for, from the server (the template decides it). */
+export type OutboundAudience = 'tenant' | 'staff' | 'contractor';
 
 /** A staff notification (simulated SMS) about an emergency, newest first. */
 export interface StaffNotification {
@@ -102,6 +101,7 @@ export interface StaffNotification {
   channel: string;
   recipient: string;
   templateId: string;
+  audience: OutboundAudience;
   body: string;
   status: 'Simulated';
   createdAtUtc: string;

@@ -34,7 +34,10 @@ public sealed class OpenRouterLiveTests : IDisposable
     public async Task One_Walsh_message_is_prepared_by_OpenRouter_with_model_id_and_token_counts()
     {
         using var factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
-            builder.UseSetting("ConnectionStrings:Meridian", $"Data Source={_dbPath}"));
+        {
+            builder.UseSetting("ConnectionStrings:Meridian", $"Data Source={_dbPath}");
+            builder.UseSetting("Demo:SeedClientMessages", "false");
+        });
         using var client = factory.CreateClient();
 
         var response = await client.PostAsJsonAsync(

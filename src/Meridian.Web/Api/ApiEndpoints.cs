@@ -1,6 +1,7 @@
 using Meridian.Application.Messages;
 using Meridian.Application.Outbox;
 using Meridian.Application.Queue;
+using Meridian.Application.Templates;
 
 namespace Meridian.Web.Api;
 
@@ -45,7 +46,7 @@ public static class ApiEndpoints
             }
 
             return Results.Ok(items.Select(o => new OutboundMessageDto(
-                o.Id, o.JobId, o.Channel, o.Recipient, o.TemplateId, o.Body, o.Status, o.CreatedAtUtc)));
+                o.Id, o.JobId, o.Channel, o.Recipient, o.TemplateId, OutboundAudience.For(o.TemplateId), o.Body, o.Status, o.CreatedAtUtc)));
         });
 
         api.MapReviewApi();

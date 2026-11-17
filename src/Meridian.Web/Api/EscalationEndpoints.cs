@@ -1,4 +1,5 @@
 using Meridian.Application.Escalation;
+using Meridian.Application.Templates;
 using Meridian.Domain.Jobs;
 using Meridian.Domain.Outbox;
 
@@ -43,6 +44,7 @@ public static class EscalationEndpoints
                 n.Message.Channel,
                 n.Message.Recipient,
                 n.Message.TemplateId,
+                OutboundAudience.For(n.Message.TemplateId),
                 n.Message.Body,
                 n.Message.Status,
                 n.Message.CreatedAtUtc)));
@@ -72,6 +74,7 @@ public sealed record NotificationDto(
     string Channel,
     string Recipient,
     string TemplateId,
+    string Audience,
     string Body,
     OutboundStatus Status,
     DateTime CreatedAtUtc);

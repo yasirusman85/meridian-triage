@@ -6,9 +6,12 @@ using Meridian.Application.Messages;
 using Meridian.Application.Outbox;
 using Meridian.Application.Queue;
 using Meridian.Application.Review;
+using Meridian.Application.Staff;
 using Meridian.Application.Triage;
 using Meridian.Infrastructure;
 using Meridian.Web.Api;
+using Meridian.Web.Configuration;
+using Meridian.Web.Demo;
 using Meridian.Web.Workers;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -28,12 +31,12 @@ builder.Services.AddScoped<AcknowledgeTenant>();
 builder.Services.AddScoped<ListOutbound>();
 builder.Services.AddScoped<RecoverOrphanMessages>();
 
-// The "acting as" people (no login): config section Staff, Rachel and Dawn by default.
-builder.Services.AddSingleton(new StaffDirectory(builder.Configuration.GetSection("Staff").Get<List<Meridian.Application.Review.StaffMember>>()));
+// The one staff list (config section Staff): the "acting as" people (no login) and the escalation recipients (R18).
+builder.Services.AddSingleton(StaffConfiguration.Read(builder.Configuration));
 builder.Services.AddScoped<GetJob>();
 builder.Services.AddScoped<ReviewJob>();
 
-// Out-of-hours escalation (R18, R19, AD-9): staff and window from Escalation:*, a worker ticking every minute.
+// Out-of-hours escalation (R18, R19, AD-9): the window from Escalation:WindowMinutes, a worker ticking every minute.
 builder.Services.AddSingleton(sp => EscalationConfiguration.Read(sp.GetRequiredService<IConfiguration>()));
 builder.Services.AddScoped<EscalationService>();
 builder.Services.AddScoped<AcknowledgeEscalation>();
@@ -52,6 +55,12 @@ builder.Services.AddScoped<CheckOverdueAttendance>();
 var app = builder.Build();
 
 await app.Services.MigrateMeridianDatabaseAsync();
+
+// Demo: on an empty database the six forwarded client messages go through the real pipeline (see DemoSeed).
+if (builder.Configuration.GetValue(DemoSeed.ConfigurationKey, false))
+{
+    await DemoSeed.SeedAsync(app.Services, CancellationToken.None);
+}
 
 // RULE-11: a message stored by an intake that stopped before its jobs were saved still gets a job and its
 // acknowledgement. Nothing is in flight before the app serves requests, so no minimum age.

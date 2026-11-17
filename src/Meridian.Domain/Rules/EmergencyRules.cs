@@ -21,7 +21,8 @@ public static class EmergencyRules
 
     private const RegexOptions Options = RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.Compiled;
 
-    private static readonly TimeZoneInfo London = FindLondon();
+    /// <summary>Europe/London, with a fall-back when the machine has no time-zone data (shared with the demo seed).</summary>
+    public static readonly TimeZoneInfo London = FindLondon();
 
     private static readonly (string RuleId, Regex[] Patterns, bool WinterOnly)[] Rules =
     {

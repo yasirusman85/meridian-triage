@@ -198,8 +198,8 @@ public sealed class EscalationApiTests : IDisposable
         using var factory = CreateFactory(clock, builder =>
         {
             builder.UseSetting("Escalation:WindowMinutes", "10");
-            builder.UseSetting("Escalation:Backup:Name", "Dee");
-            builder.UseSetting("Escalation:Backup:Phone", "07700 900999");
+            builder.UseSetting("Staff:1:Name", "Dee");
+            builder.UseSetting("Staff:1:Phone", "07700 900999");
         });
         using var client = factory.CreateClient();
         await PostAsync(client, "m.walsh@example.com", WalshText);
@@ -211,6 +211,7 @@ public sealed class EscalationApiTests : IDisposable
 
         var latest = (await client.GetFromJsonAsync<JsonElement>("/api/notifications")).EnumerateArray().First();
         Assert.Equal("Dee (07700 900999)", latest.GetProperty("recipient").GetString());
+        Assert.Equal("staff", latest.GetProperty("audience").GetString());
     }
 
     private static EscalationWorker Worker(WebApplicationFactory<Program> factory) =>
@@ -255,6 +256,7 @@ public sealed class EscalationApiTests : IDisposable
         {
             builder.UseSetting("ConnectionStrings:Meridian", $"Data Source={_dbPath}");
             builder.UseSetting("Triage:Provider", "stub");
+            builder.UseSetting("Demo:SeedClientMessages", "false");
             configure?.Invoke(builder);
             builder.ConfigureTestServices(services =>
             {

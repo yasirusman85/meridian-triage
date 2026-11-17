@@ -237,6 +237,7 @@ public sealed class AttendanceApiTests : IDisposable
         {
             builder.UseSetting("ConnectionStrings:Meridian", $"Data Source={_dbPath}");
             builder.UseSetting("Triage:Provider", "stub");
+            builder.UseSetting("Demo:SeedClientMessages", "false");
             builder.ConfigureTestServices(services =>
             {
                 services.AddSingleton(clock);
