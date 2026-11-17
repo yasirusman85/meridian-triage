@@ -1,0 +1,2447 @@
+{
+  "date": "2026-11-17",
+  "modelId": "anthropic/claude-haiku-5.5",
+  "promptVersion": "triage.v2",
+  "passed": true,
+  "thresholds": {
+    "emergencyRecall": 1,
+    "emergencyRecallPassed": true,
+    "categoryAccuracy": 0.85,
+    "categoryAccuracyPassed": true
+  },
+  "summary": {
+    "cases": 52,
+    "maintenanceCases": 49,
+    "expectedIssues": 54,
+    "emergencyRecall": {
+      "correct": 22,
+      "total": 22,
+      "rate": 1
+    },
+    "categoryAccuracy": {
+      "correct": 49,
+      "total": 54,
+      "rate": 0.9074074074074074
+    },
+    "urgencyExact": {
+      "correct": 48,
+      "total": 54,
+      "rate": 0.8888888888888888
+    },
+    "underEscalations": 0,
+    "missedEmergencies": 0,
+    "overEscalations": 6,
+    "issueCountMatch": {
+      "correct": 48,
+      "total": 49,
+      "rate": 0.9795918367346939
+    },
+    "propertyMatch": {
+      "correct": 54,
+      "total": 54,
+      "rate": 1
+    },
+    "vulnerabilityMatch": {
+      "correct": 54,
+      "total": 54,
+      "rate": 1
+    },
+    "nonMaintenance": {
+      "correct": 3,
+      "total": 3,
+      "rate": 1
+    },
+    "followUp": {
+      "correct": 52,
+      "total": 52,
+      "rate": 1
+    },
+    "modelFailures": 0,
+    "pipelineErrors": 0,
+    "latencyMsTotal": 108865,
+    "inputTokens": 59339,
+    "outputTokens": 18384,
+    "costUsd": 0.0151259,
+    "emergencyRecallPassed": true,
+    "categoryAccuracyPassed": true,
+    "passed": true
+  },
+  "failures": [
+    {
+      "caseId": "var-08",
+      "field": "issue_count",
+      "expected": "1",
+      "actual": "2",
+      "harm": "Minor"
+    },
+    {
+      "caseId": "var-09",
+      "field": "category",
+      "expected": "LocksAndDoors",
+      "actual": "General",
+      "harm": "Minor"
+    },
+    {
+      "caseId": "var-11",
+      "field": "urgency",
+      "expected": "Routine",
+      "actual": "Urgent",
+      "harm": "Tolerable"
+    },
+    {
+      "caseId": "var-15",
+      "field": "category",
+      "expected": "Plumbing",
+      "actual": "Unsure",
+      "harm": "Minor"
+    },
+    {
+      "caseId": "var-21",
+      "field": "category",
+      "expected": "Heating",
+      "actual": "Unsure",
+      "harm": "Minor"
+    },
+    {
+      "caseId": "var-23",
+      "field": "urgency",
+      "expected": "Routine",
+      "actual": "Emergency",
+      "harm": "Tolerable"
+    },
+    {
+      "caseId": "var-28",
+      "field": "category",
+      "expected": "Unsure",
+      "actual": "Pest",
+      "harm": "Minor"
+    },
+    {
+      "caseId": "var-41",
+      "field": "urgency",
+      "expected": "Urgent",
+      "actual": "Emergency",
+      "harm": "Tolerable"
+    },
+    {
+      "caseId": "var-42",
+      "field": "urgency",
+      "expected": "Routine",
+      "actual": "Urgent",
+      "harm": "Tolerable"
+    },
+    {
+      "caseId": "var-43",
+      "field": "category",
+      "expected": "Appliances",
+      "actual": "Electrical",
+      "harm": "Minor"
+    },
+    {
+      "caseId": "var-43",
+      "field": "urgency",
+      "expected": "Routine",
+      "actual": "Urgent",
+      "harm": "Tolerable"
+    },
+    {
+      "caseId": "var-44",
+      "field": "urgency",
+      "expected": "Routine",
+      "actual": "Urgent",
+      "harm": "Tolerable"
+    }
+  ],
+  "cases": [
+    {
+      "id": "real-01",
+      "correct": true,
+      "expected": {
+        "isMaintenance": true,
+        "issues": [
+          {
+            "category": "Plumbing",
+            "urgency": "Routine",
+            "vulnerabilityMentioned": false,
+            "propertyText": "Flat 4, 22 Pemberton Road"
+          },
+          {
+            "category": "Electrical",
+            "urgency": "Routine",
+            "vulnerabilityMentioned": false,
+            "propertyText": "Flat 4, 22 Pemberton Road"
+          }
+        ],
+        "followUpOf": null
+      },
+      "actual": {
+        "issues": [
+          {
+            "category": "Plumbing",
+            "urgency": "Routine",
+            "vulnerabilityMentioned": false,
+            "propertyText": "Flat 4, 22 Pemberton Road",
+            "jobReference": "MER-000001",
+            "isFollowUp": false
+          },
+          {
+            "category": "Electrical",
+            "urgency": "Routine",
+            "vulnerabilityMentioned": false,
+            "propertyText": "Flat 4, 22 Pemberton Road",
+            "jobReference": "MER-000002",
+            "isFollowUp": false
+          }
+        ],
+        "newJobs": [
+          "MER-000001",
+          "MER-000002"
+        ],
+        "attachedTo": []
+      },
+      "modelPrepared": true,
+      "modelFailureReason": null,
+      "modelCalls": 1,
+      "latencyMs": 3716,
+      "inputTokens": 1205,
+      "outputTokens": 619,
+      "costUsd": 0.00043,
+      "error": null,
+      "failures": []
+    },
+    {
+      "id": "real-02",
+      "correct": true,
+      "expected": {
+        "isMaintenance": true,
+        "issues": [
+          {
+            "category": "Heating",
+            "urgency": "Emergency",
+            "vulnerabilityMentioned": true,
+            "propertyText": "14b Alder Court"
+          }
+        ],
+        "followUpOf": null
+      },
+      "actual": {
+        "issues": [
+          {
+            "category": "Heating",
+            "urgency": "Emergency",
+            "vulnerabilityMentioned": true,
+            "propertyText": "14b Alder Court",
+            "jobReference": "MER-000003",
+            "isFollowUp": false
+          }
+        ],
+        "newJobs": [
+          "MER-000003"
+        ],
+        "attachedTo": []
+      },
+      "modelPrepared": true,
+      "modelFailureReason": null,
+      "modelCalls": 1,
+      "latencyMs": 1389,
+      "inputTokens": 1153,
+      "outputTokens": 195,
+      "costUsd": 0.0002128,
+      "error": null,
+      "failures": []
+    },
+    {
+      "id": "real-03",
+      "correct": true,
+      "expected": {
+        "isMaintenance": true,
+        "issues": [
+          {
+            "category": "Unsure",
+            "urgency": "Routine",
+            "vulnerabilityMentioned": false,
+            "propertyText": "14b Alder Court"
+          }
+        ],
+        "followUpOf": "real-02"
+      },
+      "actual": {
+        "issues": [
+          {
+            "category": "Unsure",
+            "urgency": "Routine",
+            "vulnerabilityMentioned": false,
+            "propertyText": "14b Alder Court",
+            "jobReference": "MER-000003",
+            "isFollowUp": true
+          }
+        ],
+        "newJobs": [],
+        "attachedTo": [
+          "MER-000003"
+        ]
+      },
+      "modelPrepared": true,
+      "modelFailureReason": null,
+      "modelCalls": 1,
+      "latencyMs": 2727,
+      "inputTokens": 1108,
+      "outputTokens": 460,
+      "costUsd": 0.0003408,
+      "error": null,
+      "failures": []
+    },
+    {
+      "id": "real-04",
+      "correct": true,
+      "expected": {
+        "isMaintenance": true,
+        "issues": [
+          {
+            "category": "Heating",
+            "urgency": "Emergency",
+            "vulnerabilityMentioned": true,
+            "propertyText": "14b Alder Court"
+          }
+        ],
+        "followUpOf": "real-02"
+      },
+      "actual": {
+        "issues": [
+          {
+            "category": "Heating",
+            "urgency": "Emergency",
+            "vulnerabilityMentioned": true,
+            "propertyText": "14b Alder Court",
+            "jobReference": "MER-000003",
+            "isFollowUp": true
+          }
+        ],
+        "newJobs": [],
+        "attachedTo": [
+          "MER-000003"
+        ]
+      },
+      "modelPrepared": true,
+      "modelFailureReason": null,
+      "modelCalls": 1,
+      "latencyMs": 3234,
+      "inputTokens": 1130,
+      "outputTokens": 583,
+      "costUsd": 0.0004045,
+      "error": null,
+      "failures": []
+    },
+    {
+      "id": "real-05",
+      "correct": true,
+      "expected": {
+        "isMaintenance": true,
+        "issues": [
+          {
+            "category": "Unsure",
+            "urgency": "Urgent",
+            "vulnerabilityMentioned": true,
+            "propertyText": "Mieszkanie 9, Beechwood House"
+          }
+        ],
+        "followUpOf": null
+      },
+      "actual": {
+        "issues": [
+          {
+            "category": "Unsure",
+            "urgency": "Urgent",
+            "vulnerabilityMentioned": true,
+            "propertyText": "Mieszkanie 9, Beechwood House",
+            "jobReference": "MER-000004",
+            "isFollowUp": false
+          }
+        ],
+        "newJobs": [
+          "MER-000004"
+        ],
+        "attachedTo": []
+      },
+      "modelPrepared": true,
+      "modelFailureReason": null,
+      "modelCalls": 1,
+      "latencyMs": 2108,
+      "inputTokens": 1160,
+      "outputTokens": 331,
+      "costUsd": 0.0002815,
+      "error": null,
+      "failures": []
+    },
+    {
+      "id": "real-06",
+      "correct": true,
+      "expected": {
+        "isMaintenance": true,
+        "issues": [
+          {
+            "category": "Heating",
+            "urgency": "Urgent",
+            "vulnerabilityMentioned": false,
+            "propertyText": "8 Carlton Street"
+          }
+        ],
+        "followUpOf": null
+      },
+      "actual": {
+        "issues": [
+          {
+            "category": "Heating",
+            "urgency": "Urgent",
+            "vulnerabilityMentioned": false,
+            "propertyText": "8 Carlton Street",
+            "jobReference": "MER-000005",
+            "isFollowUp": false
+          }
+        ],
+        "newJobs": [
+          "MER-000005"
+        ],
+        "attachedTo": []
+      },
+      "modelPrepared": true,
+      "modelFailureReason": null,
+      "modelCalls": 1,
+      "latencyMs": 1673,
+      "inputTokens": 1134,
+      "outputTokens": 276,
+      "costUsd": 0.0002514,
+      "error": null,
+      "failures": []
+    },
+    {
+      "id": "var-01",
+      "correct": true,
+      "expected": {
+        "isMaintenance": true,
+        "issues": [
+          {
+            "category": "Heating",
+            "urgency": "Emergency",
+            "vulnerabilityMentioned": false,
+            "propertyText": "Flat 6, 18 Clarendon Road"
+          }
+        ],
+        "followUpOf": null
+      },
+      "actual": {
+        "issues": [
+          {
+            "category": "Heating",
+            "urgency": "Emergency",
+            "vulnerabilityMentioned": false,
+            "propertyText": "Flat 6, 18 Clarendon Road",
+            "jobReference": "MER-000006",
+            "isFollowUp": false
+          }
+        ],
+        "newJobs": [
+          "MER-000006"
+        ],
+        "attachedTo": []
+      },
+      "modelPrepared": true,
+      "modelFailureReason": null,
+      "modelCalls": 1,
+      "latencyMs": 1370,
+      "inputTokens": 1140,
+      "outputTokens": 224,
+      "costUsd": 0.000226,
+      "error": null,
+      "failures": []
+    },
+    {
+      "id": "var-02",
+      "correct": true,
+      "expected": {
+        "isMaintenance": true,
+        "issues": [
+          {
+            "category": "Heating",
+            "urgency": "Emergency",
+            "vulnerabilityMentioned": false,
+            "propertyText": "3 Ferndale Mews"
+          }
+        ],
+        "followUpOf": null
+      },
+      "actual": {
+        "issues": [
+          {
+            "category": "Heating",
+            "urgency": "Emergency",
+            "vulnerabilityMentioned": false,
+            "propertyText": "3 Ferndale Mews",
+            "jobReference": "MER-000007",
+            "isFollowUp": false
+          }
+        ],
+        "newJobs": [
+          "MER-000007"
+        ],
+        "attachedTo": []
+      },
+      "modelPrepared": true,
+      "modelFailureReason": null,
+      "modelCalls": 1,
+      "latencyMs": 2894,
+      "inputTokens": 1135,
+      "outputTokens": 516,
+      "costUsd": 0.0003715,
+      "error": null,
+      "failures": []
+    },
+    {
+      "id": "var-03",
+      "correct": true,
+      "expected": {
+        "isMaintenance": true,
+        "issues": [
+          {
+            "category": "Heating",
+            "urgency": "Emergency",
+            "vulnerabilityMentioned": false,
+            "propertyText": "Flat 11, Kingfisher House"
+          }
+        ],
+        "followUpOf": null
+      },
+      "actual": {
+        "issues": [
+          {
+            "category": "Heating",
+            "urgency": "Emergency",
+            "vulnerabilityMentioned": false,
+            "propertyText": "Flat 11, Kingfisher House",
+            "jobReference": "MER-000008",
+            "isFollowUp": false
+          }
+        ],
+        "newJobs": [
+          "MER-000008"
+        ],
+        "attachedTo": []
+      },
+      "modelPrepared": true,
+      "modelFailureReason": null,
+      "modelCalls": 1,
+      "latencyMs": 1280,
+      "inputTokens": 1138,
+      "outputTokens": 185,
+      "costUsd": 0.0002063,
+      "error": null,
+      "failures": []
+    },
+    {
+      "id": "var-04",
+      "correct": true,
+      "expected": {
+        "isMaintenance": true,
+        "issues": [
+          {
+            "category": "Heating",
+            "urgency": "Emergency",
+            "vulnerabilityMentioned": false,
+            "propertyText": "Mieszkanie 3, 41 Hollins Street"
+          }
+        ],
+        "followUpOf": null
+      },
+      "actual": {
+        "issues": [
+          {
+            "category": "Heating",
+            "urgency": "Emergency",
+            "vulnerabilityMentioned": false,
+            "propertyText": "Mieszkanie 3, 41 Hollins Street",
+            "jobReference": "MER-000009",
+            "isFollowUp": false
+          }
+        ],
+        "newJobs": [
+          "MER-000009"
+        ],
+        "attachedTo": []
+      },
+      "modelPrepared": true,
+      "modelFailureReason": null,
+      "modelCalls": 1,
+      "latencyMs": 2193,
+      "inputTokens": 1155,
+      "outputTokens": 402,
+      "costUsd": 0.0003165,
+      "error": null,
+      "failures": []
+    },
+    {
+      "id": "var-05",
+      "correct": true,
+      "expected": {
+        "isMaintenance": true,
+        "issues": [
+          {
+            "category": "Heating",
+            "urgency": "Emergency",
+            "vulnerabilityMentioned": true,
+            "propertyText": "17 Reed Lane, Levenshulme"
+          }
+        ],
+        "followUpOf": null
+      },
+      "actual": {
+        "issues": [
+          {
+            "category": "Heating",
+            "urgency": "Emergency",
+            "vulnerabilityMentioned": true,
+            "propertyText": "17 Reed Lane, Levenshulme",
+            "jobReference": "MER-000010",
+            "isFollowUp": false
+          }
+        ],
+        "newJobs": [
+          "MER-000010"
+        ],
+        "attachedTo": []
+      },
+      "modelPrepared": true,
+      "modelFailureReason": null,
+      "modelCalls": 1,
+      "latencyMs": 1579,
+      "inputTokens": 1166,
+      "outputTokens": 272,
+      "costUsd": 0.0002526,
+      "error": null,
+      "failures": []
+    },
+    {
+      "id": "var-06",
+      "correct": true,
+      "expected": {
+        "isMaintenance": true,
+        "issues": [
+          {
+            "category": "Heating",
+            "urgency": "Emergency",
+            "vulnerabilityMentioned": false,
+            "propertyText": "Apartamentul 12, Orchard Mill"
+          }
+        ],
+        "followUpOf": null
+      },
+      "actual": {
+        "issues": [
+          {
+            "category": "Heating",
+            "urgency": "Emergency",
+            "vulnerabilityMentioned": false,
+            "propertyText": "Apartamentul 12, Orchard Mill",
+            "jobReference": "MER-000011",
+            "isFollowUp": false
+          }
+        ],
+        "newJobs": [
+          "MER-000011"
+        ],
+        "attachedTo": []
+      },
+      "modelPrepared": true,
+      "modelFailureReason": null,
+      "modelCalls": 1,
+      "latencyMs": 1822,
+      "inputTokens": 1145,
+      "outputTokens": 309,
+      "costUsd": 0.000269,
+      "error": null,
+      "failures": []
+    },
+    {
+      "id": "var-07",
+      "correct": true,
+      "expected": {
+        "isMaintenance": true,
+        "issues": [
+          {
+            "category": "Heating",
+            "urgency": "Emergency",
+            "vulnerabilityMentioned": false,
+            "propertyText": "27 Ashby Grove"
+          }
+        ],
+        "followUpOf": null
+      },
+      "actual": {
+        "issues": [
+          {
+            "category": "Heating",
+            "urgency": "Emergency",
+            "vulnerabilityMentioned": false,
+            "propertyText": "27 Ashby Grove",
+            "jobReference": "MER-000012",
+            "isFollowUp": false
+          }
+        ],
+        "newJobs": [
+          "MER-000012"
+        ],
+        "attachedTo": []
+      },
+      "modelPrepared": true,
+      "modelFailureReason": null,
+      "modelCalls": 1,
+      "latencyMs": 1406,
+      "inputTokens": 1144,
+      "outputTokens": 190,
+      "costUsd": 0.0002094,
+      "error": null,
+      "failures": []
+    },
+    {
+      "id": "var-08",
+      "correct": false,
+      "expected": {
+        "isMaintenance": true,
+        "issues": [
+          {
+            "category": "Appliances",
+            "urgency": "Emergency",
+            "vulnerabilityMentioned": false,
+            "propertyText": "Flat 2, 9 Linden Court"
+          }
+        ],
+        "followUpOf": null
+      },
+      "actual": {
+        "issues": [
+          {
+            "category": "Heating",
+            "urgency": "Emergency",
+            "vulnerabilityMentioned": false,
+            "propertyText": "Flat 2, 9 Linden Court",
+            "jobReference": "MER-000013",
+            "isFollowUp": false
+          },
+          {
+            "category": "Appliances",
+            "urgency": "Emergency",
+            "vulnerabilityMentioned": false,
+            "propertyText": "Flat 2, 9 Linden Court",
+            "jobReference": "MER-000014",
+            "isFollowUp": false
+          }
+        ],
+        "newJobs": [
+          "MER-000013",
+          "MER-000014"
+        ],
+        "attachedTo": []
+      },
+      "modelPrepared": true,
+      "modelFailureReason": null,
+      "modelCalls": 1,
+      "latencyMs": 3111,
+      "inputTokens": 1132,
+      "outputTokens": 642,
+      "costUsd": 0.0004342,
+      "error": null,
+      "failures": [
+        {
+          "caseId": "var-08",
+          "field": "issue_count",
+          "expected": "1",
+          "actual": "2",
+          "harm": "Minor"
+        }
+      ]
+    },
+    {
+      "id": "var-09",
+      "correct": false,
+      "expected": {
+        "isMaintenance": true,
+        "issues": [
+          {
+            "category": "LocksAndDoors",
+            "urgency": "Emergency",
+            "vulnerabilityMentioned": false,
+            "propertyText": "44 Mill Brow"
+          }
+        ],
+        "followUpOf": null
+      },
+      "actual": {
+        "issues": [
+          {
+            "category": "General",
+            "urgency": "Emergency",
+            "vulnerabilityMentioned": false,
+            "propertyText": "44 Mill Brow",
+            "jobReference": "MER-000015",
+            "isFollowUp": false
+          }
+        ],
+        "newJobs": [
+          "MER-000015"
+        ],
+        "attachedTo": []
+      },
+      "modelPrepared": true,
+      "modelFailureReason": null,
+      "modelCalls": 1,
+      "latencyMs": 2298,
+      "inputTokens": 1122,
+      "outputTokens": 430,
+      "costUsd": 0.0003272,
+      "error": null,
+      "failures": [
+        {
+          "caseId": "var-09",
+          "field": "category",
+          "expected": "LocksAndDoors",
+          "actual": "General",
+          "harm": "Minor"
+        }
+      ]
+    },
+    {
+      "id": "var-10",
+      "correct": true,
+      "expected": {
+        "isMaintenance": true,
+        "issues": [
+          {
+            "category": "Plumbing",
+            "urgency": "Routine",
+            "vulnerabilityMentioned": false,
+            "propertyText": "Flat 2, 7 Kingsway Court"
+          }
+        ],
+        "followUpOf": null
+      },
+      "actual": {
+        "issues": [
+          {
+            "category": "Plumbing",
+            "urgency": "Routine",
+            "vulnerabilityMentioned": false,
+            "propertyText": "Flat 2, 7 Kingsway Court",
+            "jobReference": "MER-000016",
+            "isFollowUp": false
+          }
+        ],
+        "newJobs": [
+          "MER-000016"
+        ],
+        "attachedTo": []
+      },
+      "modelPrepared": true,
+      "modelFailureReason": null,
+      "modelCalls": 1,
+      "latencyMs": 1434,
+      "inputTokens": 1142,
+      "outputTokens": 181,
+      "costUsd": 0.0002047,
+      "error": null,
+      "failures": []
+    },
+    {
+      "id": "var-11",
+      "correct": false,
+      "expected": {
+        "isMaintenance": true,
+        "issues": [
+          {
+            "category": "Plumbing",
+            "urgency": "Routine",
+            "vulnerabilityMentioned": false,
+            "propertyText": "Flat 2, 7 Kingsway Court"
+          }
+        ],
+        "followUpOf": "var-10"
+      },
+      "actual": {
+        "issues": [
+          {
+            "category": "Plumbing",
+            "urgency": "Urgent",
+            "vulnerabilityMentioned": false,
+            "propertyText": "Flat 2, 7 Kingsway Court",
+            "jobReference": "MER-000016",
+            "isFollowUp": true
+          }
+        ],
+        "newJobs": [],
+        "attachedTo": [
+          "MER-000016"
+        ]
+      },
+      "modelPrepared": true,
+      "modelFailureReason": null,
+      "modelCalls": 1,
+      "latencyMs": 2750,
+      "inputTokens": 1125,
+      "outputTokens": 498,
+      "costUsd": 0.0003615,
+      "error": null,
+      "failures": [
+        {
+          "caseId": "var-11",
+          "field": "urgency",
+          "expected": "Routine",
+          "actual": "Urgent",
+          "harm": "Tolerable"
+        }
+      ]
+    },
+    {
+      "id": "var-12",
+      "correct": true,
+      "expected": {
+        "isMaintenance": true,
+        "issues": [
+          {
+            "category": "Plumbing",
+            "urgency": "Emergency",
+            "vulnerabilityMentioned": false,
+            "propertyText": "Flat 2, 7 Kingsway Court"
+          }
+        ],
+        "followUpOf": "var-10"
+      },
+      "actual": {
+        "issues": [
+          {
+            "category": "Plumbing",
+            "urgency": "Emergency",
+            "vulnerabilityMentioned": false,
+            "propertyText": "Flat 2, 7 Kingsway Court",
+            "jobReference": "MER-000016",
+            "isFollowUp": true
+          }
+        ],
+        "newJobs": [],
+        "attachedTo": [
+          "MER-000016"
+        ]
+      },
+      "modelPrepared": true,
+      "modelFailureReason": null,
+      "modelCalls": 1,
+      "latencyMs": 1658,
+      "inputTokens": 1147,
+      "outputTokens": 303,
+      "costUsd": 0.0002662,
+      "error": null,
+      "failures": []
+    },
+    {
+      "id": "var-13",
+      "correct": true,
+      "expected": {
+        "isMaintenance": true,
+        "issues": [
+          {
+            "category": "Plumbing",
+            "urgency": "Emergency",
+            "vulnerabilityMentioned": false,
+            "propertyText": "Flat 5, 60 Wilmslow Road"
+          }
+        ],
+        "followUpOf": null
+      },
+      "actual": {
+        "issues": [
+          {
+            "category": "Plumbing",
+            "urgency": "Emergency",
+            "vulnerabilityMentioned": false,
+            "propertyText": "Flat 5, 60 Wilmslow Road",
+            "jobReference": "MER-000017",
+            "isFollowUp": false
+          }
+        ],
+        "newJobs": [
+          "MER-000017"
+        ],
+        "attachedTo": []
+      },
+      "modelPrepared": true,
+      "modelFailureReason": null,
+      "modelCalls": 1,
+      "latencyMs": 1334,
+      "inputTokens": 1147,
+      "outputTokens": 204,
+      "costUsd": 0.0002167,
+      "error": null,
+      "failures": []
+    },
+    {
+      "id": "var-14",
+      "correct": true,
+      "expected": {
+        "isMaintenance": true,
+        "issues": [
+          {
+            "category": "Plumbing",
+            "urgency": "Emergency",
+            "vulnerabilityMentioned": false,
+            "propertyText": "Flat 8 Hawthorn Hse"
+          }
+        ],
+        "followUpOf": null
+      },
+      "actual": {
+        "issues": [
+          {
+            "category": "Plumbing",
+            "urgency": "Emergency",
+            "vulnerabilityMentioned": false,
+            "propertyText": "Flat 8 Hawthorn Hse",
+            "jobReference": "MER-000018",
+            "isFollowUp": false
+          }
+        ],
+        "newJobs": [
+          "MER-000018"
+        ],
+        "attachedTo": []
+      },
+      "modelPrepared": true,
+      "modelFailureReason": null,
+      "modelCalls": 1,
+      "latencyMs": 2432,
+      "inputTokens": 1135,
+      "outputTokens": 400,
+      "costUsd": 0.0003135,
+      "error": null,
+      "failures": []
+    },
+    {
+      "id": "var-15",
+      "correct": false,
+      "expected": {
+        "isMaintenance": true,
+        "issues": [
+          {
+            "category": "Plumbing",
+            "urgency": "Emergency",
+            "vulnerabilityMentioned": false,
+            "propertyText": "12 Primrose Bank"
+          }
+        ],
+        "followUpOf": null
+      },
+      "actual": {
+        "issues": [
+          {
+            "category": "Unsure",
+            "urgency": "Emergency",
+            "vulnerabilityMentioned": false,
+            "propertyText": "12 Primrose Bank",
+            "jobReference": "MER-000019",
+            "isFollowUp": false
+          }
+        ],
+        "newJobs": [
+          "MER-000019"
+        ],
+        "attachedTo": []
+      },
+      "modelPrepared": true,
+      "modelFailureReason": null,
+      "modelCalls": 1,
+      "latencyMs": 3306,
+      "inputTokens": 1151,
+      "outputTokens": 605,
+      "costUsd": 0.0004176,
+      "error": null,
+      "failures": [
+        {
+          "caseId": "var-15",
+          "field": "category",
+          "expected": "Plumbing",
+          "actual": "Unsure",
+          "harm": "Minor"
+        }
+      ]
+    },
+    {
+      "id": "var-16",
+      "correct": true,
+      "expected": {
+        "isMaintenance": true,
+        "issues": [
+          {
+            "category": "Heating",
+            "urgency": "Emergency",
+            "vulnerabilityMentioned": true,
+            "propertyText": "5 Ladybarn Lane"
+          }
+        ],
+        "followUpOf": null
+      },
+      "actual": {
+        "issues": [
+          {
+            "category": "Heating",
+            "urgency": "Emergency",
+            "vulnerabilityMentioned": true,
+            "propertyText": "5 Ladybarn Lane",
+            "jobReference": "MER-000020",
+            "isFollowUp": false
+          }
+        ],
+        "newJobs": [
+          "MER-000020"
+        ],
+        "attachedTo": []
+      },
+      "modelPrepared": true,
+      "modelFailureReason": null,
+      "modelCalls": 1,
+      "latencyMs": 1695,
+      "inputTokens": 1136,
+      "outputTokens": 262,
+      "costUsd": 0.0002446,
+      "error": null,
+      "failures": []
+    },
+    {
+      "id": "var-17",
+      "correct": true,
+      "expected": {
+        "isMaintenance": true,
+        "issues": [
+          {
+            "category": "Heating",
+            "urgency": "Routine",
+            "vulnerabilityMentioned": false,
+            "propertyText": "Flat 3, 2 Egerton Street"
+          }
+        ],
+        "followUpOf": null
+      },
+      "actual": {
+        "issues": [
+          {
+            "category": "Heating",
+            "urgency": "Routine",
+            "vulnerabilityMentioned": false,
+            "propertyText": "Flat 3, 2 Egerton Street",
+            "jobReference": "MER-000021",
+            "isFollowUp": false
+          }
+        ],
+        "newJobs": [
+          "MER-000021"
+        ],
+        "attachedTo": []
+      },
+      "modelPrepared": true,
+      "modelFailureReason": null,
+      "modelCalls": 1,
+      "latencyMs": 1810,
+      "inputTokens": 1146,
+      "outputTokens": 316,
+      "costUsd": 0.0002726,
+      "error": null,
+      "failures": []
+    },
+    {
+      "id": "var-18",
+      "correct": true,
+      "expected": {
+        "isMaintenance": true,
+        "issues": [
+          {
+            "category": "Heating",
+            "urgency": "Urgent",
+            "vulnerabilityMentioned": true,
+            "propertyText": "Flat 1, 15 Cromwell Avenue"
+          }
+        ],
+        "followUpOf": null
+      },
+      "actual": {
+        "issues": [
+          {
+            "category": "Heating",
+            "urgency": "Urgent",
+            "vulnerabilityMentioned": true,
+            "propertyText": "Flat 1, 15 Cromwell Avenue",
+            "jobReference": "MER-000022",
+            "isFollowUp": false
+          }
+        ],
+        "newJobs": [
+          "MER-000022"
+        ],
+        "attachedTo": []
+      },
+      "modelPrepared": true,
+      "modelFailureReason": null,
+      "modelCalls": 1,
+      "latencyMs": 3284,
+      "inputTokens": 1133,
+      "outputTokens": 621,
+      "costUsd": 0.0004238,
+      "error": null,
+      "failures": []
+    },
+    {
+      "id": "var-19",
+      "correct": true,
+      "expected": {
+        "isMaintenance": true,
+        "issues": [
+          {
+            "category": "Heating",
+            "urgency": "Emergency",
+            "vulnerabilityMentioned": false,
+            "propertyText": "9 Rusholme Place"
+          }
+        ],
+        "followUpOf": null
+      },
+      "actual": {
+        "issues": [
+          {
+            "category": "Heating",
+            "urgency": "Emergency",
+            "vulnerabilityMentioned": false,
+            "propertyText": "9 Rusholme Place",
+            "jobReference": "MER-000023",
+            "isFollowUp": false
+          }
+        ],
+        "newJobs": [
+          "MER-000023"
+        ],
+        "attachedTo": []
+      },
+      "modelPrepared": true,
+      "modelFailureReason": null,
+      "modelCalls": 1,
+      "latencyMs": 3315,
+      "inputTokens": 1123,
+      "outputTokens": 542,
+      "costUsd": 0.0003833,
+      "error": null,
+      "failures": []
+    },
+    {
+      "id": "var-20",
+      "correct": true,
+      "expected": {
+        "isMaintenance": true,
+        "issues": [
+          {
+            "category": "Heating",
+            "urgency": "Urgent",
+            "vulnerabilityMentioned": false,
+            "propertyText": "9 Rusholme Place"
+          }
+        ],
+        "followUpOf": null
+      },
+      "actual": {
+        "issues": [
+          {
+            "category": "Heating",
+            "urgency": "Urgent",
+            "vulnerabilityMentioned": false,
+            "propertyText": "9 Rusholme Place",
+            "jobReference": "MER-000024",
+            "isFollowUp": false
+          }
+        ],
+        "newJobs": [
+          "MER-000024"
+        ],
+        "attachedTo": []
+      },
+      "modelPrepared": true,
+      "modelFailureReason": null,
+      "modelCalls": 1,
+      "latencyMs": 3104,
+      "inputTokens": 1111,
+      "outputTokens": 533,
+      "costUsd": 0.0003776,
+      "error": null,
+      "failures": []
+    },
+    {
+      "id": "var-21",
+      "correct": false,
+      "expected": {
+        "isMaintenance": true,
+        "issues": [
+          {
+            "category": "Heating",
+            "urgency": "Emergency",
+            "vulnerabilityMentioned": false,
+            "propertyText": null
+          }
+        ],
+        "followUpOf": null
+      },
+      "actual": {
+        "issues": [
+          {
+            "category": "Unsure",
+            "urgency": "Emergency",
+            "vulnerabilityMentioned": false,
+            "propertyText": null,
+            "jobReference": "MER-000025",
+            "isFollowUp": false
+          }
+        ],
+        "newJobs": [
+          "MER-000025"
+        ],
+        "attachedTo": []
+      },
+      "modelPrepared": true,
+      "modelFailureReason": null,
+      "modelCalls": 1,
+      "latencyMs": 1836,
+      "inputTokens": 1118,
+      "outputTokens": 269,
+      "costUsd": 0.0002463,
+      "error": null,
+      "failures": [
+        {
+          "caseId": "var-21",
+          "field": "category",
+          "expected": "Heating",
+          "actual": "Unsure",
+          "harm": "Minor"
+        }
+      ]
+    },
+    {
+      "id": "var-22",
+      "correct": true,
+      "expected": {
+        "isMaintenance": true,
+        "issues": [
+          {
+            "category": "Heating",
+            "urgency": "Urgent",
+            "vulnerabilityMentioned": false,
+            "propertyText": "Flat 7, 31 Albert Road"
+          }
+        ],
+        "followUpOf": null
+      },
+      "actual": {
+        "issues": [
+          {
+            "category": "Heating",
+            "urgency": "Urgent",
+            "vulnerabilityMentioned": false,
+            "propertyText": "Flat 7, 31 Albert Road",
+            "jobReference": "MER-000026",
+            "isFollowUp": false
+          }
+        ],
+        "newJobs": [
+          "MER-000026"
+        ],
+        "attachedTo": []
+      },
+      "modelPrepared": true,
+      "modelFailureReason": null,
+      "modelCalls": 1,
+      "latencyMs": 2152,
+      "inputTokens": 1132,
+      "outputTokens": 326,
+      "costUsd": 0.0002762,
+      "error": null,
+      "failures": []
+    },
+    {
+      "id": "var-23",
+      "correct": false,
+      "expected": {
+        "isMaintenance": true,
+        "issues": [
+          {
+            "category": "Plumbing",
+            "urgency": "Routine",
+            "vulnerabilityMentioned": false,
+            "propertyText": "21 Granby Row"
+          },
+          {
+            "category": "Heating",
+            "urgency": "Emergency",
+            "vulnerabilityMentioned": false,
+            "propertyText": "21 Granby Row"
+          }
+        ],
+        "followUpOf": null
+      },
+      "actual": {
+        "issues": [
+          {
+            "category": "Plumbing",
+            "urgency": "Emergency",
+            "vulnerabilityMentioned": false,
+            "propertyText": "21 Granby Row",
+            "jobReference": "MER-000027",
+            "isFollowUp": false
+          },
+          {
+            "category": "Heating",
+            "urgency": "Emergency",
+            "vulnerabilityMentioned": false,
+            "propertyText": "21 Granby Row",
+            "jobReference": "MER-000028",
+            "isFollowUp": false
+          }
+        ],
+        "newJobs": [
+          "MER-000027",
+          "MER-000028"
+        ],
+        "attachedTo": []
+      },
+      "modelPrepared": true,
+      "modelFailureReason": null,
+      "modelCalls": 1,
+      "latencyMs": 2183,
+      "inputTokens": 1137,
+      "outputTokens": 372,
+      "costUsd": 0.0002997,
+      "error": null,
+      "failures": [
+        {
+          "caseId": "var-23",
+          "field": "urgency",
+          "expected": "Routine",
+          "actual": "Emergency",
+          "harm": "Tolerable"
+        }
+      ]
+    },
+    {
+      "id": "var-24",
+      "correct": true,
+      "expected": {
+        "isMaintenance": true,
+        "issues": [
+          {
+            "category": "LocksAndDoors",
+            "urgency": "Urgent",
+            "vulnerabilityMentioned": false,
+            "propertyText": "Flat 10, Elm Bank"
+          },
+          {
+            "category": "Pest",
+            "urgency": "Routine",
+            "vulnerabilityMentioned": false,
+            "propertyText": "Flat 10, Elm Bank"
+          }
+        ],
+        "followUpOf": null
+      },
+      "actual": {
+        "issues": [
+          {
+            "category": "LocksAndDoors",
+            "urgency": "Urgent",
+            "vulnerabilityMentioned": false,
+            "propertyText": "Flat 10, Elm Bank",
+            "jobReference": "MER-000029",
+            "isFollowUp": false
+          },
+          {
+            "category": "Pest",
+            "urgency": "Routine",
+            "vulnerabilityMentioned": false,
+            "propertyText": "Flat 10, Elm Bank",
+            "jobReference": "MER-000030",
+            "isFollowUp": false
+          }
+        ],
+        "newJobs": [
+          "MER-000029",
+          "MER-000030"
+        ],
+        "attachedTo": []
+      },
+      "modelPrepared": true,
+      "modelFailureReason": null,
+      "modelCalls": 1,
+      "latencyMs": 2471,
+      "inputTokens": 1158,
+      "outputTokens": 469,
+      "costUsd": 0.0003503,
+      "error": null,
+      "failures": []
+    },
+    {
+      "id": "var-25",
+      "correct": true,
+      "expected": {
+        "isMaintenance": true,
+        "issues": [
+          {
+            "category": "Appliances",
+            "urgency": "Routine",
+            "vulnerabilityMentioned": false,
+            "propertyText": "Flat 4, 50 Upper Chorlton Road"
+          },
+          {
+            "category": "Electrical",
+            "urgency": "Routine",
+            "vulnerabilityMentioned": false,
+            "propertyText": "Flat 4, 50 Upper Chorlton Road"
+          },
+          {
+            "category": "General",
+            "urgency": "Routine",
+            "vulnerabilityMentioned": false,
+            "propertyText": "Flat 4, 50 Upper Chorlton Road"
+          }
+        ],
+        "followUpOf": null
+      },
+      "actual": {
+        "issues": [
+          {
+            "category": "Appliances",
+            "urgency": "Routine",
+            "vulnerabilityMentioned": false,
+            "propertyText": "Flat 4, 50 Upper Chorlton Road",
+            "jobReference": "MER-000031",
+            "isFollowUp": false
+          },
+          {
+            "category": "Electrical",
+            "urgency": "Routine",
+            "vulnerabilityMentioned": false,
+            "propertyText": "Flat 4, 50 Upper Chorlton Road",
+            "jobReference": "MER-000032",
+            "isFollowUp": false
+          },
+          {
+            "category": "General",
+            "urgency": "Routine",
+            "vulnerabilityMentioned": false,
+            "propertyText": "Flat 4, 50 Upper Chorlton Road",
+            "jobReference": "MER-000033",
+            "isFollowUp": false
+          }
+        ],
+        "newJobs": [
+          "MER-000031",
+          "MER-000032",
+          "MER-000033"
+        ],
+        "attachedTo": []
+      },
+      "modelPrepared": true,
+      "modelFailureReason": null,
+      "modelCalls": 1,
+      "latencyMs": 3010,
+      "inputTokens": 1160,
+      "outputTokens": 662,
+      "costUsd": 0.000447,
+      "error": null,
+      "failures": []
+    },
+    {
+      "id": "var-26",
+      "correct": true,
+      "expected": {
+        "isMaintenance": true,
+        "issues": [
+          {
+            "category": "Electrical",
+            "urgency": "Routine",
+            "vulnerabilityMentioned": false,
+            "propertyText": "Flat 2, 11 Station Approach"
+          }
+        ],
+        "followUpOf": null
+      },
+      "actual": {
+        "issues": [
+          {
+            "category": "Electrical",
+            "urgency": "Routine",
+            "vulnerabilityMentioned": false,
+            "propertyText": "Flat 2, 11 Station Approach",
+            "jobReference": "MER-000034",
+            "isFollowUp": false
+          }
+        ],
+        "newJobs": [
+          "MER-000034"
+        ],
+        "attachedTo": []
+      },
+      "modelPrepared": true,
+      "modelFailureReason": null,
+      "modelCalls": 1,
+      "latencyMs": 1948,
+      "inputTokens": 1149,
+      "outputTokens": 344,
+      "costUsd": 0.0002869,
+      "error": null,
+      "failures": []
+    },
+    {
+      "id": "var-27",
+      "correct": true,
+      "expected": {
+        "isMaintenance": true,
+        "issues": [
+          {
+            "category": "Unsure",
+            "urgency": "Routine",
+            "vulnerabilityMentioned": false,
+            "propertyText": "5 Moss Lane"
+          }
+        ],
+        "followUpOf": null
+      },
+      "actual": {
+        "issues": [
+          {
+            "category": "Unsure",
+            "urgency": "Routine",
+            "vulnerabilityMentioned": false,
+            "propertyText": "5 Moss Lane",
+            "jobReference": "MER-000035",
+            "isFollowUp": false
+          }
+        ],
+        "newJobs": [
+          "MER-000035"
+        ],
+        "attachedTo": []
+      },
+      "modelPrepared": true,
+      "modelFailureReason": null,
+      "modelCalls": 1,
+      "latencyMs": 1281,
+      "inputTokens": 1114,
+      "outputTokens": 181,
+      "costUsd": 0.0002019,
+      "error": null,
+      "failures": []
+    },
+    {
+      "id": "var-28",
+      "correct": false,
+      "expected": {
+        "isMaintenance": true,
+        "issues": [
+          {
+            "category": "Unsure",
+            "urgency": "Routine",
+            "vulnerabilityMentioned": false,
+            "propertyText": "Flat 6, Victoria Mill"
+          }
+        ],
+        "followUpOf": null
+      },
+      "actual": {
+        "issues": [
+          {
+            "category": "Pest",
+            "urgency": "Routine",
+            "vulnerabilityMentioned": false,
+            "propertyText": "Flat 6, Victoria Mill",
+            "jobReference": "MER-000036",
+            "isFollowUp": false
+          }
+        ],
+        "newJobs": [
+          "MER-000036"
+        ],
+        "attachedTo": []
+      },
+      "modelPrepared": true,
+      "modelFailureReason": null,
+      "modelCalls": 1,
+      "latencyMs": 1884,
+      "inputTokens": 1125,
+      "outputTokens": 317,
+      "costUsd": 0.000271,
+      "error": null,
+      "failures": [
+        {
+          "caseId": "var-28",
+          "field": "category",
+          "expected": "Unsure",
+          "actual": "Pest",
+          "harm": "Minor"
+        }
+      ]
+    },
+    {
+      "id": "var-29",
+      "correct": true,
+      "expected": {
+        "isMaintenance": true,
+        "issues": [
+          {
+            "category": "Plumbing",
+            "urgency": "Urgent",
+            "vulnerabilityMentioned": false,
+            "propertyText": "38 Brookfield Road"
+          }
+        ],
+        "followUpOf": null
+      },
+      "actual": {
+        "issues": [
+          {
+            "category": "Plumbing",
+            "urgency": "Urgent",
+            "vulnerabilityMentioned": false,
+            "propertyText": "38 Brookfield Road",
+            "jobReference": "MER-000037",
+            "isFollowUp": false
+          }
+        ],
+        "newJobs": [
+          "MER-000037"
+        ],
+        "attachedTo": []
+      },
+      "modelPrepared": true,
+      "modelFailureReason": null,
+      "modelCalls": 1,
+      "latencyMs": 3321,
+      "inputTokens": 1208,
+      "outputTokens": 644,
+      "costUsd": 0.0004428,
+      "error": null,
+      "failures": []
+    },
+    {
+      "id": "var-30",
+      "correct": true,
+      "expected": {
+        "isMaintenance": true,
+        "issues": [
+          {
+            "category": "Electrical",
+            "urgency": "Emergency",
+            "vulnerabilityMentioned": false,
+            "propertyText": "4 Delamere Street"
+          }
+        ],
+        "followUpOf": null
+      },
+      "actual": {
+        "issues": [
+          {
+            "category": "Electrical",
+            "urgency": "Emergency",
+            "vulnerabilityMentioned": false,
+            "propertyText": "4 Delamere Street",
+            "jobReference": "MER-000038",
+            "isFollowUp": false
+          }
+        ],
+        "newJobs": [
+          "MER-000038"
+        ],
+        "attachedTo": []
+      },
+      "modelPrepared": true,
+      "modelFailureReason": null,
+      "modelCalls": 1,
+      "latencyMs": 1780,
+      "inputTokens": 1180,
+      "outputTokens": 263,
+      "costUsd": 0.0002495,
+      "error": null,
+      "failures": []
+    },
+    {
+      "id": "var-31",
+      "correct": true,
+      "expected": {
+        "isMaintenance": true,
+        "issues": [
+          {
+            "category": "Electrical",
+            "urgency": "Emergency",
+            "vulnerabilityMentioned": true,
+            "propertyText": "Flat 9, Rowan Court"
+          }
+        ],
+        "followUpOf": null
+      },
+      "actual": {
+        "issues": [
+          {
+            "category": "Electrical",
+            "urgency": "Emergency",
+            "vulnerabilityMentioned": true,
+            "propertyText": "Flat 9, Rowan Court",
+            "jobReference": "MER-000039",
+            "isFollowUp": false
+          }
+        ],
+        "newJobs": [
+          "MER-000039"
+        ],
+        "attachedTo": []
+      },
+      "modelPrepared": true,
+      "modelFailureReason": null,
+      "modelCalls": 1,
+      "latencyMs": 1308,
+      "inputTokens": 1150,
+      "outputTokens": 205,
+      "costUsd": 0.0002175,
+      "error": null,
+      "failures": []
+    },
+    {
+      "id": "var-32",
+      "correct": true,
+      "expected": {
+        "isMaintenance": true,
+        "issues": [
+          {
+            "category": "LocksAndDoors",
+            "urgency": "Routine",
+            "vulnerabilityMentioned": false,
+            "propertyText": "Apartamentul 5, 30 Clarendon Road"
+          }
+        ],
+        "followUpOf": null
+      },
+      "actual": {
+        "issues": [
+          {
+            "category": "LocksAndDoors",
+            "urgency": "Routine",
+            "vulnerabilityMentioned": false,
+            "propertyText": "Apartamentul 5, 30 Clarendon Road",
+            "jobReference": "MER-000040",
+            "isFollowUp": false
+          }
+        ],
+        "newJobs": [
+          "MER-000040"
+        ],
+        "attachedTo": []
+      },
+      "modelPrepared": true,
+      "modelFailureReason": null,
+      "modelCalls": 1,
+      "latencyMs": 1122,
+      "inputTokens": 1149,
+      "outputTokens": 160,
+      "costUsd": 0.0001949,
+      "error": null,
+      "failures": []
+    },
+    {
+      "id": "var-33",
+      "correct": true,
+      "expected": {
+        "isMaintenance": true,
+        "issues": [
+          {
+            "category": "Appliances",
+            "urgency": "Routine",
+            "vulnerabilityMentioned": false,
+            "propertyText": "فلیٹ 2، 9 Wellington Grove"
+          }
+        ],
+        "followUpOf": null
+      },
+      "actual": {
+        "issues": [
+          {
+            "category": "Appliances",
+            "urgency": "Routine",
+            "vulnerabilityMentioned": false,
+            "propertyText": "فلیٹ 2، 9 Wellington Grove",
+            "jobReference": "MER-000041",
+            "isFollowUp": false
+          }
+        ],
+        "newJobs": [
+          "MER-000041"
+        ],
+        "attachedTo": []
+      },
+      "modelPrepared": true,
+      "modelFailureReason": null,
+      "modelCalls": 1,
+      "latencyMs": 1931,
+      "inputTokens": 1156,
+      "outputTokens": 304,
+      "costUsd": 0.0002676,
+      "error": null,
+      "failures": []
+    },
+    {
+      "id": "var-34",
+      "correct": true,
+      "expected": {
+        "isMaintenance": false,
+        "issues": [],
+        "followUpOf": null
+      },
+      "actual": {
+        "issues": [
+          {
+            "category": "Unsure",
+            "urgency": "Routine",
+            "vulnerabilityMentioned": false,
+            "propertyText": null,
+            "jobReference": "MER-000042",
+            "isFollowUp": false
+          }
+        ],
+        "newJobs": [
+          "MER-000042"
+        ],
+        "attachedTo": []
+      },
+      "modelPrepared": true,
+      "modelFailureReason": null,
+      "modelCalls": 1,
+      "latencyMs": 914,
+      "inputTokens": 1133,
+      "outputTokens": 75,
+      "costUsd": 0.0001508,
+      "error": null,
+      "failures": []
+    },
+    {
+      "id": "var-35",
+      "correct": true,
+      "expected": {
+        "isMaintenance": false,
+        "issues": [],
+        "followUpOf": null
+      },
+      "actual": {
+        "issues": [
+          {
+            "category": "Unsure",
+            "urgency": "Routine",
+            "vulnerabilityMentioned": false,
+            "propertyText": null,
+            "jobReference": "MER-000043",
+            "isFollowUp": false
+          }
+        ],
+        "newJobs": [
+          "MER-000043"
+        ],
+        "attachedTo": []
+      },
+      "modelPrepared": true,
+      "modelFailureReason": null,
+      "modelCalls": 1,
+      "latencyMs": 691,
+      "inputTokens": 1129,
+      "outputTokens": 15,
+      "costUsd": 0.0001204,
+      "error": null,
+      "failures": []
+    },
+    {
+      "id": "var-36",
+      "correct": true,
+      "expected": {
+        "isMaintenance": false,
+        "issues": [],
+        "followUpOf": null
+      },
+      "actual": {
+        "issues": [
+          {
+            "category": "Unsure",
+            "urgency": "Routine",
+            "vulnerabilityMentioned": false,
+            "propertyText": null,
+            "jobReference": "MER-000044",
+            "isFollowUp": false
+          }
+        ],
+        "newJobs": [
+          "MER-000044"
+        ],
+        "attachedTo": []
+      },
+      "modelPrepared": true,
+      "modelFailureReason": null,
+      "modelCalls": 1,
+      "latencyMs": 709,
+      "inputTokens": 1128,
+      "outputTokens": 54,
+      "costUsd": 0.0001398,
+      "error": null,
+      "failures": []
+    },
+    {
+      "id": "var-37",
+      "correct": true,
+      "expected": {
+        "isMaintenance": true,
+        "issues": [
+          {
+            "category": "Plumbing",
+            "urgency": "Routine",
+            "vulnerabilityMentioned": false,
+            "propertyText": "Flat 1, 6 Hope Street"
+          }
+        ],
+        "followUpOf": null
+      },
+      "actual": {
+        "issues": [
+          {
+            "category": "Plumbing",
+            "urgency": "Routine",
+            "vulnerabilityMentioned": false,
+            "propertyText": "Flat 1, 6 Hope Street",
+            "jobReference": "MER-000045",
+            "isFollowUp": false
+          }
+        ],
+        "newJobs": [
+          "MER-000045"
+        ],
+        "attachedTo": []
+      },
+      "modelPrepared": true,
+      "modelFailureReason": null,
+      "modelCalls": 1,
+      "latencyMs": 1788,
+      "inputTokens": 1148,
+      "outputTokens": 305,
+      "costUsd": 0.0002673,
+      "error": null,
+      "failures": []
+    },
+    {
+      "id": "var-38",
+      "correct": true,
+      "expected": {
+        "isMaintenance": true,
+        "issues": [
+          {
+            "category": "LocksAndDoors",
+            "urgency": "Emergency",
+            "vulnerabilityMentioned": true,
+            "propertyText": "19 Thornbury Way"
+          }
+        ],
+        "followUpOf": null
+      },
+      "actual": {
+        "issues": [
+          {
+            "category": "LocksAndDoors",
+            "urgency": "Emergency",
+            "vulnerabilityMentioned": true,
+            "propertyText": "19 Thornbury Way",
+            "jobReference": "MER-000046",
+            "isFollowUp": false
+          }
+        ],
+        "newJobs": [
+          "MER-000046"
+        ],
+        "attachedTo": []
+      },
+      "modelPrepared": true,
+      "modelFailureReason": null,
+      "modelCalls": 1,
+      "latencyMs": 1728,
+      "inputTokens": 1148,
+      "outputTokens": 312,
+      "costUsd": 0.0002708,
+      "error": null,
+      "failures": []
+    },
+    {
+      "id": "var-39",
+      "correct": true,
+      "expected": {
+        "isMaintenance": true,
+        "issues": [
+          {
+            "category": "LocksAndDoors",
+            "urgency": "Urgent",
+            "vulnerabilityMentioned": false,
+            "propertyText": "Flat 12, Albany Court"
+          }
+        ],
+        "followUpOf": null
+      },
+      "actual": {
+        "issues": [
+          {
+            "category": "LocksAndDoors",
+            "urgency": "Urgent",
+            "vulnerabilityMentioned": false,
+            "propertyText": "Flat 12, Albany Court",
+            "jobReference": "MER-000047",
+            "isFollowUp": false
+          }
+        ],
+        "newJobs": [
+          "MER-000047"
+        ],
+        "attachedTo": []
+      },
+      "modelPrepared": true,
+      "modelFailureReason": null,
+      "modelCalls": 1,
+      "latencyMs": 3458,
+      "inputTokens": 1139,
+      "outputTokens": 563,
+      "costUsd": 0.0003954,
+      "error": null,
+      "failures": []
+    },
+    {
+      "id": "var-40",
+      "correct": true,
+      "expected": {
+        "isMaintenance": true,
+        "issues": [
+          {
+            "category": "Pest",
+            "urgency": "Routine",
+            "vulnerabilityMentioned": false,
+            "propertyText": "Flat 3, 8 Wycliffe Street"
+          }
+        ],
+        "followUpOf": null
+      },
+      "actual": {
+        "issues": [
+          {
+            "category": "Pest",
+            "urgency": "Routine",
+            "vulnerabilityMentioned": false,
+            "propertyText": "Flat 3, 8 Wycliffe Street",
+            "jobReference": "MER-000048",
+            "isFollowUp": false
+          }
+        ],
+        "newJobs": [
+          "MER-000048"
+        ],
+        "attachedTo": []
+      },
+      "modelPrepared": true,
+      "modelFailureReason": null,
+      "modelCalls": 1,
+      "latencyMs": 1598,
+      "inputTokens": 1132,
+      "outputTokens": 245,
+      "costUsd": 0.0002357,
+      "error": null,
+      "failures": []
+    },
+    {
+      "id": "var-41",
+      "correct": false,
+      "expected": {
+        "isMaintenance": true,
+        "issues": [
+          {
+            "category": "Pest",
+            "urgency": "Urgent",
+            "vulnerabilityMentioned": true,
+            "propertyText": "2 Laurel Close"
+          }
+        ],
+        "followUpOf": null
+      },
+      "actual": {
+        "issues": [
+          {
+            "category": "Pest",
+            "urgency": "Emergency",
+            "vulnerabilityMentioned": true,
+            "propertyText": "2 Laurel Close",
+            "jobReference": "MER-000049",
+            "isFollowUp": false
+          }
+        ],
+        "newJobs": [
+          "MER-000049"
+        ],
+        "attachedTo": []
+      },
+      "modelPrepared": true,
+      "modelFailureReason": null,
+      "modelCalls": 1,
+      "latencyMs": 2010,
+      "inputTokens": 1137,
+      "outputTokens": 295,
+      "costUsd": 0.0002612,
+      "error": null,
+      "failures": [
+        {
+          "caseId": "var-41",
+          "field": "urgency",
+          "expected": "Urgent",
+          "actual": "Emergency",
+          "harm": "Tolerable"
+        }
+      ]
+    },
+    {
+      "id": "var-42",
+      "correct": false,
+      "expected": {
+        "isMaintenance": true,
+        "issues": [
+          {
+            "category": "Appliances",
+            "urgency": "Routine",
+            "vulnerabilityMentioned": false,
+            "propertyText": "flat 5 31 Dover st"
+          }
+        ],
+        "followUpOf": null
+      },
+      "actual": {
+        "issues": [
+          {
+            "category": "Appliances",
+            "urgency": "Urgent",
+            "vulnerabilityMentioned": false,
+            "propertyText": "flat 5 31 Dover st",
+            "jobReference": "MER-000050",
+            "isFollowUp": false
+          }
+        ],
+        "newJobs": [
+          "MER-000050"
+        ],
+        "attachedTo": []
+      },
+      "modelPrepared": true,
+      "modelFailureReason": null,
+      "modelCalls": 1,
+      "latencyMs": 3194,
+      "inputTokens": 1128,
+      "outputTokens": 509,
+      "costUsd": 0.0003673,
+      "error": null,
+      "failures": [
+        {
+          "caseId": "var-42",
+          "field": "urgency",
+          "expected": "Routine",
+          "actual": "Urgent",
+          "harm": "Tolerable"
+        }
+      ]
+    },
+    {
+      "id": "var-43",
+      "correct": false,
+      "expected": {
+        "isMaintenance": true,
+        "issues": [
+          {
+            "category": "Appliances",
+            "urgency": "Routine",
+            "vulnerabilityMentioned": false,
+            "propertyText": "Flat 7, 27 Princess Street"
+          }
+        ],
+        "followUpOf": null
+      },
+      "actual": {
+        "issues": [
+          {
+            "category": "Electrical",
+            "urgency": "Urgent",
+            "vulnerabilityMentioned": false,
+            "propertyText": "Flat 7, 27 Princess Street",
+            "jobReference": "MER-000051",
+            "isFollowUp": false
+          }
+        ],
+        "newJobs": [
+          "MER-000051"
+        ],
+        "attachedTo": []
+      },
+      "modelPrepared": true,
+      "modelFailureReason": null,
+      "modelCalls": 1,
+      "latencyMs": 2332,
+      "inputTokens": 1139,
+      "outputTokens": 429,
+      "costUsd": 0.0003284,
+      "error": null,
+      "failures": [
+        {
+          "caseId": "var-43",
+          "field": "category",
+          "expected": "Appliances",
+          "actual": "Electrical",
+          "harm": "Minor"
+        },
+        {
+          "caseId": "var-43",
+          "field": "urgency",
+          "expected": "Routine",
+          "actual": "Urgent",
+          "harm": "Tolerable"
+        }
+      ]
+    },
+    {
+      "id": "var-44",
+      "correct": false,
+      "expected": {
+        "isMaintenance": true,
+        "issues": [
+          {
+            "category": "General",
+            "urgency": "Routine",
+            "vulnerabilityMentioned": false,
+            "propertyText": "Pennine House, flat 4"
+          }
+        ],
+        "followUpOf": null
+      },
+      "actual": {
+        "issues": [
+          {
+            "category": "General",
+            "urgency": "Urgent",
+            "vulnerabilityMentioned": false,
+            "propertyText": "Pennine House, flat 4",
+            "jobReference": "MER-000052",
+            "isFollowUp": false
+          }
+        ],
+        "newJobs": [
+          "MER-000052"
+        ],
+        "attachedTo": []
+      },
+      "modelPrepared": true,
+      "modelFailureReason": null,
+      "modelCalls": 1,
+      "latencyMs": 2484,
+      "inputTokens": 1134,
+      "outputTokens": 490,
+      "costUsd": 0.0003584,
+      "error": null,
+      "failures": [
+        {
+          "caseId": "var-44",
+          "field": "urgency",
+          "expected": "Routine",
+          "actual": "Urgent",
+          "harm": "Tolerable"
+        }
+      ]
+    },
+    {
+      "id": "var-45",
+      "correct": true,
+      "expected": {
+        "isMaintenance": true,
+        "issues": [
+          {
+            "category": "Unsure",
+            "urgency": "Routine",
+            "vulnerabilityMentioned": false,
+            "propertyText": "16 Heaton Road"
+          }
+        ],
+        "followUpOf": null
+      },
+      "actual": {
+        "issues": [
+          {
+            "category": "Unsure",
+            "urgency": "Routine",
+            "vulnerabilityMentioned": false,
+            "propertyText": "16 Heaton Road",
+            "jobReference": "MER-000053",
+            "isFollowUp": false
+          }
+        ],
+        "newJobs": [
+          "MER-000053"
+        ],
+        "attachedTo": []
+      },
+      "modelPrepared": true,
+      "modelFailureReason": null,
+      "modelCalls": 1,
+      "latencyMs": 1077,
+      "inputTokens": 1131,
+      "outputTokens": 182,
+      "costUsd": 0.0002041,
+      "error": null,
+      "failures": []
+    },
+    {
+      "id": "var-46",
+      "correct": true,
+      "expected": {
+        "isMaintenance": true,
+        "issues": [
+          {
+            "category": "General",
+            "urgency": "Routine",
+            "vulnerabilityMentioned": false,
+            "propertyText": "33 Moorside Road"
+          }
+        ],
+        "followUpOf": null
+      },
+      "actual": {
+        "issues": [
+          {
+            "category": "General",
+            "urgency": "Routine",
+            "vulnerabilityMentioned": false,
+            "propertyText": "33 Moorside Road",
+            "jobReference": "MER-000054",
+            "isFollowUp": false
+          }
+        ],
+        "newJobs": [
+          "MER-000054"
+        ],
+        "attachedTo": []
+      },
+      "modelPrepared": true,
+      "modelFailureReason": null,
+      "modelCalls": 1,
+      "latencyMs": 1733,
+      "inputTokens": 1114,
+      "outputTokens": 295,
+      "costUsd": 0.0002589,
+      "error": null,
+      "failures": []
+    }
+  ]
+}

@@ -16,7 +16,11 @@ On Windows:
 ./run.ps1
 ```
 
-Then open http://localhost:5080. The script checks the Node and .NET versions, builds the React client into the web app, applies the database migrations (SQLite, `src/Meridian.Web/meridian.db`) and starts the app. Paste a message (sender and text) into the form to see it prepared and queued.
+Then open http://localhost:5080. The script checks the Node and .NET versions, builds the React client into the web app, applies the database migrations (SQLite, `src/Meridian.Web/meridian.db`) and starts the app.
+
+On first start the six messages Dawn forwarded are run through the real pipeline, so the queue opens with five prepared jobs (Joy's email becomes two; the three Walsh messages become one emergency with two follow-ups). Their received times are set to the most recent past weekday and time each message shows, so the Walsh emergency is already a few days old and shows as an overdue promise on the numbers page. Turn this off with `Demo__SeedClientMessages=false`; delete `src/Meridian.Web/meridian.db` to start again.
+
+**A walk through:** pick "Acting as" Rachel, acknowledge the Walsh emergency, open `MER-000003` and approve it. Approval sends it to the contractor: the job detail shows the contractor's link (`/c/<token>`); open it and press "Mark attended". Open **Numbers** to see the counts and times. Paste any message to see it prepared, or one mentioning gas to see the gas safety reply. Screenshots are in [`docs/screenshots/`](docs/screenshots/).
 
 **Tests:**
 
@@ -41,25 +45,31 @@ Everything the code trusts from a model goes through one validator; invalid outp
 
 ## What is done
 
+All 14 stories planned in BMAD are built (`_bmad-output/initiative-meridian-triage/tickets/`). 589 automated tests pass.
+
 - **Intake:** a pasted message is stored unchanged and gets a `MER-` job reference.
 - **Emergency rules:** gas, carbon monoxide, water through a ceiling, and no heating from October to April (UK time) make a job an emergency before the model is called.
-- **AI preparation:** category, urgency, English summary and explanation, through the model interface, with a 20-second timeout, one retry and a fall-back to Unsure.
+- **AI preparation:** category, urgency, English summary and explanation, through the model interface, with a 20-second timeout, one retry and a fall-back to Unsure. The AI can raise urgency (it catches emergencies no rule covers) but never lower it.
 - **Splitting and follow-ups:** one email with several problems becomes several jobs, each matched to a known property; a repeat message about an open job at the same property is attached to it as a follow-up.
-- **Urgency only goes up** unless a person lowers it, with the reason recorded.
-- **Tenant acknowledgement** for every message, quoting the reference of each job it made or joined, and a fixed gas safety message (National Gas Emergency, 0800 111 999) for gas reports. Sending is simulated and visible on the job. A message stored without a job (the app stopped mid-intake) still gets one, with its acknowledgement, at the next start.
-- **Event log:** every step of every job, including the model's raw output, model id and prompt version.
-- **Review queue page** in React, ordered by urgency then age.
 - **Contractor map:** each job shows its building and the usual contractor for its category there (or the company default), chosen by fixed lookup, never by the AI.
-- **Eval:** 52 labelled cases and a runner that pushes them through the real intake pipeline (see results below).
+- **Review:** a person approves, edits or rejects every job, with the person and the before and after values recorded. Lowering urgency needs a reason.
+- **Tenant acknowledgement** for every message, quoting the job reference, and a fixed gas safety message (National Gas Emergency, 0800 111 999) for gas reports. A message stored without a job (the app stopped mid-intake) still gets one, with its acknowledgement, at the next start.
+- **Escalation:** an emergency notifies Rachel at once, Dawn if Rachel has not acknowledged within 30 minutes, and is marked escalation-failed and held at the top of the queue after a further 30.
+- **Contractor attendance:** approving sends the job to its contractor with a single-job link; the contractor marks it attended. An emergency not attended within 24 hours raises an alert to send the fallback contractor.
+- **Numbers page** for the MD: jobs by category and urgency, time to first human look, to approval and to attendance, and how often each promise was met, for the last 30 days and all time, computed only from the event log.
+- **Job history:** every step of every job in order, including the model's raw output, model id, prompt version, latency and tokens.
+- **Eval:** 52 labelled cases and a runner that pushes them through the real intake pipeline.
 
-*This list is updated as the remaining stories land; see "Still in progress" below.*
+All sending (tenant replies, staff texts, contractor messages) is simulated: messages are stored and shown in the app, nothing leaves it.
 
-## Still in progress
+## Not done, and known gaps
 
-- Approve, edit and reject in the queue.
-- A job history page.
-- Escalation to Rachel, then the backup after 30 minutes.
-- Contractor attendance links and the MD's numbers page.
+- **Not tested in a real browser by a person:** the pages were checked with a headless browser and screenshots, and every API path by automated tests.
+- **The eval set is small and written by the builder** (6 real messages, 46 written with AI help). A fresh set of real Meridian messages is the test that matters.
+- **Non-English emergency phrases** beyond the eval cases (Polish, Romanian, Urdu in Latin script) were not checked by a native speaker.
+- **Bank holidays** are not counted in the five-working-day promise.
+- **Two messages arriving at the same moment** for the same flat could make two jobs instead of one with a follow-up.
+- **Data protection and retention** (how long tenant messages are kept, what may be sent to a model provider) are open questions for Meridian (PRD OQ-3).
 
 ## Eval results
 
@@ -67,11 +77,12 @@ Run with `dotnet run --project src/Meridian.Eval` (add `OPENROUTER_API_KEY` for 
 
 | Run | Emergency recall (target 100%) | Category accuracy (target ≥85%) | Critical failures | Result |
 |---|---|---|---|---|
-| `anthropic/claude-haiku-5.5`, prompt `triage.v2` | 100% (22/22) | 92.6% (50/54) | 0 | pass |
+| `anthropic/claude-haiku-5.5`, prompt `triage.v2`, final code (17 Nov) | 100% (22/22) | 90.7% (49/54) | 0 | pass |
+| `anthropic/claude-haiku-5.5`, prompt `triage.v2` (16 Nov) | 100% (22/22) | 92.6% (50/54) | 0 | pass |
 | `anthropic/claude-haiku-5.5`, prompt `triage.v1` | 100% (22/22) | 83.3% (45/54) | 0 | fail on category |
 | stub (hand-written answers for the 6 client messages only) | 77.3% (17/22) | 18.5% | 5 | fail, as expected |
 
-The stub run shows what the fixed rules catch on their own: the five emergencies it misses are the ones no rule covers (a sparking socket, an oxygen concentrator in a power cut, a toddler locked out at night, a bulging wet ceiling) and that the model has to catch. 52 cases cost about $0.015 on OpenRouter. The prompt was revised once after the v1 run (DECISIONS D23); the eval set was written by the builder with AI help, so a fresh set of real messages is the real test.
+The stub run shows what the fixed rules catch on their own: the five emergencies it misses are the ones no rule covers (a sparking socket, an oxygen concentrator in a power cut, a toddler locked out at night, a bulging wet ceiling) and that the model has to catch. 52 cases cost about $0.015 on OpenRouter. The two v2 runs used the same prompt at temperature 0 and still differ by one case (about 2 points), so small differences between runs are noise, not progress. The prompt was revised once after the v1 run (DECISIONS D23); the eval set was written by the builder with AI help, so a fresh set of real messages is the real test.
 
 ## What I cut, and why
 
@@ -88,7 +99,7 @@ Every decision the input left open, and why, is in [DECISIONS.md](DECISIONS.md).
 | Path | What it holds |
 |---|---|
 | `src/` | The application: `Meridian.Domain`, `Meridian.Application`, `Meridian.Infrastructure`, `Meridian.Web`, `Meridian.Eval`, `Meridian.Tests`, and `client/` (React) |
-| `docs/` | BMAD artifacts: `bmad/brief.md`, `bmad/prd.md`, `bmad/architecture.md`, the client input, and BMAD research notes |
+| `docs/` | BMAD artifacts: `bmad/brief.md`, `bmad/prd.md`, `bmad/architecture.md`, `bmad/epics-and-stories.md`, the client input, BMAD research notes, and screenshots |
 | `_bmad-output/` | The full BMAD run: brief, PRD, initiative, architecture, epics, stories (`tickets.toml`) and build plans, each with its decision log (`.memlog.md`) |
 | `eval/` | Labelled eval cases, how correctness is defined, and results |
 | `conversations/` | Every AI conversation, exported unedited (email redacted) |
